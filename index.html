@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang='pt'>
+<head>
+    <meta charset='UTF-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <link rel='stylesheet' href='CSS/style.css'>
+    <link rel='stylesheet' href='CSS/extras.css'>
+    <link rel='stylesheet' href='CSS/snackbar.css'>
+    <link rel='stylesheet' href='CSS/display1.css'>
+    <link rel='stylesheet' href='CSS/display2.css'>
+    <link rel='stylesheet' href='CSS/display3.css'>
+    <link rel='shortcut icon' href='IMG/icon.ico' type='image/x-icon'>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <script src='JS/linhas.js'></script>
+    <script src='JS/paragens.js'></script>
+    <script src='JS/veiculos.js'></script>
+    <script src='JS/extras.js'></script>
+    <script src='https://kit.fontawesome.com/207c253573.js' crossorigin='anonymous'></script>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <!-- MAPAS API -->
+    <!-- <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDQqKFRzDxr7zRDK-RDLFT8e7qSa_zl4vY&callback=initMap"></script> -->
+    <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
+    <link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet" />
+    <!-- LeafLet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <title>Carris Metropolitana | API</title>
+</head>
+<body onload="modal()">
+    
+    <div id="mainDisplay">
+        <div id="loaderBG">
+            <div id="loader"></div>
+        </div>
+        
+        <!-- Linhas -->
+        <div id="display1">
+            <!-- Input / Favoritos -->
+            <div id="extrasLinhas">
+                <input id="input_Procura_linhas" autocomplete="off" oninput="linhas()" type="text" placeholder="Número da linha / Destino da linha">
+                <button id="btnVerFavoritos" onclick="btnFavoritos()"><i class="fa-regular fa-heart"></i> Favoritos</button>
+                <!-- <button id="btnVerRecentes" onclick="btnRecentes()"><i class="fa-solid fa-list-ul"></i> Lista</button> -->
+            </div>
+            <!-- Linhas -->
+            <div id="linhasContainer">
+
+            </div>
+        </div>
+
+        <div id="detalhesLinha" class="teste">
+
+            <!-- Voltar (btn) -->
+            <button id="btnVoltar" onclick="verDetalhes()"><i class="fa-solid fa-circle-chevron-left"></i> Voltar</button>
+            <!-- Titulo -->
+            <h2 id="h2LinhaDetalhe"><span class="linhaNumero" id="numeroTitulo">0000</span> <span class="linhaPercurso" id="percursoTitulo">Partida - Destino</span></h2>
+            <!-- Parametros Linha -->
+            <div id="extrasDetalhes">
+                <div class="opcaoDetalhe">
+                    <label>Rota: </label>
+                    <div id="selectRota" class="selectCustom" onclick="select('rota')">
+                        <span id="textoSelectRota">Rotas</span> <span id="rota_iconSelect"><i class="fa-solid fa-caret-down"></i></span>
+                    </div>
+                    <div class="optionSelect" id="rota_optionSelect">
+                    </div>
+                </div>
+                <div class="opcaoDetalhe">
+                    <label>Sentido: </label>
+                    <div id="selectSentido" class="selectCustom" onclick="select('sentido')">
+                        <span id="textoSelectSentido">Sentidos</span> <span id="sentido_iconSelect"><i class="fa-solid fa-caret-down"></i></span>
+                    </div>
+                    <div class="optionSelect" id="sentido_optionSelect">
+                    </div>
+                </div>
+                <div class="opcaoDetalhe">
+                    <label>Dia: </label>
+                    <input type="date" id="dataDetalhes" oninput="selecionarDia()">
+                </div>
+                <div class="opcaoDetalhe">
+                    <label>Horas: </label>
+                    <div id="selectHoras" class="selectCustom" onclick="select('horas')">
+                        <span id="textoSelectHoras">--:--</span> <span id="horas_iconSelect"><i class="fa-solid fa-caret-down"></i></span>
+                    </div>
+                    <div class="optionSelect" id="horas_optionSelect">
+                    </div>
+                </div>
+            </div>
+
+            <div id="caminhoParagens">
+                <div id="borda">
+
+                </div>
+                <div id="paragensContainer">
+
+                </div>
+                <div id="horasPassagemContainer">
+
+                </div>
+                <div id="legenda">
+                    <span><i class="fa-solid fa-graduation-cap"></i> - Escola / Universidade</span> <span><i class="fa-solid fa-m"></i> - Metro</span> <span><i class="fa-solid fa-train"></i> - Comboio</span>
+                </div>
+                <div id="map"></div>
+            </div>
+            <div id="horarioParagemCont">
+                <h2 id="tituloHorario">Horário Titulo</h2>
+                <div id="horarioParagem">
+                </div>
+            </div>
+        </div>
+
+        <!-- Paragens -->
+        <div id="display2">
+            <div id="map2"></div>
+            <div id="inputParagens">
+                <div id="top">
+                    <h3 id="tituloContainerParagens"></h3>
+                    <div id="containerLinhas">
+                    </div>
+                    <div id="idParagem" onclick="copiarID()"></div>
+                </div>
+                <div id="paragensLista">
+                    <div id="previousTrips">
+
+                    </div>
+                    <div id="realTimeMarker">
+                        <div id="realTimeMarker_extra"></div>
+                    </div>
+                    <div id="futureTrips">
+                        <span id="paragensText">SELECIONE UMA PARAGEM</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Desenvolvimento - Atualizações -->
+        <div id="display3">
+            <div id="atualizacoes">
+                <div id="borda"></div>
+                <div class="textoInfo"><span class="icon_atualizacao">Linhas - Geral</span></div>
+                <div class="concluida"><span class="icon_atualizacao" title="Concluido"><i class="fa-solid fa-check"></i></span>Favoritos</div>
+                <div class="emDesenvolvimento"><span class="icon_atualizacao" title="Em Desenvolvimento"><i class="fa-solid fa-code"></i></span>Recentes</div>
+                <ul>
+                    <li>Mostrar Linhas recentes quando input de pesquisa é ativado</li>
+                </ul>
+                <div class="porComecar"><span class="icon_atualizacao" title="Em Desenvolvimento"><i class="fa-solid fa-xmark"></i></span>Tipo de Vista</div>
+                <ul>
+                    <li>Vista em linha</li>
+                    <li>Vista em Card</li>
+                </ul>
+
+                <div class="textoInfo"><span class="icon_atualizacao">Linhas - Detalhes</span></div>
+                <div class="concluida"><span class="icon_atualizacao" title="Concluido"><i class="fa-solid fa-check"></i></span>Paragens</div>
+                <div class="concluida"><span class="icon_atualizacao" title="Concluido"><i class="fa-solid fa-check"></i></span>Facilities</div>
+                <div class="concluida"><span class="icon_atualizacao" title="Concluido"><i class="fa-solid fa-check"></i></span>Horários por paragem</div>
+                <div class="concluida"><span class="icon_atualizacao" title="Concluido"><i class="fa-solid fa-check"></i></span>Mapa</div>
+                <ul>
+                    <li>Linha Visual</li>
+                    <li>Autocarros em Circulação</li>
+                </ul>
+                <div class="emDesenvolvimento"><span class="icon_atualizacao" title="Em Desenvolvimento"><i class="fa-solid fa-code"></i></span>Passagens em Tempo Real</div>
+                <ul>
+                    <li>Remover seleção de hora</li>
+                    <li>Apresentar as próximas passagens (Tempo Real / Agendadas) para cada paragem da linha</li>
+                </ul>
+                
+                <div class="textoInfo"><span class="icon_atualizacao">Paragens - Geral</span></div>
+                <div class="concluida"><span class="icon_atualizacao" title="Concluido"><i class="fa-solid fa-check"></i></span>Paragens</div>
+
+                <div class="textoInfo"><span class="icon_atualizacao">Paragens - Detalhes</span></div>
+                <div class="concluida"><span class="icon_atualizacao" title="Concluido"><i class="fa-solid fa-check"></i></span>Nome</div>
+                <div class="concluida"><span class="icon_atualizacao" title="Concluido"><i class="fa-solid fa-check"></i></span>Linhas Servidas</div>
+                <div class="concluida"><span class="icon_atualizacao" title="Concluido"><i class="fa-solid fa-check"></i></span>ID - copiar</div>
+                <div class="concluida"><span class="icon_atualizacao" title="Concluido"><i class="fa-solid fa-check"></i></span>Ultimas 3 passagens</div>
+                <div class="debugging"><span class="icon_atualizacao" title="Pequenos Erros"><i class="fa-solid fa-bug"></i></span>Próximas Passagens (Tempo Real / Agendadas)</div>
+                <ul>
+                    <li>[BUG] Erro quando o autocarro passa a "concluido"</li>
+                </ul>
+                <div class="porComecar"><span class="icon_atualizacao" title="Por Começar"><i class="fa-solid fa-xmark"></i></span>Pesquisar Paragem por Nome</div>
+                <div class="porComecar"><span class="icon_atualizacao" title="Por Começar"><i class="fa-solid fa-xmark"></i></span>Paragens Favoritas</div>
+                <div class="porComecar"><span class="icon_atualizacao" title="Por Começar"><i class="fa-solid fa-xmark"></i></span>Filtros de Linhas</div>
+                <ul>
+                    <li>Mostrar apenas linhas selecionadas</li>
+                </ul>
+                <div class="porComecar"><span class="icon_atualizacao" title="Por Começar"><i class="fa-solid fa-xmark"></i></span>Selecionar Passagem</div>
+                <ul>
+                    <li>Mostrar apenas linha selecionada</li>
+                    <li>Mostrar autocarros da linha selecionada</li>
+                </ul>
+                
+                <div class="textoInfo"><span class="icon_atualizacao">Notificações</span></div>
+                <div class="porComecar"><span class="icon_atualizacao" title="Por Começar"><i class="fa-solid fa-xmark"></i></span>Avisos de Chegada</div>
+                
+                <div class="textoInfo"><span class="icon_atualizacao">Versão 2.2</span></div>
+                <!-- <div class="debugging"><span class="icon_atualizacao"><i class="fa-solid fa-bug"></i></span>Debugging</div>
+                <div class="emDesenvolvimento"><span class="icon_atualizacao"><i class="fa-solid fa-code"></i></span>Em Desenvolvimento</div>
+                <div class="porComecar"><span class="icon_atualizacao"><i class="fa-solid fa-xmark"></i></span>Por Começar</div> -->
+            </div>
+        </div>
+
+    </div>
+
+    </div>
+
+    <div id="bottomBar">
+        <button id="aba1" onclick="bottomBar(1)" class="ativo"><i class="fa-solid fa-route"></i> Linhas</button>
+        <button id="aba2" onclick="bottomBar(2)"><i class="fa-solid fa-location-dot"></i> Paragens</button>
+        <button id="aba3" onclick="bottomBar(3)"><i class="fa-solid fa-code"></i> Desenvolvimento</button>
+    </div>
+
+    <div id="snackContainer">
+        <!-- <div class="snackbar">
+            <span class="icon_snackbar"><i class="fa-solid fa-heart-circle-minus"></i></span>
+            <span class="texto_snackbar">Isto é uma snackbar de TESTE</span>
+        </div> -->
+    </div>
+
+    <div id="modalAviso">
+        <h2>Atenção</h2>
+        <br>
+        <p>Vale lembrar que este não é um site oficial! <br><br> Todas as informações mostradas são retiradas da API da <a href="https://www.carrismetropolitana.pt/">Carris Metropolitana</a>, logo são dados abertos e correctos fornecidos pela empresa <br><br> Este site encontra-se nas normas de Direitos de Autor e dentro da lei.</p>
+        <br>
+        <input type="checkbox" id="modalCheckBox"> Não mostrar novamente
+        <br><br>
+        <button onclick="fecharModal()">Continuar</button>
+    </div>
+
+</body>
+</html>
+
+
+<!-- 
+
+    Alterações:
+        Linhas - Detalhes:
+            - Seleção de hora removida
+            - Horas de Passagem:
+                - Remover horas antigas
+                - Implementação de horas de passagem para cada paragem:
+                    - Tempo Real / Agendadas
+            - Horário do dia:
+                - Em baixo da paragem selecionada
+                - Limite de width para evitar conflitos com o mapa da linha
+            - Mapa da linha:
+                - Fixed no canto da tele (antigo horário)
+
+    Geral:
+        - UI Changes:
+            - Snackbars
+
+    Linhas:
+        - Linhas pesquisadas recentemente [DONE] 🟢
+        - Calcular horário mais próximo da hora atual [DONE] 🟢
+        - Mapa para a linha + Veiculos em movimento para essa linha [DONE] 🟢
+    TODO    - Tempo para a linha chegar a cada paragem, se existir (pattern/id/realtime) [UNDER DEVELOPMENT] 🟡
+    
+    Paragens:
+        - Optimização do mapa de paragens [DONE] 🟢
+        - Funcionamento do selecionador de paragens:
+            - Mostrar todas as linhas previstas:
+                - Concluidas [DONE] 🟢
+                - Atrasadas (5 Min.) [DONE] 🟢
+                - Tempo Real [DONE] 🟢
+                - Marcadas [DONE] 🟢
+                - OnClick:
+                    - Mostrar a linha visualmente e paragens + Veiculo da passagem [DONE - UNDER TESTING] 🪲
+            - Proximas chegadas à paragem [DONE - UNDER TESTING] 🪲
+            - Paragens Favoritas [UNDER DEVELOPMENT] 🟡
+
+    CHAVE API: AIzaSyDQqKFRzDxr7zRDK-RDLFT8e7qSa_zl4vY
+
+-->

@@ -1,0 +1,683 @@
+#display1 {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: displayIn_anim 1s;
+  color: whitesmoke;
+}
+
+#linhasContainer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60vw;
+  height: 30rem;
+  border: 1px solid rgb(100, 100, 100);
+  border-radius: 5px;
+  /* box-shadow: 1px 1px 10px rgba(100, 100, 100, 0.5); */
+  text-align: left;
+  overflow-y: scroll;
+}
+
+#display1 #extrasLinhas {
+  position: absolute;
+  bottom: 18rem;
+  right: 50%;
+  transform: translate(50%);
+  display: flex;
+}
+
+#display1 input {
+  border: 2px solid rgb(62, 62, 62);
+  border-radius: 5px;
+  background-color: rgb(40, 40, 40);
+  color: whitesmoke;
+  width: 30rem;
+  height: 2rem;
+  padding: 10px;
+  text-align: center;
+  font-weight: 500;
+  font-size: 18px;
+  letter-spacing: 2px;
+  outline: none;
+  margin-right: 1rem;
+  transition: 0.5s;
+}
+
+#display1 #extrasLinhas button {
+  border: 2px solid rgb(148, 58, 35);
+  border-radius: 5px;
+  background-color: rgba(148, 58, 35, 0.5);
+  color: whitesmoke;
+  width: 10rem;
+  padding: 8px 15px;
+  font-weight: 500;
+  font-size: 18px;
+  outline: none;
+  cursor: pointer;
+  transition: 0.3s;
+  word-spacing: 5px;
+}
+
+#display1 #extrasLinhas #btnVerRecentes {
+  border: 2px solid rgb(100, 100, 100);
+  background-color: rgba(100, 100, 100, 0.5);
+}
+
+#display1 #extrasLinhas button:not(:first-child) {
+  margin-right: 25px;
+}
+
+#display1 #extrasLinhas button:hover {
+  opacity: 0.5;
+}
+
+#display1 .erroMsg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: gray;
+  font-size: 20px;
+  font-weight: 800;
+  width: max-content;
+}
+
+#display1 .linhaDiv {
+  display: flex;
+  align-items: center;
+  height: 3rem;
+  width: 100%;
+}
+
+#display1 .linhaDiv:not(:last-child) {
+  border-bottom: 1px solid gray;
+}
+
+#display1 .linhaDiv #favoritosBtn_icon {
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#display1 .linhaDiv .linhaNumero {
+  position: absolute;
+  margin-left: 10px;
+  padding: 5px 10px;
+  border-radius: 25px;
+  width: 3rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+#display1 .linhaDiv .linhaPercurso {
+  margin-left: 6rem;
+  max-width: calc(100% - 12rem);
+  flex-grow: 1;
+}
+
+#display1 .linhaDiv .botoesExtra {
+  position: absolute;
+  margin-left: calc(100% - 6rem);
+  display: flex;
+}
+
+#display1 .linhaDiv .botoesExtra p {
+  margin: 0 10px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+#display1 .linhaDiv .botoesExtra p:hover {
+  opacity: 0.5;
+}
+
+#display1 #modalDetalhesLinha {
+  display: none;
+}
+
+/* Detalhes Linha */
+
+#detalhesLinha {
+  display: none;
+}
+
+#detalhesLinha #btnVoltar {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  border: 1px solid whitesmoke;
+  border-radius: 5px;
+  padding: 10px 20px;
+  background-color: transparent;
+  font-size: 20px;
+  word-spacing: 5px;
+  font-weight: 500;
+  color: whitesmoke;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#h2LinhaDetalhe {
+  position: absolute;
+  top: 4rem;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: max-content;
+  color: whitesmoke;
+}
+
+#detalhesLinha .linhaNumero {
+  padding: 5px 15px;
+  border-radius: 25px;
+  margin-right: 1rem;
+  min-width: 2rem;
+  font-weight: bold;
+  text-align: center;
+  letter-spacing: 1px;
+  color: whitesmoke;
+}
+
+#detalhesLinha #extrasDetalhes {
+  display: flex;
+  position: absolute;
+  top: 7rem;
+  left: 50%;
+  transform: translate(-50%);
+  background-color: rgb(35, 35, 35);
+  padding: 3rem 2rem 2rem 2rem;
+  border-radius: 15px;
+  min-height: 3rem;
+  z-index: 99999;
+}
+
+#detalhesLinha #h2LinhaDetalhe #definicoesExtrasbtn {
+  border: 2px solid rgb(52, 52, 52);
+  border-radius: 5px;
+  padding: 5px 15px;
+  margin-left: 2rem;
+  background-color: transparent;
+  font-size: 20px;
+  word-spacing: 5px;
+  font-weight: 500;
+  color: whitesmoke;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#detalhesLinha #h2LinhaDetalhe #definicoesExtrasbtn:hover {
+  border: 2px solid transparent;
+  background-color: rgb(48, 48, 48);
+  opacity: 0.5;
+}
+
+.opcaoDetalhe {
+  margin: 0 1rem;
+}
+
+.opcaoDetalhe label {
+  position: absolute;
+  margin-top: -2rem;
+  margin-left: 30px;
+  color: whitesmoke;
+  font-weight: 500;
+}
+
+.selectCustom {
+  position: relative;
+  border-radius: 5px;
+  background-color: rgb(48, 48, 48);
+  color: whitesmoke;
+  padding: 23px;
+  font-weight: 500;
+  font-size: 15px;
+  cursor: pointer;
+  width: 15rem;
+  height: 1.2rem;
+  margin: 0 1rem;
+  transition: 0.3s;
+}
+
+.selectCustom:hover,
+input[type="date"]:hover {
+  opacity: 0.5;
+}
+
+.selectCustom#selectHoras {
+  width: 3.5rem;
+}
+
+.optionSelect#horas_optionSelect {
+  width: 6.38rem;
+}
+
+.selectCustom i {
+  position: absolute;
+  right: 1rem;
+  top: 25px;
+  font-size: 18px;
+  transition: 0.2s;
+}
+
+#selectRota,
+#selectSentido {
+  position: relative;
+  border-radius: 5px;
+  background-color: rgb(48, 48, 48);
+  color: whitesmoke;
+  padding: 23px 31px;
+  font-weight: 500;
+  font-size: 15px;
+  cursor: pointer;
+  width: 14rem;
+  height: 1.2rem;
+  margin: 0 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.opcaoDetalhe .optionSelect {
+  display: none;
+  position: absolute;
+  background-color: rgb(48, 48, 48);
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  margin-top: -3px;
+  margin-left: 1rem;
+  width: calc(15rem + 46px);
+  z-index: 99999;
+}
+
+.optionSelect span {
+  display: block;
+  width: 15.42rem;
+  padding: 10px 15px;
+  margin: 5px 5px;
+  font-weight: normal;
+  font-size: 16px;
+  background-color: rgb(42, 42, 42);
+  color: whitesmoke;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.hora span {
+  display: block;
+  width: 3.9rem;
+  padding: 10px 15px;
+  margin: 5px 5px;
+  font-weight: normal;
+  font-size: 16px;
+  background-color: rgb(42, 42, 42);
+  color: whitesmoke;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#horas_optionSelect {
+  max-height: 12rem;
+  overflow: scroll;
+}
+
+.optionSelect span:hover {
+  opacity: 0.5;
+}
+
+input[type="date"] {
+  border: none;
+  border-radius: 5px;
+  background-color: rgb(48, 48, 48);
+  color: whitesmoke;
+  width: 9rem;
+  height: 1.2rem;
+  padding: 23px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: 0.3s;
+}
+
+::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  scale: 1.5;
+}
+
+#rotasDiferentes {
+  border-radius: 5px;
+  background-color: rgb(48, 48, 48);
+  width: 15rem;
+  padding: 10px;
+  margin-right: 1rem;
+}
+
+#rotasDiferentes label:not(.labelRota) {
+  position: absolute;
+  margin-top: -2.6rem;
+  margin-left: 0px;
+  color: whitesmoke;
+  font-weight: 500;
+}
+
+#rotasDiferentes #rotasContainer {
+  text-align: center;
+  font-weight: normal;
+  font-size: 15px;
+  max-height: 6.2rem;
+  overflow-y: scroll;
+}
+
+#rotasDiferentes #rotasContainer .rota {
+  display: block;
+  padding: 10px;
+  color: whitesmoke;
+  background-color: rgb(42, 42, 42);
+  border-radius: 5px;
+  height: 25px;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  white-space: nowrap;
+}
+
+#rotasDiferentes #rotasContainer .rota:not(:last-child) {
+  margin-bottom: 10px;
+}
+
+#detalhesLinha #btnVoltar i {
+  font-size: 22px;
+  vertical-align: -1px;
+}
+
+#detalhesLinha #btnVoltar:hover {
+  background-color: rgba(190, 190, 190, 0.5);
+  border: 1px solid transparent;
+  opacity: 0.5;
+}
+
+/* HORÁRIOS PARAGENS */
+
+#horarioParagemCont {
+  display: none;
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  width: max-content;
+  border: 2px solid rgba(63, 63, 63, 0.3);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+#horarioParagemCont h2 {
+  color: whitesmoke;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+#horarioParagem {
+  color: whitesmoke;
+  justify-content: center;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  row-gap: 20px;
+}
+
+#horarioParagem ul {
+  display: flex;
+  flex-direction: column;
+}
+
+#horarioParagem ul li {
+  list-style: none;
+  padding: 4px 5px;
+  text-align: center;
+  transition: 0.3s;
+}
+
+#horarioParagem ul li:first-child {
+  background-color: rgb(96, 96, 96);
+  color: whitesmoke;
+  font-weight: 500;
+}
+
+#horarioParagem ul:first-child li:first-child {
+  border-top-left-radius: 999px;
+  border-bottom-left-radius: 999px;
+}
+
+#horarioParagem ul:last-child li:first-child {
+  border-top-right-radius: 999px;
+  border-bottom-right-radius: 999px;
+}
+
+#horarioParagem ul:first-child li {
+  padding-left: 15px;
+}
+
+#horarioParagem ul:last-child li {
+  padding-right: 15px;
+}
+
+#horarioParagem ul:hover:not(:first-child) li:not(:first-child) {
+  color: rgb(154, 154, 154);
+}
+
+/* PARAGENS */
+
+#horasPassagemContainer {
+  position: absolute;
+  top: -5px;
+  left: -6rem;
+  color: whitesmoke;
+}
+
+.horaPassagem {
+  font-weight: normal;
+  padding: 10px;
+}
+
+#caminhoParagens {
+  position: absolute;
+  top: 19rem;
+  left: 35%;
+  transform: translate(-50%);
+  width: 30rem;
+  color: whitesmoke;
+  padding-bottom: 33rem;
+}
+
+#borda {
+  position: absolute;
+  left: -2rem;
+  top: 0;
+  width: 1rem;
+  height: calc(100% - 33rem);
+  border-radius: 50px;
+  /* background-color: pink; */
+}
+
+.facilitiesContainer {
+  display: flex;
+  margin-left: 1rem;
+  margin-top: 5px;
+}
+
+.facilitiesContainer i {
+  margin: 0 3px;
+  padding: 0 5px;
+}
+
+.paragem {
+  display: flex;
+  font-weight: 500;
+  transition: 0.3s;
+  padding: 5px;
+  text-transform: uppercase;
+  position: relative;
+  width: max-content;
+  cursor: pointer;
+}
+
+.paragem::before {
+  content: "•";
+  position: absolute;
+  margin-left: -2.05rem;
+  transition: 0.3s;
+}
+
+.paragem:not(:last-child) {
+  margin-bottom: 10px;
+}
+
+.paragem:hover {
+  margin-left: 10px;
+}
+
+.paragem:hover::before {
+  margin-left: -2.65rem;
+  margin-top: -2px;
+  transform: scale(2);
+}
+
+.proximasPassagens {
+  /* background-color: red; */
+  /* margin: -10px 0 15px 5px; */
+}
+
+#legenda {
+  display: flex;
+  position: absolute;
+  left: -6.5rem;
+  bottom: 30rem;
+  color: whitesmoke;
+  font-size: 18px;
+  width: max-content;
+}
+
+#legenda span {
+  margin: 0 1rem;
+}
+/* MAPA LINHA */
+
+#map {
+  position: absolute;
+  bottom: 2rem;
+  left: -5.4rem;
+  height: 400px;
+  width: 600px;
+  border-radius: 15px;
+}
+
+.iconBus {
+  background-color: rgb(160, 21, 21);
+  height: 20px;
+  width: 20px;
+  border-radius: 50px;
+}
+
+#horariosTipo {
+  position: absolute;
+  top: 18rem;
+  left: 50%;
+  transform: translate(-50%);
+  font-weight: 500;
+  color: whitesmoke;
+  background-color: rgb(25, 25, 25);
+  padding: 10px 20px;
+  border-radius: 25px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 35px;
+  height: 20px;
+  margin: 5px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #323232;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16.5px;
+  width: 16.5px;
+  left: 1.5px;
+  bottom: 2px;
+  background-color: white;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(15px);
+  -ms-transform: translateX(15px);
+  transform: translateX(15px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+/* ANIMAÇÕES */
+
+@keyframes definicoesLinha_anim {
+  from {
+    margin-top: -20px;
+    opacity: 0;
+  }
+}
+
+/* SCROLLBAR ROTAS */
+
+.rota::-webkit-scrollbar {
+  height: 4px;
+  display: block;
+}
+
+/* Track */
+.rota::-webkit-scrollbar-track {
+  background-color: rgba(67, 67, 67, 0);
+  border-radius: 25px;
+}
+
+/* Handle */
+.rota::-webkit-scrollbar-thumb {
+  background: rgba(70, 70, 70, 0.5);
+  border-radius: 10px;
+}
+
+/* Handle on hover */
+.rota::-webkit-scrollbar-thumb:hover {
+  background: rgba(110, 110, 110, 0.5);
+}
+
+#rotasContainer::-webkit-scrollbar {
+  display: none;
+}

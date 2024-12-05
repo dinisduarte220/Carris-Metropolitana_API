@@ -1,0 +1,218 @@
+#display2 {
+  display: none;
+}
+
+#map2 {
+    position: absolute;
+    top: calc(50% - 2rem);
+    left: 5rem;
+    transform: translateY(-50%);
+    bottom: 2rem;
+    height: 70vh;
+    width: 50%;
+    border-radius: 15px;
+}
+
+#inputParagens {
+    position: absolute;
+    right: 10rem;
+    top: 5.5rem;
+    border: 2px solid rgb(87, 87, 87);
+    border-radius: 10px;
+    width: 30rem;
+    height: 70vh;
+    display: flex;
+    text-align: center;
+    flex-direction: column;
+    align-items: center;
+    overflow-y: auto;
+}
+
+#inputParagens #top {
+    padding: 10px 0;
+    width: 100%;
+}
+
+#inputParagens #top h3 {
+    color: whitesmoke;
+    margin-bottom: 15px;
+}
+
+#inputParagens #containerLinhas {
+    display: flex;
+    margin-left: 50%;
+    transform: translate(-50%, 0);
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    width: 90%;
+    max-height: 7.5rem;
+    overflow-y: auto;
+}
+
+#inputParagens #containerLinhas .linhaParagem {
+    padding: 5px 10px;
+    border-radius: 25px;
+    width: 3rem;
+    font-weight: 600;
+    color: whitesmoke;
+    text-align: center;
+    cursor: pointer;
+}
+
+#inputParagens #paragensLista {
+    /* display: none; */
+    position: relative;
+    width: 100%;
+    height: calc(100% - 2rem);
+    /* background-color: aquamarine; */
+}
+
+#inputParagens #top #idParagem {
+    display: none;
+    margin-top: 15px;
+    margin-left: 50%;
+    transform: translate(-50%, 0);
+    background-color: rgba(100, 100, 100, .5);
+    border-radius: 50px;
+    padding: 5px 10px;
+    font-weight: 600;
+    font-size: 14px;
+    word-spacing: -2px;
+    color: whitesmoke;
+    width: fit-content;
+    transition: .3s;
+    cursor: pointer;
+}
+
+#inputParagens #top #idParagem:hover {
+    opacity: .5;
+}
+
+#inputParagens #paragensLista #paragensText {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: gray;
+    font-size: 18px;
+    font-weight: 800;
+    width: max-content;
+}
+
+#display2 #inputParagens #paragensLista .passagemLista {
+    position: relative;
+    padding: 10px 0;
+    width: 100%;
+    height: 2.5rem;
+}
+
+#display2 #inputParagens #paragensLista .passagemLista.realTime .linhaTempoReal {
+    color: rgb(68, 216, 27);
+}
+
+#display2 #inputParagens #paragensLista .passagemLista.delayed .linhaTempoReal {
+    color: rgb(197, 216, 27);
+}
+
+#display2 #inputParagens #paragensLista .passagemLista.veryDelayed .linhaTempoReal {
+    color: rgb(216, 33, 27);
+}
+
+#display2 #inputParagens #paragensLista .passagemLista.concluded .linhaPercurso, #display2 #inputParagens #paragensLista div.concluded .linhaTempoReal, #display2 #inputParagens #paragensLista div.concluded .linhaNumero {
+    color: rgba(245, 245, 245, 0.3);
+}
+
+#display2 #map2 .popupBus {
+    animation: popupBus 1s;
+    padding: 2rem;
+}
+
+@keyframes popupBus {
+    from {
+        opacity: 0;
+    }
+}
+
+#realTimeMarker {
+    display: none;
+    position: relative;
+    height: 3px;
+    width: 100%;
+    background-color: rgb(212, 21, 21);
+    margin-top: -2px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: whitesmoke;
+}
+
+#realTimeMarker_extra {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 14px;
+    width: 35px;
+    border-top-right-radius: 50px;
+    border-bottom-right-radius: 50px;
+    padding: 0 5px 0 3px;
+    background-color: rgb(212, 21, 21);
+}
+
+#display2 #inputParagens #paragensLista .passagemLista.concluded {
+    border-top: 1px solid gray;
+}
+
+#display2 #inputParagens #paragensLista .passagemLista.realTime, #display2 #inputParagens #paragensLista .passagemLista.delayed, #display2 #inputParagens #paragensLista .passagemLista.veryDelayed, #display2 #inputParagens #paragensLista .passagemLista.scheduled:not(:last-child) {
+    border-bottom: 1px solid gray;
+}
+
+#display2 #inputParagens #paragensLista .linhaNumero {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 15px;
+    padding: 5px 10px;
+    border-radius: 25px;
+    width: 3rem;
+    font-weight: 600;
+    color: whitesmoke;
+    text-align: center;
+}
+
+#display2 #inputParagens #paragensLista .linhaPercurso {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 6.1rem;
+    font-weight: 500;
+    color: whitesmoke;
+    text-align: center;
+}
+
+#display2 #inputParagens #paragensLista .linhaTempoReal {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 15px;
+    font-weight: 600;
+    color: whitesmoke;
+    text-align: center;
+    /* width: 4.5rem;
+    background-color: red; */
+}
+
+
+#display2 #inputParagens #paragensLista .textoAtraso {
+    position: absolute;
+    bottom: 6px;
+    right: 10px;
+    font-size: 12px;
+    color: rgb(185, 185, 185);
+    font-weight: 500;
+    text-align: right;
+}
+
+#paragensLista .textoAtraso:not(:empty) ~ .linhaTempoReal {
+    margin-top: -5px;
+}

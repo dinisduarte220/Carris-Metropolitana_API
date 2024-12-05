@@ -1,0 +1,55 @@
+#snackContainer {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  overflow: hidden;
+  z-index: 9999999;
+  overflow: visible;
+}
+
+.snackbar {
+  right: 0;
+  padding: 10px 15px;
+  background-color: rgba(48, 48, 48);
+  box-shadow: 1px 1px 10px rgba(48, 48, 48, 1);
+  border-radius: 5px;
+  animation: snack_anim .5s;
+  width: max-content;
+  overflow: hidden;
+}
+
+.snackbar:not(:first-child) {
+  margin-top: 1rem;
+}
+
+.icon_snackbar {
+  font-size: 22px;
+  color: rgb(200, 200, 200);
+  vertical-align: -3px;
+}
+
+.texto_snackbar {
+  color: rgb(200, 200, 200);
+  font-weight: bold;
+  font-size: 16px;
+  margin: 5px 0 0 10px;
+}
+
+@keyframes snack_anim {
+
+  from {
+      opacity: 0;
+  }
+
+}
+
+@keyframes snack_anim_fora {
+
+  to {
+      opacity: 0;
+  }
+
+}

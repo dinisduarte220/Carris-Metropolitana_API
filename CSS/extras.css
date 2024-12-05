@@ -1,0 +1,125 @@
+/* Extras Mapas */
+
+.maplibregl-ctrl-bottom-right {
+  display: none;
+}
+
+/* Icon Tempo Real */
+
+.tempoReal_icon {
+  position: absolute;
+  margin-left: -2rem;
+  display: flex;
+  flex-direction: column;
+  margin-top: 3px;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  z-index: 9999999;
+  /* background-color: red; */
+}
+
+.tempoReal_icon .ponto {
+  width: 6px;
+  height: 6px;
+  background-color: rgba(190, 190, 190, 0.8);
+  border-radius: 50px;
+  z-index: 9999;
+}
+
+.tempoReal_icon .anel {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border-radius: 50px;
+  animation: tempoReal_anim 2000ms linear infinite;
+}
+
+@keyframes tempoReal_anim {
+  
+  0% {
+    opacity: 1;
+    transform: scale(0);
+  }
+  70% {
+    opacity: 0;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+
+}
+
+/* Loader */
+
+#loaderBG {
+  display: none;
+  background-color: rgba(0, 0, 0, 0.5);
+  width: 100vw;
+  height: 100vh;
+  z-index: 99999999;
+}
+
+#loader {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3rem;
+  height: 3rem;
+  margin-top: -1.5rem;
+  margin-left: -1.5rem;
+  border-radius: 100%;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid gray;
+  border-left: 5px solid gray;
+  border-right: 5px solid gray;
+  animation: loader_anim 1s linear infinite;
+  z-index: 99999999;
+}
+
+@keyframes loader_anim {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* CUSTOM SCROLLBAR */
+
+::-webkit-scrollbar {
+  width: 10px;
+  /* display: none; */
+}
+
+input:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+/* SCROLL | Linhas Container [DESATIVADO] */
+
+/* #linhasContainer::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Track */
+#linhasContainer::-webkit-scrollbar-track {
+  background-color: transparent;
+  border-radius: 10px;
+}
+ 
+/* Handle */
+#linhasContainer::-webkit-scrollbar-thumb {
+  background: rgb(120, 120, 120); 
+  height: 3rem;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* Handle on hover */
+#linhasContainer::-webkit-scrollbar-thumb:hover {
+  background: rgba(110, 110, 110, 0.5);
+}
