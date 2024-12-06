@@ -3,21 +3,55 @@ let lineStops = []
 let busCoords = []
 let map
 
+carregarRecentes()
+
 // API Call
 function apiCall(extraEndPoint) {
-  return new Promise((resolve, reject) => {
-    let fullURL = mainLink + extraEndPoint
-    $.ajax({
-      method: "GET",
-      url: fullURL,
-      success: function (result) {
-        resolve(result)
-      },
-      error: function ajaxError(jqXHR) {
-        reject(jqXHR.responseText)
-      },
+  let fullURL = mainLink + extraEndPoint
+  return fetch(fullURL)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok')
+      }
+      return response.json()
     })
-  })
+    .catch(error => Promise.reject(error.message))
+}
+
+// Recentes
+function carregarRecentes() {
+  let linhas = JSON.parse(localStorage.getItem("historico_linhas")) || []
+  let container = document.getElementById('recentes_container')
+  let msgErro = document.getElementById('mensagemErro')
+
+  if (linhas.length > 0) {
+    for (let i in linhas) {
+        let resultados = apiCall("lines/" + linhas[i])
+        resultados.then(function (result) {
+          let novaLinha = document.createElement("div")
+          novaLinha.setAttribute("class", "itemRecente")
+          novaLinha.setAttribute("onclick",'verDetalhes("' + result.short_name + '")')
+          
+  
+          let numero = document.createElement("p")
+          numero.setAttribute("class", "linhaNumero")
+          numero.style.backgroundColor = result.color
+          numero.innerText = result.id
+          let percurso = document.createElement("p")
+          percurso.setAttribute("class", "linhaPercurso")
+          percurso.innerText = result.long_name
+  
+          novaLinha.appendChild(numero)
+          novaLinha.appendChild(percurso)
+          container.appendChild(novaLinha)
+        }).catch (function(error) {
+          snackbar("erro", "Ocorreu um erro no servidor")
+          console.error(error)
+        })
+    }
+  } else {
+    msgErro.style.display = "block"
+  }
 }
 
 // Linhas - API
@@ -66,10 +100,7 @@ function linhas() {
           let detalhesBtn = document.createElement("p")
           detalhesBtn.setAttribute("id", "favoritosBtn_icon")
           detalhesBtn.setAttribute("title", "Detalhes da linha")
-          detalhesBtn.setAttribute(
-            "onclick",
-            'verDetalhes("' + element.short_name + '")'
-          )
+          detalhesBtn.setAttribute("onclick",'verDetalhes("' + element.short_name + '")')
           detalhesBtn.innerHTML = '<i class="fa-regular fa-file-lines"></i>'
 
           let favoritoBtn = document.createElement("p")

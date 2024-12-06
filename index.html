@@ -13,13 +13,11 @@
     <link rel='shortcut icon' href='IMG/icon.ico' type='image/x-icon'>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-    <script src='JS/linhas.js'></script>
-    <script src='JS/paragens.js'></script>
-    <script src='JS/veiculos.js'></script>
-    <script src='JS/extras.js'></script>
+
     <script src='https://kit.fontawesome.com/207c253573.js' crossorigin='anonymous'></script>
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <!-- MAPAS API -->
+    <!-- <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDQqKFRzDxr7zRDK-RDLFT8e7qSa_zl4vY&callback=initMap"></script> -->
     <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
     <link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet" />
     <!-- LeafLet -->
@@ -40,7 +38,16 @@
         <div id="display1">
             <!-- Input / Favoritos -->
             <div id="extrasLinhas">
-                <input id="input_Procura_linhas" autocomplete="off" oninput="linhas()" type="text" placeholder="Número da linha / Destino da linha">
+                <input required id="input_Procura_linhas" autocomplete="off" oninput="linhas()" type="text" placeholder="Número da linha / Destino da linha">
+                <div id="recentes_container">
+                    <div id="mensagemErro">
+                        Não existem linhas recentes
+                    </div>
+                    <!-- <div class="itemRecente">
+                        <p class="linhaNumero" style="background-color: red;">0000</p>
+                        <p class="linhaPercurso">Origem - Destino</p>
+                    </div> -->
+                </div>
                 <button id="btnVerFavoritos" onclick="btnFavoritos()"><i class="fa-regular fa-heart"></i> Favoritos</button>
                 <!-- <button id="btnVerRecentes" onclick="btnRecentes()"><i class="fa-solid fa-list-ul"></i> Lista</button> -->
             </div>
@@ -226,14 +233,16 @@
         <button onclick="fecharModal()">Continuar</button>
     </div>
 
+    <script src='JS/linhas.js'></script>
+    <script src='JS/paragens.js'></script>
+    <script src='JS/veiculos.js'></script>
+    <script src='JS/extras.js'></script>
+
 </body>
 </html>
 
 
 <!-- 
-
-    Notificações:
-        - Notificações de chegada de uma ou mais linhas
 
     Alterações:
         Linhas - Detalhes:
