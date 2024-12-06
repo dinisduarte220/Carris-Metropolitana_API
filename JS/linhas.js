@@ -24,6 +24,10 @@ async function carregarRecentes() {
   let container = document.getElementById('recentes_container')
   let msgErro = document.getElementById('mensagemErro')
 
+  while (container.firstChild) {
+    container.removeChild(container.firstChild)
+  }
+
   if (linhas.length > 0) {
     for (let linha of linhas) {
       try {
@@ -42,7 +46,7 @@ async function carregarRecentes() {
 
         novaLinha.appendChild(numero)
         novaLinha.appendChild(percurso)
-        container.appendChild(novaLinha)
+        container.insertBefore(novaLinha, container.firstChild)
       } catch (error) {
         snackbar("erro", "Ocorreu um erro no servidor")
         console.error(error)
@@ -227,10 +231,8 @@ async function verDetalhes(id) {
     try {
       await detalhesLinha(id)
       let lastLines = JSON.parse(localStorage.getItem("historico_linhas")) || []
-      if (!lastLines.includes(id)) {
-        lastLines.push(id)
-        localStorage.setItem("historico_linhas", JSON.stringify(lastLines))
-      }
+      lastLines.push(id)
+      localStorage.setItem("historico_linhas", JSON.stringify(lastLines))
       carregarRecentes()
     } catch (error) {
       console.error(error)
