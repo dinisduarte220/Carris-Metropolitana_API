@@ -22,7 +22,7 @@
   border-bottom-right-radius: 5px;
   margin-top: 3.35rem;
   max-height: 0;
-  transition: max-height 0.5s;
+  transition: max-height 0.2s;
   overflow-y: auto;
   overflow-x: hidden;
 }

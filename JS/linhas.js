@@ -6,7 +6,7 @@ let map
 carregarRecentes()
 
 // API Call
-function apiCall(extraEndPoint) {
+async function apiCall(extraEndPoint) {
   let fullURL = mainLink + extraEndPoint
   return fetch(fullURL)
     .then(response => {
@@ -336,7 +336,6 @@ async function verDetalhes(id) {
     bottomBar.style.display = "block"
   }
 }
-
 // Carregar detalhes para uma linha especifica
 async function detalhesLinha(id) {
   let startTime = performance.now()
@@ -367,6 +366,7 @@ async function detalhesLinha(id) {
     console.log(
       "Tempo de resposta: " + responseTime.toFixed(2) + " milisegundos"
     )
+    loader()
   } catch (error) {
     snackbar("erro", "Ocorreu um erro no servidor")
     console.error(error)

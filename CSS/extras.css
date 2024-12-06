@@ -17,7 +17,6 @@
   width: 20px;
   height: 20px;
   z-index: 9999999;
-  /* background-color: red; */
 }
 
 .tempoReal_icon .ponto {
@@ -54,17 +53,8 @@
 
 }
 
-/* Loader */
-
-#loaderBG {
-  display: none;
-  background-color: rgba(0, 0, 0, 0.5);
-  width: 100vw;
-  height: 100vh;
-  z-index: 99999999;
-}
-
 #loader {
+  display: none;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -74,10 +64,10 @@
   margin-left: -1.5rem;
   border-radius: 100%;
   border-top: 5px solid transparent;
-  border-bottom: 5px solid gray;
+  border-bottom: 5px solid transparent;
   border-left: 5px solid gray;
   border-right: 5px solid gray;
-  animation: loader_anim 1s linear infinite;
+  animation: loader_anim .5s linear infinite;
   z-index: 99999999;
 }
 
