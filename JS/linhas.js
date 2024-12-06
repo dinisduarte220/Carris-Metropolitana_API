@@ -6,7 +6,7 @@ let map
 carregarRecentes()
 
 // API Call
-async function apiCall(extraEndPoint) {
+function apiCall(extraEndPoint) {
   let fullURL = mainLink + extraEndPoint
   return fetch(fullURL)
     .then(response => {
@@ -19,35 +19,34 @@ async function apiCall(extraEndPoint) {
 }
 
 // Recentes
-function carregarRecentes() {
+async function carregarRecentes() {
   let linhas = JSON.parse(localStorage.getItem("historico_linhas")) || []
   let container = document.getElementById('recentes_container')
   let msgErro = document.getElementById('mensagemErro')
 
   if (linhas.length > 0) {
-    for (let i in linhas) {
-        let resultados = apiCall("lines/" + linhas[i])
-        resultados.then(function (result) {
-          let novaLinha = document.createElement("div")
-          novaLinha.setAttribute("class", "itemRecente")
-          novaLinha.setAttribute("onclick",'verDetalhes("' + result.short_name + '")')
-          
-  
-          let numero = document.createElement("p")
-          numero.setAttribute("class", "linhaNumero")
-          numero.style.backgroundColor = result.color
-          numero.innerText = result.id
-          let percurso = document.createElement("p")
-          percurso.setAttribute("class", "linhaPercurso")
-          percurso.innerText = result.long_name
-  
-          novaLinha.appendChild(numero)
-          novaLinha.appendChild(percurso)
-          container.appendChild(novaLinha)
-        }).catch (function(error) {
-          snackbar("erro", "Ocorreu um erro no servidor")
-          console.error(error)
-        })
+    for (let linha of linhas) {
+      try {
+        let result = await apiCall("lines/" + linha)
+        let novaLinha = document.createElement("div")
+        novaLinha.setAttribute("class", "itemRecente")
+        novaLinha.setAttribute("onclick", 'verDetalhes("' + result.short_name + '")')
+
+        let numero = document.createElement("p")
+        numero.setAttribute("class", "linhaNumero")
+        numero.style.backgroundColor = result.color
+        numero.innerText = result.id
+        let percurso = document.createElement("p")
+        percurso.setAttribute("class", "linhaPercurso")
+        percurso.innerText = result.long_name
+
+        novaLinha.appendChild(numero)
+        novaLinha.appendChild(percurso)
+        container.appendChild(novaLinha)
+      } catch (error) {
+        snackbar("erro", "Ocorreu um erro no servidor")
+        console.error(error)
+      }
     }
   } else {
     msgErro.style.display = "block"
@@ -116,99 +115,6 @@ function linhas() {
           } else {
             favoritoBtn.innerHTML = '<i class="fa-regular fa-heart"></i>'
           }
-
-          botoesExtraLinha.appendChild(favoritoBtn)
-          botoesExtraLinha.appendChild(detalhesBtn)
-          div.appendChild(linhaNumero)
-          div.appendChild(linhaPercurso)
-          div.appendChild(botoesExtraLinha)
-          cont.appendChild(div)
-        }
-      })
-    })
-    .catch(function (error) {
-      snackbar("erro", "Ocorreu um erro no servidor")
-      console.error(error)
-    })
-}
-
-function btnRecentes() {
-  let icon = document.getElementById("btnVerRecentes")
-
-  let input = document.getElementById("input_Procura_linhas")
-
-  if (icon.classList.contains("aberto")) {
-    icon.classList.remove("aberto")
-    input.removeAttribute("disabled")
-    linhas()
-  } else {
-    icon.classList.add("aberto")
-    input.value = ""
-    input.setAttribute("disabled", "")
-    verRecentes()
-  }
-}
-
-function verRecentes() {
-  let lastLines = JSON.parse(localStorage.getItem("historico_linhas")) || []
-  let resultados = apiCall("lines")
-  let cont = document.getElementById("linhasContainer")
-
-  resultados
-    .then(function (result) {
-      while (cont.firstChild) {
-        cont.removeChild(cont.firstChild)
-      }
-
-      if (lastLines.length === 0) {
-        let errorMSG = document.createElement("span")
-        errorMSG.innerText = "Sem linhas recentes"
-        errorMSG.setAttribute("class", "erroMsg")
-        cont.appendChild(errorMSG)
-        return
-      }
-
-      result.forEach((element) => {
-        if (lastLines.includes(element.id)) {
-          let div = document.createElement("div")
-          div.setAttribute("class", "linhaDiv")
-
-          if (element.color === "#ED1944") {
-            let novaCor = "#C61D23"
-          } else {
-            novaCor = element.color
-          }
-
-          let linhaNumero = document.createElement("p")
-          linhaNumero.setAttribute("class", "linhaNumero")
-          linhaNumero.style.backgroundColor = novaCor
-          linhaNumero.innerText = element.short_name
-
-          let linhaPercurso = document.createElement("p")
-          linhaPercurso.setAttribute("class", "linhaPercurso")
-          linhaPercurso.innerText = element.long_name
-
-          // Botoes Linha
-          let botoesExtraLinha = document.createElement("div")
-          botoesExtraLinha.setAttribute("class", "botoesExtra")
-
-          let detalhesBtn = document.createElement("p")
-          detalhesBtn.setAttribute("id", "favoritosBtn_icon")
-          detalhesBtn.setAttribute("title", "Detalhes da linha")
-          detalhesBtn.setAttribute(
-            "onclick",
-            'verDetalhes("' + element.short_name + '")'
-          )
-          detalhesBtn.innerHTML = '<i class="fa-regular fa-file-lines"></i>'
-
-          let favoritoBtn = document.createElement("p")
-          favoritoBtn.setAttribute("id", "favoritosBtn_icon")
-          favoritoBtn.setAttribute("title", "Adicionar aos favoritos")
-          favoritoBtn.setAttribute(
-            "onclick",
-            'favorito(event, "' + element.id + '")'
-          )
-          favoritoBtn.innerHTML = '<i class="fa-regular fa-heart"></i>'
 
           botoesExtraLinha.appendChild(favoritoBtn)
           botoesExtraLinha.appendChild(detalhesBtn)
@@ -325,6 +231,7 @@ async function verDetalhes(id) {
         lastLines.push(id)
         localStorage.setItem("historico_linhas", JSON.stringify(lastLines))
       }
+      carregarRecentes()
     } catch (error) {
       console.error(error)
     }
@@ -336,6 +243,7 @@ async function verDetalhes(id) {
     bottomBar.style.display = "block"
   }
 }
+
 // Carregar detalhes para uma linha especifica
 async function detalhesLinha(id) {
   let startTime = performance.now()
@@ -366,7 +274,6 @@ async function detalhesLinha(id) {
     console.log(
       "Tempo de resposta: " + responseTime.toFixed(2) + " milisegundos"
     )
-    loader()
   } catch (error) {
     snackbar("erro", "Ocorreu um erro no servidor")
     console.error(error)

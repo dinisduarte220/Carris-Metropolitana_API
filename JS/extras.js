@@ -146,13 +146,3 @@ function bottomBar(aba) {
   antigaAba.classList.remove('ativo');
   novaAba.classList.add('ativo');
 }
-
-function loader() {
-  const loader = document.createElement('loader')
-
-  if (window.getComputedStyle(loader).display === "block") {
-    loader.style.display = "none"
-  } else {
-    loader.style.display = "block"
-  }
-}

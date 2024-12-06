@@ -22,7 +22,7 @@
   border-bottom-right-radius: 5px;
   margin-top: 3.35rem;
   max-height: 0;
-  transition: max-height 0.2s;
+  transition: max-height 0.5s;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -81,8 +81,6 @@
   max-height: 10rem;
   padding: 10px;
   opacity: 1;
-  /* display: block; */
-  /* animation: openRecentes 1s; */
 }
 
 #extrasLinhas input:focus:invalid {
