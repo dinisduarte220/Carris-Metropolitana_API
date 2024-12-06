@@ -22,7 +22,6 @@ function apiCall(extraEndPoint) {
 async function carregarRecentes() {
   let linhas = JSON.parse(localStorage.getItem("historico_linhas")) || []
   let container = document.getElementById('recentes_container')
-  let msgErro = document.getElementById('mensagemErro')
 
   while (container.firstChild) {
     container.removeChild(container.firstChild)
@@ -53,7 +52,10 @@ async function carregarRecentes() {
       }
     }
   } else {
-    msgErro.style.display = "block"
+    let msgErro = document.createElement('div')
+    msgErro.setAttribute('id', 'mensagemErro')
+    msgErro.innerText = "Não existem linhas recentes"
+    container.appendChild(msgErro)
   }
 }
 
@@ -231,6 +233,10 @@ async function verDetalhes(id) {
     try {
       await detalhesLinha(id)
       let lastLines = JSON.parse(localStorage.getItem("historico_linhas")) || []
+      if (lastLines.includes(id)) {
+        let index = lastLines.indexOf(id)
+        lastLines.splice(index, 1)
+      }
       lastLines.push(id)
       localStorage.setItem("historico_linhas", JSON.stringify(lastLines))
       carregarRecentes()

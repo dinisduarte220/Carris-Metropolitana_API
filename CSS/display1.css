@@ -68,7 +68,6 @@
 }
 
 #recentes_container #mensagemErro {
-  display: none;
   font-weight: 800;
   font-size: 18px;
   color: rgb(100, 100, 100);
