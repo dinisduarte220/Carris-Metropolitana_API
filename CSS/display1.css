@@ -35,7 +35,6 @@
   display: flex;
   align-items: center;
   min-height: 3rem;
-  /* width: calc(100% + 10px); */
   background-color: rgb(50, 50, 50);
   border-radius: 5px;
   cursor: pointer;
@@ -100,7 +99,6 @@ input:invalid {
 }
 
 #linhasContainer {
-  /* display: none; */
   position: absolute;
   top: 50%;
   left: 50%;
@@ -109,7 +107,6 @@ input:invalid {
   height: 30rem;
   border: 1px solid rgb(100, 100, 100);
   border-radius: 5px;
-  /* box-shadow: 1px 1px 10px rgba(100, 100, 100, 0.5); */
   text-align: left;
   overflow-y: scroll;
   z-index: 5;
@@ -232,7 +229,6 @@ input:invalid {
 }
 
 /* Detalhes Linha */
-
 #detalhesLinha {
   display: none;
 }
