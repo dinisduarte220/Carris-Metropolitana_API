@@ -9,7 +9,6 @@
 }
 
 /* Historico Linhas */
-
 #recentes_container {
   opacity: 0;
   position: absolute;
@@ -24,7 +23,6 @@
   max-height: 0;
   transition: max-height 0.5s;
   overflow-y: auto;
-  overflow-x: hidden;
 }
 
 #recentes_container::-webkit-scrollbar {
@@ -85,16 +83,6 @@
   transition: 0s;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
-}
-
-input:invalid {
-  background-color: red;
-}
-
-@keyframes openRecentes {
-  from {
-    height: 0;
-  }
 }
 
 #linhasContainer {

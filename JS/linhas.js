@@ -33,7 +33,7 @@ async function carregarRecentes() {
         let result = await apiCall("lines/" + linha)
         let novaLinha = document.createElement("div")
         novaLinha.setAttribute("class", "itemRecente")
-        novaLinha.setAttribute("onclick", 'verDetalhes("' + result.short_name + '")')
+        novaLinha.setAttribute("onmousedown", 'verDetalhes("' + result.short_name + '")')
 
         let numero = document.createElement("p")
         numero.setAttribute("class", "linhaNumero")
@@ -46,6 +46,7 @@ async function carregarRecentes() {
         novaLinha.appendChild(numero)
         novaLinha.appendChild(percurso)
         container.insertBefore(novaLinha, container.firstChild)
+        console.log(novaLinha.onclick)
       } catch (error) {
         snackbar("erro", "Ocorreu um erro no servidor")
         console.error(error)
@@ -60,7 +61,6 @@ async function carregarRecentes() {
 }
 
 // Linhas - API
-
 function linhas() {
   let resultados = apiCall("lines")
   let favoritosArray = JSON.parse(localStorage.getItem("favoritos")) || []
@@ -98,7 +98,6 @@ function linhas() {
           linhaPercurso.setAttribute("class", "linhaPercurso")
           linhaPercurso.innerText = element.long_name
 
-          // Butoes Linha
           let botoesExtraLinha = document.createElement("div")
           botoesExtraLinha.setAttribute("class", "botoesExtra")
 
