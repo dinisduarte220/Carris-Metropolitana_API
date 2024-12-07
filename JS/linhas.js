@@ -46,7 +46,6 @@ async function carregarRecentes() {
         novaLinha.appendChild(numero)
         novaLinha.appendChild(percurso)
         container.insertBefore(novaLinha, container.firstChild)
-        console.log(novaLinha.onclick)
       } catch (error) {
         snackbar("erro", "Ocorreu um erro no servidor")
         console.error(error)
