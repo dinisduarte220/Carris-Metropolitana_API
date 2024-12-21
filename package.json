@@ -1,0 +1,19 @@
+{
+  "name": "carrismetropolitana_api",
+  "version": "2.0.0",
+  "description": "Carris Metropolitana API - Version 2",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dinisduarte220/Carris-Metropolitana_API.git"
+  },
+  "author": "Dinis Duarte",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dinisduarte220/Carris-Metropolitana_API/issues"
+  },
+  "homepage": "https://github.com/dinisduarte220/Carris-Metropolitana_API#readme"
+}
