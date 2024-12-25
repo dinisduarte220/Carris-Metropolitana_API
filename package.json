@@ -15,5 +15,11 @@
   "bugs": {
     "url": "https://github.com/dinisduarte220/Carris-Metropolitana_API/issues"
   },
-  "homepage": "https://github.com/dinisduarte220/Carris-Metropolitana_API#readme"
+  "homepage": "https://github.com/dinisduarte220/Carris-Metropolitana_API#readme",
+  "dependencies": {
+    "body-parser": "^1.20.3",
+    "express": "^4.21.2",
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7"
+  }
 }
