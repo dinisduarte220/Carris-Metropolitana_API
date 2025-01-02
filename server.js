@@ -22,5 +22,5 @@ function ensureDirectoryExistence(filePath) {
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.listen(PORT, () => {
-    console.log(`\nServer is running\n\nhttp://localhost:${PORT}`);
+    console.log(`\nServer up and running\n\nhttp://localhost:${PORT}`);
 });
