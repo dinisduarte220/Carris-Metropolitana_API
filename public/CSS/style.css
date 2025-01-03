@@ -44,8 +44,18 @@ body {
 }
 
 /* Display */
-
 #mainDisplay {
     width: 100vw;
     height: calc(100vh - 6rem);
+}
+
+/* Just for testing */
+.display h2 {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: whitesmoke;
+    font-weight: 600;
+    font-size: 2rem;
 }
