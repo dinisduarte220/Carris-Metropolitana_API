@@ -29,15 +29,23 @@ body {
     transition: .3s;
 }
 
-#navBar .navItem:hover {
+#navBar .navItem:hover:not(.active) {
     opacity: .5;
 }
 
-#navBar .navItem:active {
+#navBar .navItem:active:not(.active) {
     scale: .95;
 }
 
 #navBar .navItem.active {
     color: black;
     background-color: #dfc417;
+    cursor: default;
+}
+
+/* Display */
+
+#display {
+    width: 100vw;
+    height: calc(100vh - 6rem);
 }
