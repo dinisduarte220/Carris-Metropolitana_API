@@ -9,53 +9,47 @@ body {
   background-color: rgb(20, 20, 20);
 }
 
-/* Navigation Bar */
-#navBar {
-    position: absolute;
-    bottom: 1.5rem;
-    width: 100%;
-    display: flex;
-    justify-content: space-evenly;
+/* Top Bar */
+#topBar {
+  position: absolute;
+  top: 0;
+  width: 100vw;
+  height: 5rem;
+  background-color: rgb(30, 30, 30);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgb(50, 50, 50);
 }
 
-#navBar .navItem {
-    padding: 10px 15px;
-    background-color: rgb(50, 50, 50);
-    border-radius: 50px;
-    word-spacing: 10px;
-    font-weight: 600;
-    color: whitesmoke;
-    cursor: pointer;
-    transition: .3s;
+#topBar img {
+  height: 3rem;
+  margin-left: 3rem;
+  vertical-align: middle;
+  cursor: pointer;
 }
 
-#navBar .navItem:hover:not(.active) {
-    opacity: .5;
+#topBar #links a {
+  margin-right: 25px;
+  text-decoration: none;
+  color: whitesmoke;
+  font-size: 20px;
+  font-weight: 600;
+  word-spacing: 10px;
+  padding: 10px 15px;
+  border: 2px solid rgb(125, 125, 125);
+  border-radius: 5px;
+  background-color: rgba(100, 100, 100, .3);
+  transition: .3s;
 }
-
-#navBar .navItem:active:not(.active) {
-    scale: .95;
+#topBar #links a:not(.active):hover {
+  border: 2px solid transparent;
+  background-color: rgba(75, 75, 75);
+  cursor: pointer;
 }
-
-#navBar .navItem.active {
-    color: black;
-    background-color: #dfc417;
-    cursor: default;
-}
-
-/* Display */
-#mainDisplay {
-    width: 100vw;
-    height: calc(100vh - 6rem);
-}
-
-/* Just for testing */
-.display h2 {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: whitesmoke;
-    font-weight: 600;
-    font-size: 2rem;
+#topBar #links a.active {
+  border: 2px solid rgb(255, 221, 1);
+  background-color: rgb(255, 221, 1);
+  color: black;
+  opacity: 1;
 }
