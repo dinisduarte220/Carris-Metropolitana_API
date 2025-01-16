@@ -25,6 +25,33 @@ app.get('/page/:path' , (req , res)=>{
     }
 })
 
+// Storage Endpoints - Get & Store
+app.get('/storage' , (req , res)=>{
+    try {
+        const data = fs.readFileSync(storageFilePath, 'utf8')
+        const storage = JSON.parse(data)
+        const storageId = req.query.storage_id
+
+        if (storageId) {
+            // Check if provided storage ID exists
+            if (storage.hasOwnProperty(storageId)) {
+                return res.json({ [storageId]: storage[storageId] });
+            } else {
+                return res.status(404).json({ error: `[ERROR] Storage ID "${storageId}" not found` });
+            }
+        } else {
+            // If no storage ID is provided, return full data
+            return res.json(storage)
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            icon: "fa-solid fa-triangle-exclamation",
+            message: "[ERRO] Ocorreu um erro ao carregar os dados guardados"
+        });
+    }
+})
+
 // Server static files
 app.use(express.static(path.join(__dirname, 'public')));
 

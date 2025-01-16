@@ -15,14 +15,57 @@
 </head>
 <body>
     <!-- NavBar -->
-     <div id="topBar">
-        <a id="logo" href="/"><img src="IMG/logo.png" alt="logo"></a>
-        <div id="links">
-            <a class="active"><i class="fa-solid fa-home"></i> Inicio</a>
-            <a href="/page/lines"><i class="fa-solid fa-route"></i> Linhas</a>
-            <a href="/page/stops"><i class="fa-solid fa-map-location-dot"></i> Paragens</a>
+    <div id="topBar">
+       <a id="logo" href="/"><img src="IMG/logo.png" alt="logo"></a>
+       <div id="links">
+           <a class="active"><i class="fa-solid fa-home"></i> Inicio</a>
+           <a href="/page/lines"><i class="fa-solid fa-route"></i> Linhas</a>
+           <a href="/page/stops"><i class="fa-solid fa-map-location-dot"></i> Paragens</a>
+       </div>
+    </div>
+    <!-- SnackBar Notifications -->
+    <div id="snackbar">
+        <i class="fa-regular fa-bell"></i> Isto é uma snackbar
+    </div>
+    <!-- Favorites Lines / Stops + Recent Lines + Near Stops (4x4 Grid)-->
+    <div id="homeGrid">
+        <div class="gridItem" id="favoriteLines">
+            <h3 >Linhas Favoritas:</h3>
+            <div class="itemsContainer" id="favLines_container">
+
+            </div>
+            <div class="errorMsg">
+                SEM LINHAS FAVORITAS
+            </div>
         </div>
-     </div>
+        <div class="gridItem" id="favoriteStops">
+            <h3 >Paragens Favoritas:</h3>
+            <div class="itemsContainer" id="favStops_container">
+
+            </div>
+            <div class="errorMsg">
+                SEM PARAGENS FAVORITAS
+            </div>
+        </div>
+        <div class="gridItem" id="recentLines">
+            <h3 >Linhas Recentes:</h3>
+            <div class="itemsContainer" id="recentLines_container">
+
+            </div>
+            <div class="errorMsg">
+                SEM LINHAS RECENTES
+            </div>
+        </div>
+        <div class="gridItem" id="nearStops">
+            <h3>Paragens Próximas:</h3>
+            <div class="itemsContainer" id="nearStops_container">
+
+            </div>
+            <div class="errorMsg">
+                LOCALIZAÇÃO INDISPONIVEL
+            </div>
+        </div>
+    </div>
     <!-- JS Files -->
     <script src="script.js"></script>
 </body>

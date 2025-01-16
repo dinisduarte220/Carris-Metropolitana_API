@@ -7,12 +7,11 @@
 
 body {
   background-color: rgb(20, 20, 20);
+  overflow: hidden;
 }
 
 /* Top Bar */
 #topBar {
-  position: absolute;
-  top: 0;
   width: 100vw;
   height: 5rem;
   background-color: rgb(30, 30, 30);
@@ -51,5 +50,71 @@ body {
   border: 2px solid rgb(255, 221, 1);
   background-color: rgb(255, 221, 1);
   color: black;
-  opacity: 1;
+}
+
+/* SnackBar */
+#snackbar {
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: 15px;
+  transform: translate(-50%, 0);
+  background-color: rgb(100, 100, 100);
+  padding: 10px;
+  border-radius: 10px;
+  font-weight: 600;
+  z-index: 9999999;
+  animation: snackbar_anim .5s ease;
+}
+
+#snackbar i {
+  margin-right: 5px;
+  font-size: 20px;
+  vertical-align: middle;
+}
+
+@keyframes snackbar_anim {
+  from {
+    transform: translate(-50%, 5rem);
+  }
+}
+
+@keyframes snackbar_anim_out {
+  to {
+    transform: translate(-50%, 5rem);
+  }
+}
+
+/* Customs Grid */
+#homeGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  height: calc(100vh - 5rem - 1px - 6rem); /* Use full screen height (100vh) - topBar height (5rem) - topBar bottom border (1px) - Grid Padding from main Screen (3rem * 2) */
+  width: calc(100vw - 6rem); /* Use full screen width (100vw) - Grid Padding from main screen (3rem * 2) */
+  padding: 3rem;
+  gap: 3rem;
+}
+
+#homeGrid .gridItem {
+  position: relative;
+  border: 1px solid rgb(125, 125, 125);
+  border-radius: 15px;
+  background-color: rgb(35, 35, 35);
+  text-align: center;
+  padding: 15px;
+  color: whitesmoke;
+  transition: .3s;
+}
+#homeGrid .gridItem:hover {
+  box-shadow: 1px 1px 15px rgba(100, 100, 100, 0.5);
+}
+#homeGrid .gridItem .errorMsg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 20px;
+  font-weight: 700;
+  color: rgba(128, 128, 128, 0.5);
 }
