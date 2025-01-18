@@ -26,7 +26,7 @@ app.get('/page/:path' , (req , res)=>{
 })
 
 // Storage Endpoints - Get & Store
-app.get('/storage', (req , res)=>{
+app.get('/storage', (req, res) => {
     try {
         const data = fs.readFileSync(storageFilePath, 'utf8')
         const storage = JSON.parse(data)
@@ -35,21 +35,24 @@ app.get('/storage', (req , res)=>{
         if (storageId) {
             // Check if provided storage ID exists
             if (storage.hasOwnProperty(storageId)) {
-                return res.json({ [storageId]: storage[storageId] });
+                const result = storage[storageId]
+                return res.json(result)
             } else {
-                return res.status(404).json({ error: `[ERROR] Storage ID "${storageId}" not found` });
+                return res.status(404).json({ error: `[ERROR] Storage ID "${storageId}" not found` })
             }
         } else {
-            // If no storage ID is provided, return full data
-            return res.json(storage)
+            // Return all data as arrays if no specific storageId is provided
+            const allDataAsArrays = Object.fromEntries(
+                Object.entries(storage).map(([key, value]) => [key, value])
+            )
+            return res.json(allDataAsArrays)
         }
     } catch (error) {
-        // Error Handler
-        console.error(error);
+        console.error(error)
         res.status(500).json({
             icon: "fa-solid fa-triangle-exclamation",
             message: "[ERRO] Ocorreu um erro ao carregar os dados guardados!"
-        });
+        })
     }
 })
 app.post('/storage', (req, res) => {

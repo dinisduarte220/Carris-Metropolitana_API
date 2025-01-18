@@ -98,6 +98,7 @@ body {
 
 #homeGrid .gridItem {
   position: relative;
+  overflow: hidden;
   border: 1px solid rgb(125, 125, 125);
   border-radius: 15px;
   background-color: rgb(35, 35, 35);
@@ -110,6 +111,7 @@ body {
   box-shadow: 1px 1px 15px rgba(100, 100, 100, 0.5);
 }
 #homeGrid .gridItem .errorMsg {
+  display: none;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -117,4 +119,40 @@ body {
   font-size: 20px;
   font-weight: 700;
   color: rgba(128, 128, 128, 0.5);
+}
+#homeGrid .gridItem .itemsContainer {
+  margin-top: 15px;
+  width: 100%;
+  height: calc(100% - 40px);
+  overflow-y: scroll;
+}
+#homeGrid .gridItem .itemsContainer .item {
+  width: calc(100% - 20px);
+  background-color: rgb(50, 50, 50);
+  border-radius: 5px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .3s;
+}
+#homeGrid .gridItem .itemsContainer .item:hover {
+  opacity: .5;
+}
+#homeGrid .gridItem .itemsContainer .item .lineID {
+  padding: 5px 15px;
+  border-radius: 50px;
+}
+#homeGrid .gridItem .itemsContainer .item .lineName {
+  text-align: left;
+}
+#homeGrid .gridItem .itemsContainer .item:not(:last-child) {
+  margin-bottom: 10px;
+}
+
+/* Remove Scroll */
+::-webkit-scrollbar {
+  display: none;
 }
