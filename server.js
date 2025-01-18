@@ -26,7 +26,7 @@ app.get('/page/:path' , (req , res)=>{
 })
 
 // Storage Endpoints - Get & Store
-app.get('/storage' , (req , res)=>{
+app.get('/storage', (req , res)=>{
     try {
         const data = fs.readFileSync(storageFilePath, 'utf8')
         const storage = JSON.parse(data)
@@ -44,11 +44,40 @@ app.get('/storage' , (req , res)=>{
             return res.json(storage)
         }
     } catch (error) {
+        // Error Handler
         console.error(error);
         res.status(500).json({
             icon: "fa-solid fa-triangle-exclamation",
-            message: "[ERRO] Ocorreu um erro ao carregar os dados guardados"
+            message: "[ERRO] Ocorreu um erro ao carregar os dados guardados!"
         });
+    }
+})
+app.post('/storage', (req, res) => {
+    try {
+        const data = fs.readFileSync(storageFilePath, 'utf8')
+        const storage = JSON.parse(data)
+        const { storage_id, value } = req.body
+        // Check if a storage ID and a value were provided
+        if (!storage_id || !value) {
+            return res.status(400).json({
+                error: '[ERROR] Missing required fields: storage_id and value'
+            })
+        }
+        // Store new value
+        storage[storage_id] = value
+        fs.writeFileSync(storageFilePath, JSON.stringify(storage, null, 2))
+        res.json({
+            message: '[SUCCESS] Dados atualizados com sucesso!',
+            storage_id: storage_id,
+            value: value
+        })
+    } catch (error) {
+        // Error Handler
+        console.error(error)
+        res.status(500).json({
+            icon: 'fa-solid fa-triangle-exclamation',
+            message: '[ERRO] Ocorreu um erro ao guardar os dados!'
+        })
     }
 })
 
