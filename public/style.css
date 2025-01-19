@@ -141,15 +141,25 @@ body {
 #homeGrid .gridItem .itemsContainer .item:hover {
   opacity: .5;
 }
-#homeGrid .gridItem .itemsContainer .item .lineID {
+#homeGrid .gridItem .itemsContainer .item:not(:last-child) {
+  margin-bottom: 10px;
+}
+/* Lines Style */
+#homeGrid .gridItem .itemsContainer .item.line .lineID {
   padding: 5px 15px;
   border-radius: 50px;
 }
-#homeGrid .gridItem .itemsContainer .item .lineName {
+#homeGrid .gridItem .itemsContainer .item.line .lineName {
   text-align: left;
 }
-#homeGrid .gridItem .itemsContainer .item:not(:last-child) {
-  margin-bottom: 10px;
+/* Stops Style */
+#homeGrid .gridItem .itemsContainer .item.stop .stopID {
+  padding: 5px 15px;
+  border-radius: 50px;
+  background-color: rgb(75, 75, 75);
+}
+#homeGrid .gridItem .itemsContainer .item.stop .stopName {
+  text-align: left;
 }
 
 /* Remove Scroll */
