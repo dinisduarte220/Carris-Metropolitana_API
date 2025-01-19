@@ -1,0 +1,40 @@
+/* Lines Container */
+#linesContainer {
+    margin-top: 3rem;
+    margin-left: 5rem;
+    width: calc(100vw - 10rem - 20px); /* Full screen width - sides gap (5rem * 2) - Container padding (10px * 2) */
+    height: calc(100vh - 5rem - 6rem - 20px); /* Full screen height - Top Bar height - sides gap (3rem * 2) */
+    border: 1px solid rgb(125, 125, 125);
+    border-radius: 10px;
+    background-color: rgb(30, 30, 30);
+    text-align: center;
+    padding: 10px;
+    overflow: auto;
+}
+#linesContainer .item {
+    text-decoration: none;
+    width: calc(100% - 20px); /* Full width - sides gap (10px * 2) */
+    background-color: rgb(50, 50, 50);
+    border-radius: 5px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: .3s;
+}
+#linesContainer .item:hover {
+    opacity: .5;
+}
+#linesContainer .item:not(:last-child) {
+    margin-bottom: 10px;
+}
+#linesContainer .item .lineID {
+  padding: 5px 15px;
+  border-radius: 50px;
+}
+#linesContainer .item .lineName {
+  text-align: left;
+}

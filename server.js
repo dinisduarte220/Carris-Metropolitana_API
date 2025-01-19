@@ -25,6 +25,11 @@ app.get('/page/:path' , (req , res)=>{
     }
 })
 
+// Lines Endpoint - Details for a specific Line
+app.get('/lines/:lineID' , (req , res)=>{
+    
+})
+
 // Storage Endpoints - Get & Store
 app.get('/storage', (req, res) => {
     try {

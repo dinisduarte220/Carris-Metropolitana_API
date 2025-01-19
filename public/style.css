@@ -127,6 +127,7 @@ body {
   overflow-y: scroll;
 }
 #homeGrid .gridItem .itemsContainer .item {
+  text-decoration: none;
   width: calc(100% - 20px);
   background-color: rgb(50, 50, 50);
   border-radius: 5px;
@@ -135,6 +136,7 @@ body {
   align-items: center;
   gap: 15px;
   font-weight: 600;
+  color: white;
   cursor: pointer;
   transition: .3s;
 }
