@@ -5,7 +5,7 @@ const path = require('path');
 const app = express();
 const PORT = 3000;
 
-const possiblePaths = ["home", "lines", "stops", "settings"]
+const possiblePaths = ["lines", "stops"]
 app.use(bodyParser.json());
 
 // Define Storage and Settings files locations
@@ -26,8 +26,29 @@ app.get('/page/:path' , (req , res)=>{
 })
 
 // Lines Endpoint - Details for a specific Line
-app.get('/lines/:lineID' , (req , res)=>{
-    
+app.use('/page/lines/:line_id', express.static(path.join(__dirname, 'public', 'endpoints', 'lines', 'line_id')))
+app.get('/page/lines/:line_id/:date', (req, res) => {
+  const { line_id: lineId, date } = req.params
+  const { active_pattern: activePattern } = req.query
+
+  if (!lineId || !date || !activePattern) {
+    return res.status(400).json({ error: "Missing required parameters: lineId, date, or active_pattern" })
+  }
+  
+  // Validate date format (YYYYMMDD)
+  const dateRegex = /^\d{4}\d{2}\d{2}$/
+  if (!dateRegex.test(date)) {
+    return res.status(400).json({ error: "Invalid date format. Use YYYYMMDD" })
+  }
+  
+  const lineData = {
+    lineId,
+    date,
+    activePattern,
+    info: `Data for line ${lineId} on date ${date} with pattern ${activePattern}`
+  }
+
+  res.json(lineData)
 })
 
 // Storage Endpoints - Get & Store
@@ -61,32 +82,42 @@ app.get('/storage', (req, res) => {
     }
 })
 app.post('/storage', (req, res) => {
-    try {
-        const data = fs.readFileSync(storageFilePath, 'utf8')
-        const storage = JSON.parse(data)
-        const { storage_id, value } = req.body
-        // Check if a storage ID and a value were provided
-        if (!storage_id || !value) {
-            return res.status(400).json({
-                error: '[ERROR] Missing required fields: storage_id and value'
-            })
-        }
-        // Store new value
-        storage[storage_id] = value
-        fs.writeFileSync(storageFilePath, JSON.stringify(storage, null, 2))
-        res.json({
-            message: '[SUCCESS] Dados atualizados com sucesso!',
-            storage_id: storage_id,
-            value: value
-        })
-    } catch (error) {
-        // Error Handler
-        console.error(error)
-        res.status(500).json({
-            icon: 'fa-solid fa-triangle-exclamation',
-            message: '[ERRO] Ocorreu um erro ao guardar os dados!'
-        })
+  try {
+    const data = fs.readFileSync(storageFilePath, 'utf8')
+    const storage = JSON.parse(data)
+    const { storage_id, value } = req.body
+
+    // Validar campos obrigatórios
+    if (!storage_id || !value) {
+      return res.status(400).json({
+        error: '[ERROR] Missing required fields: storage_id and value'
+      })
     }
+
+    // Atualizar o armazenamento
+    storage[storage_id] = value
+
+    try {
+      fs.writeFileSync(storageFilePath, JSON.stringify(storage, null, 2))
+      res.json({
+        message: '[SUCCESS] Dados atualizados com sucesso!',
+        storage_id: storage_id,
+        value: value
+      })
+    } catch (writeError) {
+      console.error(writeError)
+      res.status(500).json({
+        icon: 'fa-solid fa-triangle-exclamation',
+        message: '[ERRO] Ocorreu um erro ao guardar os dados!'
+      })
+    }
+  } catch (readError) {
+    console.error(readError)
+    res.status(500).json({
+      icon: 'fa-solid fa-triangle-exclamation',
+      message: '[ERRO] Ocorreu um erro ao processar os dados!'
+    })
+  }
 })
 
 // Server static files

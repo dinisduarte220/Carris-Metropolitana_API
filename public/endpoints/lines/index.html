@@ -24,7 +24,16 @@
            <a href="/page/stops"><i class="fa-solid fa-map-location-dot"></i> Paragens</a>
        </div>
     </div>
-    <div id="linesContainer">
+    <!-- SnackBar Notifications -->
+    <div id="snackbar">
+        <i class="fa-regular fa-bell"></i> Isto é uma snackbar
+    </div>
+    <div id="allLinesDisplay">
+        <div id="inputLines">
+            <input type="text" id="searchLine_input" oninput="loadAllLines()" placeholder="Pesquisar por Nome ou Número">
+        </div>
+        <div id="linesContainer">
+        </div>
     </div>
     <!-- JS Files -->
     <script src="../../shared.js"></script>

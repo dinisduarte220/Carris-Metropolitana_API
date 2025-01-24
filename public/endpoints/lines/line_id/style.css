@@ -1,0 +1,42 @@
+/* Top Line Information */
+#topInformation {
+    margin-top: 1rem;
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-weight: 600;
+    font-size: 20px;
+    color: whitesmoke;
+}
+#topInformation a {
+    margin-left: 1rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    background-color: rgb(50, 50, 50);
+    border-radius: 50px;
+    color: whitesmoke;
+    font-size: 16px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: .3s;
+}
+#topInformation a:hover {
+    opacity: .5;
+}
+#topInformation #lineNumber {
+    margin-left: 1rem;
+    padding: 5px 15px;
+    border-radius: 50px;
+    background-color: rgb(128, 0, 0);
+}
+#topInformation #favoritesIcon {
+    color: rgb(150, 150, 150);
+    cursor: pointer;
+    transition: .3s;
+}
+#topInformation #favoritesIcon:active {
+    scale: .9;
+}

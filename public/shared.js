@@ -68,3 +68,30 @@ function copyText(text) {
   navigator.clipboard.writeText(text);
   snackbar("fa-regular fa-copy", "Texto copiado")
 }
+
+// SnackBar Notifications
+let timer, timer_out
+const snackbarTime = 5000 // 5 Seconds
+function snackbar(icon, text) {
+  let div = document.getElementById('snackbar')
+  if (!icon || !text) {
+    return
+  } else {
+    if (timer || timer_out) {
+      clearTimeout(timer)
+      clearTimeout(timer_out)
+      div.style.display = "none"
+      void div.offsetWidth
+    }
+    div.style.animation = "snackbar_anim .5s ease"
+    div.style.display = "block"
+    timer_out = setTimeout(() => {
+      div.style.animation = "snackbar_anim_out .5s ease"
+    }, snackbarTime - 500); // Add out animation 500ms before removing the snackbar
+    timer = setTimeout(() => {
+      div.style.display = "none"
+    }, snackbarTime);
+    div.innerHTML = `<i class="${icon}"></i> ${text}`
+  }
+}
+// snackbar("fa-regular fa-bell", "Snackbar")  ->  Example call for snackbar
