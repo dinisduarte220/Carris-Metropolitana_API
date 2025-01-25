@@ -2,6 +2,8 @@
 const pathParts = window.location.pathname.split('/')
 const lineId = pathParts[3] // Get the 3rd part of the URL (URL Base = /page/lines/:line_id)
 
+addLineToRecents()
+
 // Store current date in YYYYMMDD format
 // const date = new Date()
 // const currentDate = `${date.getFullYear()}${date.getMonth()}${date.getDay()}` 
@@ -26,6 +28,43 @@ async function getFirstPattern() {
 }
 getFirstPattern()
 
+async function addLineToRecents() {
+  try {
+    const response = await fetch('/storage?storage_id=recent_lines')
+    if (!response.ok) {
+      throw new Error(`[ERROR] Failed to fetch recent lines: ${response.statusText}`)
+    }
+
+    let data = await response.json()
+
+    // Move lineId to the first position if it already exists, otherwise add it
+    const index = data.indexOf(lineId)
+    if (index !== -1) {
+      data.splice(index, 1) // Remove the existing lineId
+    }
+    data.unshift(lineId) // Add it to the beginning of the array
+
+    // Update the recent lines on the server
+    const finalRes = await fetch('/storage', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        storage_id: 'recent_lines',
+        value: data
+      })
+    })
+
+    if (!finalRes.ok) {
+      throw new Error(`[ERROR] Failed to update recent lines: ${finalRes.statusText}`)
+    }
+  } catch (error) {
+    console.error(error.message)
+    snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as tuas linhas favoritas")
+  }
+}
+
 // Line Top Information
 async function lineInformationDisplay() {
   // Define current line display (Number and Name)
@@ -35,6 +74,7 @@ async function lineInformationDisplay() {
     const data = await getAPI("/lines/" + lineId)
 
     lineNumber.innerText = lineId
+    lineNumber.style.backgroundColor = data.color
     lineName.innerText = data.long_name
 
     // If line is stored on favorites, change the icon to solid

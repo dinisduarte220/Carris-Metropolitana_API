@@ -33,7 +33,7 @@
     background-color: rgb(128, 0, 0);
 }
 #topInformation #favoritesIcon {
-    color: rgb(150, 150, 150);
+    color: rgb(200, 200, 200);
     cursor: pointer;
     transition: .3s;
 }
