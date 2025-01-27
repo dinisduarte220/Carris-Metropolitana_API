@@ -1,3 +1,7 @@
+body {
+    overflow: auto;
+}
+
 /* Top Line Information */
 #topInformation {
     margin-top: 1rem;
@@ -39,4 +43,142 @@
 }
 #topInformation #favoritesIcon:active {
     scale: .9;
+}
+
+/* Line Parameters */
+#lineParameters {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+#lineParameters #patternSelect, #lineParameters #dateSelect {
+    display: flex;
+    flex-direction: column;
+}
+#lineParameters #patternSelect label, #lineParameters #dateSelect label {
+    display: none;
+    margin:  0 0 5px 5px;
+    color: white;
+    font-weight: 600;
+}
+
+#lineParameters .selectMenu {
+    width: 35rem;
+    padding: 10px;
+    background-color: rgb(50, 50, 50);
+    border: 2px solid rgb(75, 75, 75);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+#lineParameters .selectOptions {
+    display: none;
+    margin-top: -2px;
+    max-height: 10rem;
+    overflow: auto;
+    width: 35rem;
+    padding: 10px;
+    background-color: rgb(50, 50, 50);
+    border: 2px solid rgb(75, 75, 75);
+    border-top-right-radius: 0;
+    border-top-left-radius: 0;
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+    color: white;
+}
+#lineParameters #pattern_selectOptions .newRoute {
+    color: rgb(150, 150, 150);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 5px 0 5px 5px;
+}
+#lineParameters #pattern_selectOptions .newPattern {
+    padding: 10px;
+    border-radius: 5px;
+    font-weight: 600;
+    cursor: pointer;
+}
+#lineParameters #pattern_selectOptions .newPattern:hover {
+    background-color: rgb(35, 35, 35);
+}
+#lineParameters #pattern_selectOptions .newPattern.active {
+    background-color: rgb(100, 100, 100);
+    cursor: default;
+}
+
+/* Custom Select Menus */
+.selectMenu:not(.open) {
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-top-left-radius: 10px;
+}
+.selectMenu.open {
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-right-radius: 10px;
+    border-top-left-radius: 10px;
+}
+.selectMenu i {
+    transition: .3s;
+}
+.selectMenu.open i {
+    transform: rotate(180deg);
+}
+
+#lineParameters #date_input {
+    /* display: none; */
+    margin-top: -2px;
+    width: 8rem;
+    padding: 10px;
+    background-color: rgb(50, 50, 50);
+    border: 2px solid rgb(75, 75, 75);
+    border-radius: 10px;
+    font-size: 16px;
+    color: white;
+}
+::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    scale: 1.25
+}
+
+/* Stop List */
+#lineStops {
+    display: flex;
+    gap: 1rem;
+    margin: 5rem 0 5rem 10rem;
+}
+#lineStops #stopsBorder {
+    width: 20px;
+    border-radius: 50px;
+}
+#lineStops #stopsContainer .newStop:hover .stopName {
+    margin-left: 10px;
+}
+#lineStops #stopsContainer .newStop:not(:last-child) {
+    margin: 5px 0 15px 0;
+}
+#lineStops #stopsContainer .newStop:last-child {
+    margin-bottom: 10px;
+}
+#lineStops #stopsContainer .newStop:before {
+    content: "•";
+    position: absolute;
+    margin-left: -1.85rem;
+    scale: 2;
+    color: white;
+    transition: 0.3s;
+}
+#lineStops #stopsContainer .newStop:hover:before {
+    scale: 2.5;
+}
+#lineStops #stopsContainer .newStop .stopName {
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .3s;
 }

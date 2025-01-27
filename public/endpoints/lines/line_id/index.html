@@ -30,6 +30,26 @@
         <div id="lineName">Percurso</div>
         <i onclick="favoriteLines()" id="favoritesIcon" class="fa-regular fa-heart"></i>
     </div>
+    <div id="lineParameters">
+        <div id="patternSelect">
+            <label>Percurso / Sentido</label>
+            <div id="pattern_selectMenu" class="selectMenu" onclick="select('pattern')">
+                <span id="activePatternText">Percuso / Sentido</span> <i class="fa-solid fa-caret-down"></i>
+            </div>
+            <div id="pattern_selectOptions" class="selectOptions">
+            </div>
+        </div>
+        <div id="dateSelect">
+            <label>Dia</label>
+            <input type="date" id="date_input" oninput="changeDate()">
+        </div>
+    </div>
+    <div id="lineStops">
+        <div id="stopsBorder"></div>
+        <div id="stopsContainer">
+
+        </div>
+    </div>
     <!-- SnackBar Notifications -->
     <div id="snackbar">
         <i class="fa-regular fa-bell"></i> Isto é uma snackbar
