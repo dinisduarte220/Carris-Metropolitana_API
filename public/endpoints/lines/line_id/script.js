@@ -435,8 +435,8 @@ async function selectStop(stop_id) {
           }
         })
         stopDiv.scrollIntoView({
-          behavior: 'smooth', // Smooth scrolling animation
-          block: 'center', // Center the stop in the visible area
+          behavior: 'smooth',
+          block: 'center',
         })
       } catch (error) {
         console.error(error.message)

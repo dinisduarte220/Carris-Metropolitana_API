@@ -230,7 +230,7 @@ body {
   transition: 0.3s;
 }
 #lineStops #stopsContainer .newStop .timeTable ul li.marked {
-    color: rgb(226, 226, 0);
+    color: rgb(235, 235, 29);
 }
 #lineStops #stopsContainer .newStop .timeTable ul li:not(:first-child):hover {
     opacity: .5;
