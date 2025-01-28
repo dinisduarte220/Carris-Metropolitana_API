@@ -211,6 +211,7 @@ async function selectPattern(pattern_id) {
   const activePatternDisplay = document.getElementById('activePatternText')
   // If there was another active pattern, remove the class and change it to the new pattern
   let activePattern = document.querySelector('.newPattern.active')
+  let shapeID, lineColor, lineStops
   if (activePattern) {
     activePattern.classList.remove('active')
     // Close patterns select menu, just if its not the first time loading (To avoid opening the select menu when the first pattern is selected)
@@ -222,6 +223,8 @@ async function selectPattern(pattern_id) {
   try {
     const data = await getAPI("patterns/" + pattern_id)
     activePatternDisplay.innerText = data.headsign
+    shapeID = data.shape_id
+    lineColor = data.color
   } catch (error) {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as rotas / sentidos para esta linha")
@@ -229,6 +232,7 @@ async function selectPattern(pattern_id) {
   // Store current pattern for future uses
   patternId = pattern_id
   loadStops()
+  loadRoute(shapeID, lineColor)
 }
 
 // Load stops for the active pattern
@@ -496,21 +500,6 @@ function markTime(trip) {
   }
 }
 
-// Stops real time
-
-// async function realTime() {
-//   try {
-//     const data = getAPI(`patterns/${patternId}/realtime`)
-
-//     data.forEach(time => {
-
-//     })
-//   } catch (error) {
-//     console.error(error.message)
-//     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro no tempo real")
-//   }
-// }
-
 // Line Map
 var map = new maplibregl.Map({
   container: "map",
@@ -518,3 +507,67 @@ var map = new maplibregl.Map({
   center: [-9.0, 38.7],
   zoom: 9,
 });
+
+// Load Map Route
+async function loadRoute(shape_id, color) {
+  try {
+
+    const data = await getAPI("shapes/" + shape_id)
+    const lineCoords = data.geojson.geometry.coordinates
+    // Remove all existing line layers
+    if (map.getLayer("lineString")) {
+      map.removeLayer("lineString")
+      map.removeSource("lineString")
+    }
+
+    const lineStringGeojson = {
+      type: "FeatureCollection",
+      features: [{
+        type: "Feature",
+        geometry: {
+          type: "LineString",
+          coordinates: lineCoords
+        }
+      }]
+    }
+
+    // Add new source and layer for the line
+    map.addSource("lineString", {
+      type: "geojson",
+      data: lineStringGeojson
+    })
+
+    map.addLayer({
+      id: "lineString",
+      type: "line",
+      source: "lineString",
+      layout: {
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      paint: {
+        "line-color": color, // Line color
+        "line-width": 4 // Line width
+      }
+    })
+
+    // Calculate bounds and center for the new route
+    const allCoordinates = lineStringGeojson.features[0].geometry.coordinates
+    const latitudes = allCoordinates.map((coord) => coord[1])
+    const longitudes = allCoordinates.map((coord) => coord[0])
+    const centerLatitude = (Math.max(...latitudes) + Math.min(...latitudes)) / 2
+    const centerLongitude =
+      (Math.max(...longitudes) + Math.min(...longitudes)) / 2
+    const center = [centerLongitude, centerLatitude]
+
+    const bounds = new maplibregl.LngLatBounds()
+    allCoordinates.forEach((coord) => bounds.extend(coord))
+
+    map.fitBounds(bounds, { padding: 100, animate: false })
+    const idealZoom = map.getZoom() + 0.5
+    map.jumpTo({ center: center, zoom: idealZoom })
+  } catch (error) {
+    console.error(error.message)
+    snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar a linha no mapa")
+  }
+}
