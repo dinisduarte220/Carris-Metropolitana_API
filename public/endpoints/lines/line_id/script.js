@@ -603,16 +603,15 @@ async function loadRoute(shape_id, color) {
     const latitudes = allCoordinates.map((coord) => coord[1])
     const longitudes = allCoordinates.map((coord) => coord[0])
     const centerLatitude = (Math.max(...latitudes) + Math.min(...latitudes)) / 2
-    const centerLongitude =
-      (Math.max(...longitudes) + Math.min(...longitudes)) / 2
-    const center = [centerLongitude, centerLatitude]
+    const centerLongitude = (Math.max(...longitudes) + Math.min(...longitudes)) / 2
 
     const bounds = new maplibregl.LngLatBounds()
     allCoordinates.forEach((coord) => bounds.extend(coord))
 
-    map.fitBounds(bounds, { padding: 100, animate: false })
-    const idealZoom = map.getZoom() + 0.5
-    map.jumpTo({ center: center, zoom: idealZoom })
+    map.fitBounds(bounds, { padding: 50, animate: true })
+    // const idealZoom = map.getZoom()
+    // const center = [centerLongitude, centerLatitude]
+    // map.jumpTo({ center: center, zoom: idealZoom })
   } catch (error) {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar a linha no mapa")
