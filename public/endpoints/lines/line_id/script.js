@@ -315,6 +315,7 @@ async function selectStop(stop_id) {
 
     scheduleContainer.appendChild(texts)
 
+    // Create timetable
     let verifiedHours = []
     for (let i = 0; i < schedules.length; i++) {
       let currentTime = schedules[i].substring(0, 2)
@@ -346,10 +347,69 @@ async function selectStop(stop_id) {
         scheduleContainer.appendChild(ul)
       }
     }
+    // Display next arrivals (real time / scheduled)
+    let arrivalTimes = document.createElement('div')
+    arrivalTimes.setAttribute('class', 'arrivalTimes')
+    let arrivalTimes_icon = document.createElement('i')
+    arrivalTimes_icon.setAttribute('class', 'fa-regular fa-clock')
+    arrivalTimes.appendChild(arrivalTimes_icon)
+    let hasArrivals = false
+    try {
+      const realTime_data = await getAPI(`patterns/${patternId}/realtime`)
+      const currentUNIX = Math.floor(Date.now() / 1000)
+
+      realTime_data.forEach(realTime => {
+        if (realTime.observed_arrival === null && realTime.estimated_arrival !== null && realTime.estimated_arrival_unix > currentUNIX && realTime.stop_id === stop_id) {
+          let newRealTime = document.createElement('')
+          newRealTime.setAttribute('class', 'realTime')
+          let arrivalTime = Math.floor((realTime.estimated_arrival_unix - currentUNIX) / 60)
+          if (arrivalTime < 1) {
+            newRealTime.innerText = "A chegar"
+          } else {
+            newRealTime.innerText = arrivalTime + " min"
+          }
+          arrivalTimes.appendChild(newRealTime)
+          hasArrivals = true
+        } else if (realTime.observed_arrival === null && realTime.estimated_arrival === null && realTime.scheduled_arrival_unix > currentUNIX && realTime.stop_id === stop_id) {
+          let newScheduleTime = document.createElement('p')
+          newScheduleTime.setAttribute('class', 'scheduleTime')
+          // Handle hours after 24h
+          let rawTime = realTime.scheduled_arrival
+          let hours = parseInt(rawTime.substring(0, 2)) % 24
+          let minutes = rawTime.substring(3, 5)
+          let normalizedTime = `${hours.toString().padStart(2, '0')}:${minutes}`
+          
+          newScheduleTime.innerText = normalizedTime
+          arrivalTimes.appendChild(newScheduleTime)
+          hasArrivals = true
+        }
+      })
+    } catch (error) {
+      console.error(error.message)
+      snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as próximas passagens nesta paragem")
+    }
     // Remove all existing schedules in the stops container
     const previousSchedules = stopsContainer.querySelectorAll('.newStop .timeTable')
+    const previousScheduleTitles = stopsContainer.querySelectorAll('.newStop .scheduleTitle')
+    const previousArrivalTimes = stopsContainer.querySelectorAll('.newStop .arrivalTimes')
+    const previousArrivalTimesTitle = stopsContainer.querySelectorAll('.newStop .arrivalTimesTitle')
+    previousArrivalTimes.forEach(schedule => schedule.remove())
+    previousArrivalTimesTitle.forEach(schedule => schedule.remove())
     previousSchedules.forEach(schedule => schedule.remove())
+    previousScheduleTitles.forEach(schedule => schedule.remove())
+    // Add next arrival times
+    if (hasArrivals) {
+      let arrivalTimesTitle = document.createElement('p')
+      arrivalTimesTitle.setAttribute('class', 'arrivalTimesTitle')
+      arrivalTimesTitle.innerHTML = 'Próximas passagens:'
+      stopDiv.appendChild(arrivalTimesTitle)
+      stopDiv.appendChild(arrivalTimes)
+    }
     // Add the new schedule
+    let scheduleTitle = document.createElement('p')
+    scheduleTitle.setAttribute('class', 'scheduleTitle')
+    scheduleTitle.innerHTML = "Horários para esta paragem:"
+    stopDiv.appendChild(scheduleTitle)
     stopDiv.appendChild(scheduleContainer)
   } catch (error) {
     console.error(error.message)
@@ -375,6 +435,21 @@ function markTime(trip) {
     tripId = trip
   }
 }
+
+// Stops real time
+
+// async function realTime() {
+//   try {
+//     const data = getAPI(`patterns/${patternId}/realtime`)
+
+//     data.forEach(time => {
+
+//     })
+//   } catch (error) {
+//     console.error(error.message)
+//     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro no tempo real")
+//   }
+// }
 
 // Line Map
 var map = new maplibregl.Map({
