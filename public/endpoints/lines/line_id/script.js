@@ -211,7 +211,6 @@ async function selectPattern(pattern_id) {
   const activePatternDisplay = document.getElementById('activePatternText')
   // If there was another active pattern, remove the class and change it to the new pattern
   let activePattern = document.querySelector('.newPattern.active')
-  let shapeID, lineColor, lineStops
   if (activePattern) {
     activePattern.classList.remove('active')
     // Close patterns select menu, just if its not the first time loading (To avoid opening the select menu when the first pattern is selected)
@@ -223,8 +222,6 @@ async function selectPattern(pattern_id) {
   try {
     const data = await getAPI("patterns/" + pattern_id)
     activePatternDisplay.innerText = data.headsign
-    shapeID = data.shape_id
-    lineColor = data.color
   } catch (error) {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as rotas / sentidos para esta linha")
@@ -232,12 +229,13 @@ async function selectPattern(pattern_id) {
   // Store current pattern for future uses
   patternId = pattern_id
   loadStops()
-  loadRoute(shapeID, lineColor)
 }
 
 // Load stops for the active pattern
 async function loadStops() {
   let firstStopSet = false
+  let stopsCoords = []
+  let pointFeatures = []
   try {
     const data = await getAPI("patterns/" + patternId)
     document.getElementById('stopsBorder').style.backgroundColor = data.color
@@ -249,6 +247,13 @@ async function loadStops() {
 
     let stops = data.path
     stops.forEach(stop => {
+
+      let coords = [stop.stop.lon, stop.stop.lat]
+      pointFeatures.push({
+        type: "Feature",
+        properties: { name: stop.stop.name, id: stop.stop.id },
+        geometry: { type: "Point", coordinates: coords },
+      })
       let newStop = document.createElement('div')
       newStop.setAttribute('class', 'newStop')
       newStop.setAttribute('id', 'newStop_' + stop.stop.id)
@@ -268,6 +273,44 @@ async function loadStops() {
         selectStop(stop.stop.id)
       }
     });
+    // Make the route load first to avoid stop points to be set below the line
+    await loadRoute(data.shape_id, data.color)
+    const geoJsonPoints = {
+      type: "FeatureCollection",
+      features: pointFeatures,
+    }
+    if (map.getLayer("points")) {
+      map.removeLayer("points")
+      if (map.getSource("points")) map.removeSource("points")
+    }
+    map.addSource("points", { type: "geojson", data: geoJsonPoints })
+
+    map.addLayer({
+      id: "points",
+      type: "circle",
+      source: "points",
+      paint: {
+        "circle-radius": 3,
+        "circle-color": data.color,
+        "circle-stroke-width": 2,
+        "circle-stroke-color": "#FFFFFF",
+      },
+    })
+    // Onclick function to select the wanted stop on the list
+    map.on('click', 'points', (e) => {
+      const stopId = e.features[0].properties.id
+      selectStop(stopId)
+      // window.location.href = "#newStop_" + stopId
+    })
+
+    // Change the cursor to a pointer when hovering over the points
+    map.on('mouseenter', 'points', () => {
+      map.getCanvas().style.cursor = 'pointer'
+    })
+
+    map.on('mouseleave', 'points', () => {
+      map.getCanvas().style.cursor = ''
+    })
   } catch (error) {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as paragens desta linha")
@@ -390,6 +433,10 @@ async function selectStop(stop_id) {
             arrivalTimes.appendChild(newScheduleTime)
             hasArrivals = true
           }
+        })
+        stopDiv.scrollIntoView({
+          behavior: 'smooth', // Smooth scrolling animation
+          block: 'center', // Center the stop in the visible area
         })
       } catch (error) {
         console.error(error.message)
