@@ -558,7 +558,6 @@ var map = new maplibregl.Map({
 // Load Map Route
 async function loadRoute(shape_id, color) {
   try {
-
     const data = await getAPI("shapes/" + shape_id)
     const lineCoords = data.geojson.geometry.coordinates
     // Remove all existing line layers
@@ -612,8 +611,151 @@ async function loadRoute(shape_id, color) {
     // const idealZoom = map.getZoom()
     // const center = [centerLongitude, centerLatitude]
     // map.jumpTo({ center: center, zoom: idealZoom })
+
+    loadVehicles()
   } catch (error) {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar a linha no mapa")
+  }
+}
+
+let updateInterval_vehicles
+async function loadVehicles() {
+  try {
+    const vehicle_data = await getAPI("vehicles")
+    let pointFeatures = []
+    vehicle_data.forEach(vehicle => {
+      if (vehicle.pattern_id === patternId) {
+        let coords = [vehicle.lon, vehicle.lat]
+        pointFeatures.push({
+          type: "Feature",
+          properties: {
+            name: vehicle.id,
+            className: "iconBus",
+            bearing: vehicle.bearing,
+            timeStamp: vehicle.timestamp,
+            description: `Line: <b>${vehicle.line_id}</b><br>
+            Route: <b>${vehicle.route_id}</b><br>
+            Pattern: <b>${vehicle.pattern_id}</b><br>
+            State: <b>${vehicle.current_status}</b><br>
+            Stop: <b>${vehicle.stop_id}</b><br>
+            Vehicle ID: <b>${vehicle.id}</b>`
+          },
+          geometry: {
+            type: "Point",
+            coordinates: coords
+          }
+        });
+
+        // Add a bus icon to the stop list, to visually represent the position of the vehicle based on the line.
+
+        // let stopDIV = document.getElementById('newStop_' + vehicle.stop_id)
+        // let busIcon = document.createElement('i')
+        // busIcon.setAttribute('class', ' busIcon fa-solid fa-bus')
+
+        stopDIV.appendChild(busIcon)
+      }
+    })
+    const geoJsonPoints = {
+      type: "FeatureCollection",
+      features: pointFeatures,
+    }
+    const popup = new maplibregl.Popup({
+      closeButton: false,
+      closeOnClick: false,
+      className: "popupBus"
+    });
+    map.on('mouseenter', 'pointsbus', (e) => {
+      map.getCanvas().style.cursor = 'pointer';
+      const coordinates = e.features[0].geometry.coordinates.slice();
+      const description = e.features[0].properties.description;
+      while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+          coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+      }
+      // Populate the popup and set its coordinates
+      // based on the feature found.
+      popup.setLngLat(coordinates).setHTML(description).addTo(map);
+    });
+    map.on('mouseleave', 'pointsbus', () => {
+      map.getCanvas().style.cursor = 'default';
+      popup.remove();
+    });
+    // Remove previous vehicles layer, if exists
+    if (map.getLayer("pointsbus")) {
+      map.removeLayer("pointsbus")
+    }
+    // Remove previous vehicles source, if exists
+    if (map.getSource("pointsbus")) {
+      map.removeSource("pointsbus")
+    }
+    // Adds a new source for GeoJSON points
+    map.addSource("pointsbus", {
+      type: "geojson",
+      data: geoJsonPoints,
+    })
+    // Remove duplicated images
+    if (map.hasImage("bus-icon")) {
+      map.removeImage("bus-icon")
+    }
+    // Load and add the vehicle image
+    image = await map.loadImage("../../../IMG/busIcon.png")
+    map.addImage("bus-icon", image.data)
+    // Adiciona a camada com a imagem carregada
+    map.addLayer({
+      id: "pointsbus",
+      type: "symbol",
+      source: "pointsbus",
+      layout: {
+        "icon-image": "bus-icon",
+        "icon-size": [
+          "interpolate",
+          ["linear", 0.5],
+          ["zoom"],
+          10,
+          0.05,
+          20,
+          0.15,
+        ],
+        "icon-allow-overlap": true,
+        "icon-offset": [0, -15],
+        "icon-rotate": ["get", "bearing"],
+      },
+    })
+    // Missing images handler
+    map.on("styleimagemissing", (e) => {
+      console.log(`Image missing: ${e.id}`)
+    })
+    if (updateInterval_vehicles) clearInterval(updateInterval_vehicles)
+      updateInterval_vehicles = setInterval(() => updateTimes_vehicles(), 10000)
+  } catch (error) {
+    console.error(error.message)
+    snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar os veiculos desta linha")
+  }
+}
+
+async function updateTimes_vehicles() {
+  try {
+    const vehicle_data = await getAPI("vehicles");
+
+    vehicle_data.forEach(vehicle => {
+      if (vehicle.pattern_id === patternId) {
+        const coords = [vehicle.lon, vehicle.lat];
+        const source = map.getSource("pointsbus");
+
+        if (source) {
+          const data = source._data;
+          const feature = data.features.find(f => f.properties.name === vehicle.id);
+          if (feature) {
+            feature.geometry.coordinates = coords;
+            feature.properties.bearing = vehicle.bearing;
+            feature.properties.timeStamp = vehicle.timestamp;
+            source.setData(data);
+          }
+        }
+      }
+    });
+  } catch (error) {
+    snackbar("erro", "Erro no servidor");
+    console.log(error);
   }
 }

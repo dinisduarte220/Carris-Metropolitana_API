@@ -158,6 +158,9 @@ body {
     width: 20px;
     border-radius: 50px;
 }
+#lineStops #stopsContainer .newStop {
+    position: relative;
+}
 #lineStops #stopsContainer .newStop:hover .stopName {
     margin-left: 10px;
 }
