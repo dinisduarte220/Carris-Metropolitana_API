@@ -546,8 +546,8 @@ async function loadRoute(shape_id, color) {
         "line-join": "round"
       },
       paint: {
-        "line-color": color, // Line color
-        "line-width": 4 // Line width
+        "line-color": color,
+        "line-width": 4
       }
     })
 
