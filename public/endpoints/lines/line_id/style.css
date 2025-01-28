@@ -191,11 +191,15 @@ body {
     font-weight: 600;
     color: white;
     display: flex;
+    gap: 10px;
     align-items: center;
     margin-left: 5px;
 }
-#lineStops #stopsContainer .newStop .arrivalTimes i {
-    margin-right: 10px;
+#lineStops #stopsContainer .newStop .arrivalTimes .realTime {
+    color: rgb(0, 205, 50);
+}
+#lineStops #stopsContainer .newStop .arrivalTimes p {
+    font-weight: 600;
 }
 
 /* Time Table */

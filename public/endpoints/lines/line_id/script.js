@@ -7,8 +7,6 @@ let tripId // Store trip ID
 addLineToRecents()
 
 // Store current date in YYYYMMDD format
-// const date = new Date()
-// const currentDate = `${date.getFullYear()}${date.getMonth()}${date.getDay()}` 
 let date = new Date()
 let currentDate = date.toISOString().split("T")[0].replace(/-/g, '') // Date for the pattern selector
 let formatedDate = date.toISOString().split("T")[0] // Date for the date selector
@@ -272,11 +270,11 @@ async function loadStops() {
   }
 }
 
+let updateInterval_stop
 async function selectStop(stop_id) {
   try {
     const stopDiv = document.getElementById('newStop_' + stop_id)
     const stopsContainer = document.getElementById('stopsContainer')
-
 
     let schedules = [], trips = []
 
@@ -347,47 +345,56 @@ async function selectStop(stop_id) {
         scheduleContainer.appendChild(ul)
       }
     }
+    // Just show next arrivals if the selected date is for the current day
+    let hasArrivals = false
     // Display next arrivals (real time / scheduled)
     let arrivalTimes = document.createElement('div')
     arrivalTimes.setAttribute('class', 'arrivalTimes')
     let arrivalTimes_icon = document.createElement('i')
     arrivalTimes_icon.setAttribute('class', 'fa-regular fa-clock')
     arrivalTimes.appendChild(arrivalTimes_icon)
-    let hasArrivals = false
-    try {
-      const realTime_data = await getAPI(`patterns/${patternId}/realtime`)
-      const currentUNIX = Math.floor(Date.now() / 1000)
+    if (changedDate === currentDate) {
+      let scheduledTimesCounter = 0
+      try {
+        const realTime_data = await getAPI(`patterns/${patternId}/realtime`)
+        const currentUNIX = Math.floor(Date.now() / 1000)
 
-      realTime_data.forEach(realTime => {
-        if (realTime.observed_arrival === null && realTime.estimated_arrival !== null && realTime.estimated_arrival_unix > currentUNIX && realTime.stop_id === stop_id) {
-          let newRealTime = document.createElement('')
-          newRealTime.setAttribute('class', 'realTime')
-          let arrivalTime = Math.floor((realTime.estimated_arrival_unix - currentUNIX) / 60)
-          if (arrivalTime < 1) {
-            newRealTime.innerText = "A chegar"
-          } else {
-            newRealTime.innerText = arrivalTime + " min"
+        realTime_data.forEach(realTime => {
+          if (realTime.observed_arrival === null && realTime.estimated_arrival !== null && realTime.estimated_arrival_unix > currentUNIX && realTime.stop_id === stop_id) {
+            let newRealTime = document.createElement('p')
+            newRealTime.setAttribute('class', 'realTime')
+            newRealTime.setAttribute('id', "arrivalTime_" + realTime.trip_id)
+            let arrivalTime = Math.floor((realTime.estimated_arrival_unix - currentUNIX) / 60)
+            if (arrivalTime < 1) {
+              newRealTime.innerText = "A chegar"
+            } else {
+              newRealTime.innerText = arrivalTime + " min"
+            }
+            arrivalTimes.appendChild(newRealTime)
+            hasArrivals = true
+          } else if (realTime.observed_arrival === null && realTime.estimated_arrival === null && realTime.scheduled_arrival_unix > currentUNIX && realTime.stop_id === stop_id && scheduledTimesCounter < 3) {
+            let newScheduleTime = document.createElement('p')
+            newScheduleTime.setAttribute('class', 'scheduleTime')
+            newScheduleTime.setAttribute('id', "arrivalTime_" + realTime.trip_id)
+            // Handle hours after 24h
+            let rawTime = realTime.scheduled_arrival
+            let hours = parseInt(rawTime.substring(0, 2)) % 24
+            let minutes = rawTime.substring(3, 5)
+            let normalizedTime = `${hours.toString().padStart(2, '0')}:${minutes}`
+            scheduledTimesCounter++
+            newScheduleTime.innerText = normalizedTime
+            arrivalTimes.appendChild(newScheduleTime)
+            hasArrivals = true
           }
-          arrivalTimes.appendChild(newRealTime)
-          hasArrivals = true
-        } else if (realTime.observed_arrival === null && realTime.estimated_arrival === null && realTime.scheduled_arrival_unix > currentUNIX && realTime.stop_id === stop_id) {
-          let newScheduleTime = document.createElement('p')
-          newScheduleTime.setAttribute('class', 'scheduleTime')
-          // Handle hours after 24h
-          let rawTime = realTime.scheduled_arrival
-          let hours = parseInt(rawTime.substring(0, 2)) % 24
-          let minutes = rawTime.substring(3, 5)
-          let normalizedTime = `${hours.toString().padStart(2, '0')}:${minutes}`
-          
-          newScheduleTime.innerText = normalizedTime
-          arrivalTimes.appendChild(newScheduleTime)
-          hasArrivals = true
-        }
-      })
-    } catch (error) {
-      console.error(error.message)
-      snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as próximas passagens nesta paragem")
+        })
+      } catch (error) {
+        console.error(error.message)
+        snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as próximas passagens nesta paragem")
+      }
     }
+
+    if (updateInterval_stop) clearInterval(updateInterval_stop);
+        updateInterval_stop = setInterval(() => updateStopArrivals(stop_id), 10000);
     // Remove all existing schedules in the stops container
     const previousSchedules = stopsContainer.querySelectorAll('.newStop .timeTable')
     const previousScheduleTitles = stopsContainer.querySelectorAll('.newStop .scheduleTitle')
@@ -408,12 +415,65 @@ async function selectStop(stop_id) {
     // Add the new schedule
     let scheduleTitle = document.createElement('p')
     scheduleTitle.setAttribute('class', 'scheduleTitle')
-    scheduleTitle.innerHTML = "Horários para esta paragem:"
+    scheduleTitle.innerHTML = "Horário para esta paragem:"
     stopDiv.appendChild(scheduleTitle)
     stopDiv.appendChild(scheduleContainer)
   } catch (error) {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar o horário para esta paragem")
+  }
+}
+// Update Real Times
+async function updateStopArrivals(id) {
+  const currentUNIX = Math.floor(Date.now() / 1000)
+
+  try {
+    const data = await getAPI(`patterns/${patternId}/realtime`)
+    data.forEach(dataItem => {
+      let item = document.getElementById('arrivalTime_' + dataItem.trip_id)
+      if (!item) {
+        return
+      }
+      if (item.classList.contains('done')) {
+        return
+      }
+      if (dataItem.stop_id !== id) {
+        return
+      }
+
+      // Check if bus as passed
+      if (dataItem.observed_arrival_unix !== null && dataItem.scheduled_arrival_unix < currentUNIX && dataItem.estimated_arrival_unix < currentUNIX) {
+        item.remove()
+        console.log("ITEM REMOVED", dataItem.trip_id)
+      }
+      // Check if its still realTime and update minutes
+      else if (dataItem.observed_arrival_unix === null && dataItem.estimated_arrival_unix !== null && dataItem.estimated_arrival_unix > currentUNIX && !item.classList.contains('scheduleTime')) {
+        let arrivalTime = Math.floor((dataItem.estimated_arrival_unix - currentUNIX) / 60)
+        if (arrivalTime < 1) {
+          item.innerText = "A chegar"
+        } else {
+          item.innerText = arrivalTime + " min"
+        }
+        console.log("ITEM UPDATED")
+      }
+      // Check if scheduled time is now a real Time
+      else if (dataItem.observed_arrival_unix === null && dataItem.estimated_arrival_unix !== null && dataItem.scheduled_arrival_unix > currentUNIX && item.classList.contains('scheduleTime')) {
+        let arrivalTime = Math.floor((dataItem.estimated_arrival_unix - currentUNIX) / 60)
+        if (arrivalTime < 1) {
+          item.innerText = "A chegar"
+        } else {
+          item.innerText = arrivalTime + " min"
+        }
+        item.classList.remove('scheduleTime')
+        item.classList.add('realTime')
+      } else {
+        return
+      }
+
+    })
+  } catch (error) {
+    console.error(error.message)
+    snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao atualizar as próximas passagens")
   }
 }
 // Sort schedule times
