@@ -1,7 +1,8 @@
 // Extract the current line_id from URL
 const pathParts = window.location.pathname.split('/')
 const lineId = pathParts[3] // Get the 3rd part of the URL (URL Base = /page/lines/:line_id)
-let patternId
+let patternId, stopId // Store the active pattern and stop
+let tripId // Store trip ID
 
 addLineToRecents()
 
@@ -234,6 +235,7 @@ async function selectPattern(pattern_id) {
 
 // Load stops for the active pattern
 async function loadStops() {
+  let firstStopSet = false
   try {
     const data = await getAPI("patterns/" + patternId)
     document.getElementById('stopsBorder').style.backgroundColor = data.color
@@ -248,7 +250,7 @@ async function loadStops() {
       let newStop = document.createElement('div')
       newStop.setAttribute('class', 'newStop')
       newStop.setAttribute('id', 'newStop_' + stop.stop.id)
-      newStop.setAttribute('onclick', `selectStop(${stop.stop.id})`)
+      newStop.setAttribute('onclick', `selectStop("${stop.stop.id}")`)
 
       let stopName = document.createElement('p')
       stopName.setAttribute('class', 'stopName')
@@ -257,9 +259,127 @@ async function loadStops() {
       newStop.appendChild(stopName)
 
       stopsContainer.appendChild(newStop)
+          // Select the first stop, for the schedule to appear
+      if (!firstStopSet) {
+        stopId = stop.stop.id
+        firstStopSet = true
+        selectStop(stop.stop.id)
+      }
     });
   } catch (error) {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as paragens desta linha")
   }
 }
+
+async function selectStop(stop_id) {
+  try {
+    const stopDiv = document.getElementById('newStop_' + stop_id)
+    const stopsContainer = document.getElementById('stopsContainer')
+
+
+    let schedules = [], trips = []
+
+    const dateSelected = document.getElementById('date_input').value
+    let changedDate = dateSelected.replace(/-/g, '')
+    const data = await getAPI("patterns/" + patternId)
+    data.trips.forEach(trip => {
+      if (trip.dates.includes(changedDate)) {
+        trip.schedule.forEach(scheduleItem => {
+          if (scheduleItem.stop_id === stop_id) {
+            schedules.push(scheduleItem.arrival_time.substring(0, 5))
+            schedules.sort((a, b) => {
+              const timeA = parseArrivalTime(a)
+              const timeB = parseArrivalTime(b)
+              return timeA - timeB
+            })
+            trips.push(trip.id)
+          }
+        })
+      }
+    })
+
+    // Create a new timetable for the selected stop
+    let scheduleContainer = document.createElement('div')
+    scheduleContainer.setAttribute('class', 'timeTable')
+
+    let texts = document.createElement("ul")
+    texts.setAttribute("class", "timeTable_indicators")
+
+    let hoursText = document.createElement("li")
+    hoursText.innerText = "Hora"
+    texts.appendChild(hoursText)
+    let minutesText = document.createElement("li")
+    minutesText.innerText = "Min."
+    texts.appendChild(minutesText)
+
+    scheduleContainer.appendChild(texts)
+
+    let verifiedHours = []
+    for (let i = 0; i < schedules.length; i++) {
+      let currentTime = schedules[i].substring(0, 2)
+
+      if (!verifiedHours.includes(currentTime)) {
+        verifiedHours.push(currentTime)
+
+        let ul = document.createElement("ul")
+        ul.setAttribute("class", "timeTable_times")
+
+        let hour = document.createElement("li")
+        hour.innerText = currentTime
+
+        ul.appendChild(hour)
+
+        for (let j = 0; j < schedules.length; j++) {
+          if (schedules[j].substring(0, 2) === currentTime) {
+            let minute = document.createElement("li")
+            minute.innerText = schedules[j].substring(3, 5)
+            minute.setAttribute('onclick', `markTime("${trips[j]}")`)
+
+            if (trips[j] === tripId) {
+              minute.classList.add('marked')
+            }
+
+            ul.appendChild(minute)
+          }
+        }
+        scheduleContainer.appendChild(ul)
+      }
+    }
+    // Remove all existing schedules in the stops container
+    const previousSchedules = stopsContainer.querySelectorAll('.newStop .timeTable')
+    previousSchedules.forEach(schedule => schedule.remove())
+    // Add the new schedule
+    stopDiv.appendChild(scheduleContainer)
+  } catch (error) {
+    console.error(error.message)
+    snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar o horário para esta paragem")
+  }
+}
+// Sort schedule times
+function parseArrivalTime(arrivalTime) {
+  const timeParts = arrivalTime.split(":")
+  const hours = parseInt(timeParts[0])
+  const minutes = parseInt(timeParts[1])
+  // If the schedule time is between 00am and 04am, set it to the end of the day and not to be considered like a "morning" time
+  const adjustedHours = hours >= 4 ? hours - 24 : hours
+  return adjustedHours * 60 + minutes
+}
+
+// Mark times - To see the arriving time on other stops
+function markTime(trip) {
+  // If the trip matches the stored trip, remove it (for the user to remove the mark)
+  if (tripId === trip) {
+    tripId = ""
+  } else {
+    tripId = trip
+  }
+}
+
+// Line Map
+var map = new maplibregl.Map({
+  container: "map",
+  style: "https://api.jawg.io/styles/jawg-dark.json?access-token=zyLDUYMkhQ8nsbh3NFInHcUxLoxFUPjIVXadZWrhSSKlG9LRXFceIrP4vMErY9dy",
+  center: [-9.0, 38.7],
+  zoom: 9,
+});
