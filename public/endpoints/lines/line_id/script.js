@@ -730,8 +730,7 @@ async function loadVehicles() {
           stopDIV = document.getElementById('newStop_' + vehicle.stop_id)
         }
         let busIcon = document.createElement('i')
-        busIcon.setAttribute('class', ' busIcon fa-solid fa-bus')
-        busIcon.setAttribute('title', 'Próxima Paragem')
+        busIcon.setAttribute('class', 'busIcon fa-solid fa-bus')
         stopDIV.appendChild(busIcon)
       }
     })
@@ -871,7 +870,6 @@ async function updateTimes_vehicles() {
             if (stopDIV) {
               let busIcon = document.createElement('i');
               busIcon.setAttribute('class', 'busIcon fa-solid fa-bus');
-              busIcon.setAttribute('title', 'Próxima Paragem')
               busIcon.setAttribute('data-bus-id', vehicle.id);
               stopDIV.appendChild(busIcon);
             }
