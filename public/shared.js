@@ -47,7 +47,7 @@ function renderStops(stops, container) {
     let newStop = document.createElement('div')
     newStop.classList.add('item')
     newStop.classList.add('stop')
-    newStop.setAttribute('onclick', `seeStopDetails(${stop.id})`)
+    newStop.setAttribute('href', `/page/stops/` + stop.id)
     let stopID = document.createElement('p')
     stopID.setAttribute('class', 'stopID')
     stopID.setAttribute('onclick', `event.stopPropagation(); copyText("${stop.id}")`)

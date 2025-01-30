@@ -232,10 +232,12 @@ async function selectPattern(pattern_id) {
 }
 
 // Load stops for the active pattern
+let pointFeatures = []
+let allStops = []
 async function loadStops() {
   let firstStopSet = false
   let stopsCoords = []
-  let pointFeatures = []
+  pointFeatures = []
   try {
     const data = await getAPI("patterns/" + patternId)
     document.getElementById('stopsBorder').style.backgroundColor = data.color
@@ -247,7 +249,7 @@ async function loadStops() {
 
     let stops = data.path
     stops.forEach(stop => {
-
+      allStops.push(stop.stop.id)
       let coords = [stop.stop.lon, stop.stop.lat]
       pointFeatures.push({
         type: "Feature",
@@ -469,6 +471,40 @@ async function selectStop(stop_id) {
     scheduleTitle.innerHTML = "Horário para esta paragem:"
     stopDiv.appendChild(scheduleTitle)
     stopDiv.appendChild(scheduleContainer)
+
+    const clickedFeature = pointFeatures.find(feature => feature.properties.id === stop_id);
+    if (clickedFeature) {
+      // Zoom and center to the select stop
+      map.flyTo({
+          center: clickedFeature.geometry.coordinates,
+          zoom: 14,
+      })
+      // Selected stop styling
+      map.setPaintProperty('points', 'circle-color', [
+        'case',
+        ['==', ['get', 'id'], stop_id],
+        'rgb(150, 150, 150)',
+        data.color
+      ])
+      map.setPaintProperty('points', 'circle-opacity', [
+          'case',
+          ['==', ['get', 'id'], stop_id],
+          1,
+          1
+      ])
+      map.setPaintProperty('points', 'circle-stroke-opacity', [
+          'case',
+          ['==', ['get', 'id'], stop_id],
+          1,
+          0.5
+      ])
+      map.setPaintProperty('points', 'circle-radius', [
+          'case',
+          ['==', ['get', 'id'], stop_id],
+          6,
+          3
+      ])
+    }
   } catch (error) {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar o horário para esta paragem")
@@ -621,6 +657,19 @@ async function loadRoute(shape_id, color) {
 
 let updateInterval_vehicles
 async function loadVehicles() {
+  // Remove previous vehicles layer, if exists
+  if (map.getLayer("pointsbus")) {
+    map.removeLayer("pointsbus")
+  }
+  // Remove previous vehicles source, if exists
+  if (map.getSource("pointsbus")) {
+    map.removeSource("pointsbus")
+  }
+  const dateSelected = document.getElementById('date_input').value
+  let changedDate = dateSelected.replace(/-/g, '')
+  if (changedDate !== currentDate) {
+    return
+  }
   try {
     const vehicle_data = await getAPI("vehicles")
     let pointFeatures = []
@@ -647,12 +696,19 @@ async function loadVehicles() {
           }
         });
 
+        // Get previous stop ID
+        const currentStopID = allStops.indexOf(vehicle.stop_id)
+        let stopDIV
+
         // Add a bus icon to the stop list, to visually represent the position of the vehicle based on the line.
-
-        // let stopDIV = document.getElementById('newStop_' + vehicle.stop_id)
-        // let busIcon = document.createElement('i')
-        // busIcon.setAttribute('class', ' busIcon fa-solid fa-bus')
-
+        if (currentStopID > 0 && vehicle.current_status !== "STOPPED_AT") {
+          stopDIV = document.getElementById('newStop_' + allStops[currentStopID-1])
+        } else {
+          stopDIV = document.getElementById('newStop_' + vehicle.stop_id)
+        }
+        let busIcon = document.createElement('i')
+        busIcon.setAttribute('class', ' busIcon fa-solid fa-bus')
+        busIcon.setAttribute('title', 'Próxima Paragem')
         stopDIV.appendChild(busIcon)
       }
     })
@@ -680,14 +736,6 @@ async function loadVehicles() {
       map.getCanvas().style.cursor = 'default';
       popup.remove();
     });
-    // Remove previous vehicles layer, if exists
-    if (map.getLayer("pointsbus")) {
-      map.removeLayer("pointsbus")
-    }
-    // Remove previous vehicles source, if exists
-    if (map.getSource("pointsbus")) {
-      map.removeSource("pointsbus")
-    }
     // Adds a new source for GeoJSON points
     map.addSource("pointsbus", {
       type: "geojson",
@@ -737,23 +785,78 @@ async function updateTimes_vehicles() {
   try {
     const vehicle_data = await getAPI("vehicles");
 
-    vehicle_data.forEach(vehicle => {
-      if (vehicle.pattern_id === patternId) {
-        const coords = [vehicle.lon, vehicle.lat];
-        const source = map.getSource("pointsbus");
+    // Remove todos os ícones existentes dos autocarros antes de atualizar a sua posição
+    const allBusIcons = document.querySelectorAll('.busIcon');
+    allBusIcons.forEach(busIcon => busIcon.remove());
 
-        if (source) {
-          const data = source._data;
+    const source = map.getSource("pointsbus");
+    if (source) {
+      const data = source._data;
+
+      // Remove veículos que terminaram a viagem
+      data.features = data.features.filter(f => 
+        vehicle_data.some(vehicle => vehicle.id === f.properties.name)
+      );
+
+      vehicle_data.forEach(vehicle => {
+        if (vehicle.pattern_id === patternId) {
+          const coords = [vehicle.lon, vehicle.lat];
+
           const feature = data.features.find(f => f.properties.name === vehicle.id);
           if (feature) {
+            // Atualiza as propriedades do veículo no mapa
             feature.geometry.coordinates = coords;
             feature.properties.bearing = vehicle.bearing;
             feature.properties.timeStamp = vehicle.timestamp;
-            source.setData(data);
+            feature.properties.description = `Line: <b>${vehicle.line_id}</b><br>
+              Route: <b>${vehicle.route_id}</b><br>
+              Pattern: <b>${vehicle.pattern_id}</b><br>
+              State: <b>${vehicle.current_status}</b><br>
+              Stop: <b>${vehicle.stop_id}</b><br>
+              Vehicle ID: <b>${vehicle.id}</b>`;
+          } else {
+            // Se o veículo ainda não existir, adiciona um novo feature
+            data.features.push({
+              type: "Feature",
+              geometry: { type: "Point", coordinates: coords },
+              properties: {
+                name: vehicle.id,
+                bearing: vehicle.bearing,
+                timeStamp: vehicle.timestamp,
+                description: `Line: <b>${vehicle.line_id}</b><br>
+                  Route: <b>${vehicle.route_id}</b><br>
+                  Pattern: <b>${vehicle.pattern_id}</b><br>
+                  State: <b>${vehicle.current_status}</b><br>
+                  Stop: <b>${vehicle.stop_id}</b><br>
+                  Vehicle ID: <b>${vehicle.id}</b>`
+              }
+            });
+          }
+
+          // Adiciona o ícone do autocarro na paragem correspondente
+          if (vehicle.current_status !== "COMPLETED") {
+                    // Get previous stop ID
+            const currentStopID = allStops.indexOf(vehicle.stop_id)
+            let stopDIV
+            if (currentStopID > 0 && vehicle.current_status !== "STOPPED_AT") {
+              stopDIV = document.getElementById('newStop_' + allStops[currentStopID-1])
+            } else {
+              stopDIV = document.getElementById('newStop_' + vehicle.stop_id)
+            }
+            if (stopDIV) {
+              let busIcon = document.createElement('i');
+              busIcon.setAttribute('class', 'busIcon fa-solid fa-bus');
+              busIcon.setAttribute('title', 'Próxima Paragem')
+              busIcon.setAttribute('data-bus-id', vehicle.id); // Atribuir um ID para identificar o autocarro
+              stopDIV.appendChild(busIcon);
+            }
           }
         }
-      }
-    });
+      });
+
+      // Atualiza os dados no mapa
+      source.setData(data);
+    }
   } catch (error) {
     snackbar("erro", "Erro no servidor");
     console.log(error);

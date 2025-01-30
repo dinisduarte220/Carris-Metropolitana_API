@@ -24,11 +24,24 @@
            <a class="active"><i class="fa-solid fa-map-location-dot"></i> Paragens</a>
        </div>
     </div>
+    <div id="inputStops">
+        <input type="text" id="searchStop_input" oninput="searchStop()" placeholder="Pesquisar por Nome, ID, ou Localidade">
+        <div id="searchResults">
+        </div>
+    </div>
+    <div id="content">
+        <div id="map"></div>
+        <div id="stopContainer">
+
+        </div>
+    </div>
+    <div id="map"></div>
     <!-- SnackBar Notifications -->
     <div id="snackbar">
         <i class="fa-regular fa-bell"></i> Isto é uma snackbar
     </div>
     <!-- JS Files -->
+    <script src="../../shared.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

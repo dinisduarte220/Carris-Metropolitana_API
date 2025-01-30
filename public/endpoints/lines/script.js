@@ -8,7 +8,7 @@ async function loadAllLines() {
     // Get all lines from Carris Metropolitana API
     const allLines = await getAPI("lines")
     let linesToDisplay
-    if (searchInput.length > 0) {
+    if (searchInput.length > 3) {
       linesToDisplay = allLines.filter(line => 
         line.id.toLowerCase().includes(searchInput) || 
         line.long_name.toLowerCase().includes(searchInput)
