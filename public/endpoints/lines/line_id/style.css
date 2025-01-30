@@ -157,7 +157,7 @@ body {
 }
 #lineStops #stopsContainer .newStop .busIcon {
     position: absolute;
-    top: 0;
+    top: -3px;
     left: -2.6rem;
     background-color: rgb(200, 200, 200);
     height: 30px;
@@ -193,6 +193,10 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: .3s;
+}
+
+.popupStop {
+    font-size: 11px;
 }
 
 /* Next arrivals */
