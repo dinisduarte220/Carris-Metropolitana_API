@@ -8,7 +8,7 @@ async function loadAllLines() {
     // Get all lines from Carris Metropolitana API
     const allLines = await getAPI("lines")
     let linesToDisplay
-    if (searchInput.length > 3) {
+    if (searchInput.length > 0) {
       linesToDisplay = allLines.filter(line => 
         line.id.toLowerCase().includes(searchInput) || 
         line.long_name.toLowerCase().includes(searchInput)
@@ -22,13 +22,4 @@ async function loadAllLines() {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as linhas")
   }
-}
-
-// Search line
-function searchLine(searchText) {
-  
-  if (searchText.length == 0) {
-    return
-  }
-
 }

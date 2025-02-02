@@ -44,7 +44,7 @@ function renderStops(stops, container) {
     container.removeChild(container.firstChild)
   }
   stops.forEach(stop => {
-    let newStop = document.createElement('div')
+    let newStop = document.createElement('a')
     newStop.classList.add('item')
     newStop.classList.add('stop')
     newStop.setAttribute('href', `/page/stops/` + stop.id)
