@@ -1,8 +1,28 @@
 // Extract the current line_id from URL
 const pathParts = window.location.pathname.split('/')
-const lineId = pathParts[3] // Get the 3rd part of the URL (URL Base = /page/lines/:line_id)
+const lineId = pathParts[3]
 let patternId, stopId // Store the active pattern and stop
 let tripId // Store trip ID
+
+// Check if the user wants to receive line notifications
+let receiveNotifications
+// Fetch settings and update icon
+fetch('/settings')
+  .then(response => response.json())
+  .then(settings => {
+    receiveNotifications = settings.line_notifications
+    updateNotificationIcon() // Call function to update the icon after receiving data
+  })
+  .catch(error => console.error('[ERROR] Failed to load settings:', error))
+// Function to update the icon
+function updateNotificationIcon() {
+  const iconElement = document.getElementById('notificationsIcon')
+  if (receiveNotifications === true) {
+    iconElement.className = "fa-solid fa-bell"
+  } else {
+    iconElement.className = "fa-regular fa-bell"
+  }
+}
 
 addLineToRecents()
 
@@ -29,6 +49,24 @@ async function checkLine() {
 }
 checkLine()
 
+// Deactivate / Reactivate notifications
+function toggleNotifications() {
+  receiveNotifications = !receiveNotifications
+
+  fetch('/settings', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ line_notifications: receiveNotifications })
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log('[SUCCESS]', data.message)
+    updateNotificationIcon() // Update icon after saving the new state
+  })
+  .catch(error => console.error('[ERROR] Failed to update settings:', error))
+}
 // Add to the recent lines
 async function addLineToRecents() {
   try {

@@ -27,28 +27,8 @@ app.get('/page/:path' , (req , res)=>{
 
 // Lines Endpoint - Details for a specific Line
 app.use('/page/lines/:line_id', express.static(path.join(__dirname, 'public', 'endpoints', 'lines', 'line_id')))
-app.get('/page/lines/:line_id/:date', (req, res) => {
-  const { line_id: lineId, date } = req.params
-  const { active_pattern: activePattern } = req.query
-
-  if (!lineId || !date || !activePattern) {
-    return res.status(400).json({ error: "Missing required parameters: lineId, date, or active_pattern" })
-  }
-  
-  // Validate date format (YYYYMMDD)
-  const dateRegex = /^\d{4}\d{2}\d{2}$/
-  if (!dateRegex.test(date)) {
-    return res.status(400).json({ error: "Invalid date format. Use YYYYMMDD" })
-  }
-  
-  const lineData = {
-    lineId,
-    date,
-    activePattern,
-    info: `Data for line ${lineId} on date ${date} with pattern ${activePattern}`
-  }
-
-  res.json(lineData)
+app.get('/page/stops/:stop_id', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'endpoints', 'stops', 'index.html'))
 })
 
 // Storage Endpoints - Get & Store
@@ -117,6 +97,58 @@ app.post('/storage', (req, res) => {
       icon: 'fa-solid fa-triangle-exclamation',
       message: '[ERRO] Ocorreu um erro ao processar os dados!'
     })
+  }
+})
+
+// Settings Endpoints - Get & Update
+app.get('/settings', (req, res) => {
+  try {
+      const data = fs.readFileSync(settingsFilePath, 'utf8')
+      const settings = JSON.parse(data)
+      res.json(settings)
+  } catch (error) {
+      console.error(error)
+      res.status(500).json({
+          icon: "fa-solid fa-triangle-exclamation",
+          message: "[ERRO] Ocorreu um erro ao carregar as configurações!"
+      })
+  }
+})
+app.post('/settings', (req, res) => {
+  try {
+      const data = fs.readFileSync(settingsFilePath, 'utf8')
+      let settings = JSON.parse(data)
+      const updates = req.body
+
+      // Validar se existem updates
+      if (!updates || typeof updates !== 'object') {
+          return res.status(400).json({
+              error: '[ERROR] Invalid or missing settings update data'
+          })
+      }
+
+      // Atualizar configurações
+      settings = { ...settings, ...updates }
+
+      try {
+          fs.writeFileSync(settingsFilePath, JSON.stringify(settings, null, 2))
+          res.json({
+              message: '[SUCCESS] Configurações atualizadas com sucesso!',
+              settings
+          })
+      } catch (writeError) {
+          console.error(writeError)
+          res.status(500).json({
+              icon: 'fa-solid fa-triangle-exclamation',
+              message: '[ERRO] Ocorreu um erro ao guardar as configurações!'
+          })
+      }
+  } catch (readError) {
+      console.error(readError)
+      res.status(500).json({
+          icon: 'fa-solid fa-triangle-exclamation',
+          message: '[ERRO] Ocorreu um erro ao processar as configurações!'
+      })
   }
 })
 

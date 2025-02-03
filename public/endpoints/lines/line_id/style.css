@@ -36,12 +36,12 @@ body {
     border-radius: 50px;
     background-color: rgb(128, 0, 0);
 }
-#topInformation #favoritesIcon {
+#topInformation #favoritesIcon, #topInformation #notificationsIcon {
     color: rgb(200, 200, 200);
     cursor: pointer;
     transition: .3s;
 }
-#topInformation #favoritesIcon:active {
+#topInformation #favoritesIcon:active, #topInformation #notificationsIcon:active {
     scale: .9;
 }
 

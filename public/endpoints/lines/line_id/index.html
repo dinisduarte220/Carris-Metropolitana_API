@@ -15,8 +15,6 @@
     <!-- Map API -->
     <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
     <link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet" />
-    <!-- TURF -->
-    <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
     <title>Carris Metropolitana - API [BETA]</title>
 </head>
 <body>
@@ -34,6 +32,7 @@
         <div id="lineNumber">0000</div>
         <div id="lineName">Percurso</div>
         <i onclick="favoriteLines()" id="favoritesIcon" class="fa-regular fa-heart"></i>
+        <i onclick="toggleNotifications()" id="notificationsIcon" class="fa-regular fa-bell"></i>
     </div>
     <div id="lineParameters">
         <div id="patternSelect">
