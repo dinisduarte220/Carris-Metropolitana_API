@@ -4,7 +4,10 @@ body {
 
 /* Top Line Information */
 #topInformation {
-    margin-top: 1rem;
+    position: sticky;
+    top: 0;
+    padding: 1rem 0;
+    /* margin-top: 1rem; */
     width: 100vw;
     display: flex;
     align-items: center;
@@ -12,6 +15,8 @@ body {
     font-weight: 600;
     font-size: 20px;
     color: whitesmoke;
+    background-color: rgb(20, 20, 20);
+    z-index: 9999;
 }
 #topInformation a {
     margin-left: 1rem;
