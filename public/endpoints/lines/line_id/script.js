@@ -4,6 +4,9 @@ const lineId = pathParts[3]
 let patternId, stopId // Store the active pattern and stop
 let tripId // Store trip ID
 
+// Picture in Picture Element
+let pipWindow = null
+
 // Check if the user wants to receive line notifications
 let receiveNotifications
 // Fetch settings and update icon
@@ -273,6 +276,12 @@ async function selectPattern(pattern_id) {
 let pointFeatures = []
 let allStops = []
 async function loadStops() {
+  stopId = ""
+  if (pipWindow) {
+    pipWindow.close()
+    pipWindow = null
+    document.getElementById('pipIcon').className = "fa-regular fa-clone"
+  }
   let firstStopSet = false
   let stopsCoords = []
   pointFeatures = []
@@ -948,12 +957,16 @@ async function updateTimes_vehicles() {
 }
 
 // Picture in Picture
-let pipWindow = null
-
 async function togglePictureInPicture() {
   let pipIcon = document.getElementById('pipIcon')
   if (!stopId) {
     snackbar("fa-solid fa-triangle-exclamation", "Esta função necessita de uma paragem selecionada")
+    return
+  }
+  const dateSelected = document.getElementById('date_input').value
+  let changedDate = dateSelected.replace(/-/g, '')
+  if (changedDate !== currentDate) {
+    snackbar("fa-solid fa-triangle-exclamation", "Não é possível usar esta função com a data selecionada")
     return
   }
   // Close PIP if it exists
