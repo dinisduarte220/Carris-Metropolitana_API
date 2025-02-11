@@ -566,12 +566,16 @@ async function selectStop(stop_id) {
       behavior: 'smooth',
       block: 'center',
     })
+    stopId = stop_id
+    updatePipArrivals()
   } catch (error) {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar o horário para esta paragem")
   }
 }
 // Update Real Times
+let notifiedBuses = new Set(); // Set to track notified buses
+
 async function updateStopArrivals(id) {
   const currentUNIX = Math.floor(Date.now() / 1000)
 
@@ -589,22 +593,42 @@ async function updateStopArrivals(id) {
         return
       }
 
-      // Check if bus as passed
+      // Check if bus has passed
       if (dataItem.observed_arrival_unix !== null && dataItem.scheduled_arrival_unix < currentUNIX && dataItem.estimated_arrival_unix < currentUNIX) {
         item.remove()
         console.log("ITEM REMOVED", dataItem.trip_id)
       }
-      // Check if its still realTime and update minutes
+      // Check if it's still realTime and update minutes
       else if (dataItem.observed_arrival_unix === null && dataItem.estimated_arrival_unix !== null && dataItem.estimated_arrival_unix > currentUNIX && !item.classList.contains('scheduleTime')) {
         let arrivalTime = Math.floor((dataItem.estimated_arrival_unix - currentUNIX) / 60)
+        // If arriving time is less than 1 minute, show a incoming message. If its greater, show the remaining minutes till arrival
         if (arrivalTime < 1) {
           item.innerText = "A chegar"
+          // Notify the user of the incoming vehicle
+          if ('Notification' in window && Notification.permission === 'granted' && receiveNotifications === true) {
+            // Trigger notification only once
+            if (!notifiedBuses.has(dataItem.trip_id)) {
+              notifiedBuses.add(dataItem.trip_id)
+              new Notification(`🚍 ${dataItem.line_id} - ${dataItem.headsign}`, {
+                body: 'O autocarro está perto!'
+              })
+            }
+          } else if (Notification.permission !== 'denied' && receiveNotifications === true) {
+            Notification.requestPermission().then(permission => {
+              if (permission === 'granted' && !notifiedBuses.has(dataItem.trip_id)) {
+                notifiedBuses.add(dataItem.trip_id)
+                new Notification(`🚍 ${dataItem.line_id} - ${dataItem.headsign}`, {
+                  body: 'O autocarro está perto!'
+                })
+              }
+            })
+          }
         } else {
           item.innerText = arrivalTime + " min"
         }
         console.log("ITEM UPDATED")
       }
-      // Check if scheduled time is now a real Time
+      // Check if scheduled time is now a real-time and trigger notification if necessary
       else if (dataItem.observed_arrival_unix === null && dataItem.estimated_arrival_unix !== null && dataItem.scheduled_arrival_unix > currentUNIX && item.classList.contains('scheduleTime')) {
         let arrivalTime = Math.floor((dataItem.estimated_arrival_unix - currentUNIX) / 60)
         if (arrivalTime < 1) {
@@ -921,4 +945,93 @@ async function updateTimes_vehicles() {
     snackbar("erro", "Erro no servidor");
     console.log(error);
   }
+}
+
+// Picture in Picture
+let pipWindow = null
+
+async function togglePictureInPicture() {
+  let pipIcon = document.getElementById('pipIcon')
+  if (!stopId) {
+    snackbar("fa-solid fa-triangle-exclamation", "Esta função necessita de uma paragem selecionada")
+    return
+  }
+  // Close PIP if it exists
+  if (pipWindow) {
+    pipWindow.close()
+    pipWindow = null
+    pipIcon.className = "fa-regular fa-clone"
+    return
+  }
+
+  pipIcon.className = "fa-solid fa-clone"
+
+  let pipOptions = {
+    width: 350,
+    height: 100
+  }
+  pipWindow = await documentPictureInPicture.requestWindow(pipOptions)
+  let style = document.createElement("link");
+  style.rel = "stylesheet";
+  style.href = "style.css"
+  pipWindow.document.head.append(style);
+  let style2 = document.createElement("link");
+  style2.rel = "stylesheet";
+  style2.href = "../../../style.css"
+  pipWindow.document.head.append(style2);
+
+  pipWindow.addEventListener("pagehide", () => {
+    pipWindow = null
+    pipIcon.className = "fa-regular fa-clone"
+  })
+
+  let pipContainer = document.createElement('div')
+  pipContainer.setAttribute('class', 'pipContainer')
+  pipContainer.style.display = 'flex'
+  pipContainer.style.flexDirection = 'column'
+  pipContainer.style.alignItems = 'center'
+  pipContainer.style.justifyContent = 'center'
+  pipContainer.style.height = '100%'
+
+  let arrivingTimes = document.createElement('h3')
+  arrivingTimes.setAttribute('class', 'pipTitle')
+  arrivingTimes.innerText = "Próximas chegadas"
+
+  let arrivalContainer = document.createElement('div')
+  arrivalContainer.setAttribute('class', 'pipStopsContainer')
+  arrivalContainer.setAttribute('id', 'pip_arrivals')
+
+  pipContainer.appendChild(arrivingTimes)
+  pipContainer.appendChild(arrivalContainer)
+
+  pipWindow.document.body.appendChild(pipContainer)
+
+  updatePipArrivals()
+  setInterval(updatePipArrivals, 10000)
+
+  // Listen for visibility change to keep updating PiP when the tab is not active
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && pipWindow) {
+      updatePipArrivals() // Update when tab becomes active
+    }
+  })
+}
+
+function updatePipArrivals() {
+  if (!pipWindow) return
+
+  let arrivalContainer = pipWindow.document.getElementById('pip_arrivals')
+  if (!arrivalContainer) return
+
+  arrivalContainer.innerHTML = ""
+
+  let arrivals = document.querySelectorAll('.realTime, .scheduleTime')
+  arrivals = Array.from(arrivals).slice(0, 3) // Get only the first 3 arrivals
+
+  arrivals.forEach(arrival => {
+    let newArrival = document.createElement('p')
+    newArrival.setAttribute('class', arrival.classList.contains('realTime') ? 'pipArrivalTime realTime' : 'pipArrivalTime')
+    newArrival.innerText = arrival.innerText
+    arrivalContainer.appendChild(newArrival)
+  })
 }

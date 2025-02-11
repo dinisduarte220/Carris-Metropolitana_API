@@ -36,12 +36,12 @@ body {
     border-radius: 50px;
     background-color: rgb(128, 0, 0);
 }
-#topInformation #favoritesIcon, #topInformation #notificationsIcon {
+#topInformation i {
     color: rgb(200, 200, 200);
     cursor: pointer;
     transition: .3s;
 }
-#topInformation #favoritesIcon:active, #topInformation #notificationsIcon:active {
+#topInformation i:active {
     scale: .9;
 }
 
@@ -277,4 +277,28 @@ body {
     height: 50vh;
     width: 40vw;
     border-radius: 15px;
+}
+
+/* PIP Styling */
+.pipTitle {
+    color: whitesmoke;
+    text-align: center;
+    margin-top: 5px;
+}
+.pipStopsContainer {
+    display: flex;
+    width: 95%;
+    margin-top: 15px;
+    justify-content: space-evenly;
+}
+.pipArrivalTime {
+    background-color: rgb(50, 50, 50);
+    text-align: center;
+    padding: 5px 10px;
+    border-radius: 5px;
+    color: whitesmoke;
+    font-weight: 600;
+}
+.pipArrivalTime.realTime {
+    color: rgb(0, 205, 50);
 }
