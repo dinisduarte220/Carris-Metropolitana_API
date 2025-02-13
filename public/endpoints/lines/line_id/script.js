@@ -120,6 +120,8 @@ async function lineInformationDisplay() {
     lineNumber.style.backgroundColor = data.color
     lineName.innerText = data.long_name
 
+    document.title = `${lineId} - ${data.long_name}`
+
     // If line is stored on favorites, change the icon to solid
     const response = await fetch('/storage?storage_id=favorite_lines')
     if (!response.ok) {
