@@ -3,7 +3,6 @@ const pathParts = window.location.pathname.split('/')
 const stopId = pathParts[3]
 let linesFiltered = []
 
-
 // Picture in Picture Element
 let pipWindow = null
 
@@ -60,7 +59,6 @@ function toggleNotifications() {
   })
   .then(response => response.json())
   .then(data => {
-    console.log('[SUCCESS]', data.message)
     updateNotificationIcon() // Update icon after saving the new state
   })
   .catch(error => console.error('[ERROR] Failed to update settings:', error))
@@ -272,50 +270,61 @@ function filterLines(line_id) {
       document.getElementById('line_' + line).style.opacity = "1"
     })
   }
+
+  loadArrivals()
 }
 
-// Load arrival times
-let pastTrips_counter = 0
-let pastTrips = []
-let realTimeTrips = []
-let scheduledTrips = []
-let finalTrips = []
+let updateInterval, currentTimeInterval
 
-async function loadArrivals() {
-  const currentUNIX = Math.floor(Date.now() / 1000)
-  const pastContainer = document.getElementById('pastTrips')
-  const futureContainer = document.getElementById('futureTrips')
+// Load Arrivals for the stop
+async function loadArrivals(fullList) {
+  document.getElementById('fullPastTrips').style.display = "block"
+  var pastTrips_container = document.getElementById('pastTrips')
+  var futureTrips_container = document.getElementById('futureTrips')
+  let concluded_arrivals = [], realTime_arrivals = [], scheduled_arrivals = []
+  let realTime_trips = [], scheduled_trips = [], future_trips = [], past_trips = []
+  let color, arrivingTime, delayTime, delayType, delayText
 
-  let className, color, arrivalTime, delayType, delayTime
+  const currentUNIX = Math.floor(Date.now() / 1000);
   try {
-    const arrival_data = await getAPI(`stops/${stopId}/realtime`)
-    arrival_data.forEach(arrival => {
-      // Check if arrival is already done (past trip)
-      if (arrival.observed_arrival_unix !== null && arrival.estimated_arrival_unix !== null && arrival.estimated_arrival_unix < currentUNIX && arrival.scheduled_arrival_unix < currentUNIX) {
-        let lineObj = linesData.find(line => line.line_ID === arrival.line_id)
-        color = lineObj ? lineObj.line_color : null
-        className = "concluded"
-        if (arrival.observed_arrival_unix !== null) {
-          console.log(arrival.estimated_arrival)
-          arrivalTime = arrival.estimated_arrival.substring(0, 5)
-        } else {
-          arrivalTime = arrival.scheduled_arrival.substring(0, 5)
-        }
-        delayTime = null
-        delayType = null
-        pastTrips.push({ trip: arrival, arrivalTime, color, className, delayTime, delayType })
+    let arrivals_data = await getAPI(`stops/${stopId}/realtime`)
+    arrivals_data.forEach(arrival => {
+      if (linesFiltered.length > 0 && !linesFiltered.includes(Number(arrival.line_id))) {
+        return
       }
-      // Check if arrival is on real time (already running)
-      else if (arrival.observed_arrival_unix === null && arrival.estimated_arrival_unix !== null && arrival.estimated_arrival_unix > currentUNIX) {
-        let lineObj = linesData.find(line => line.line_ID === arrival.line_id)
-        color = lineObj ? lineObj.line_color : null
-        className = "realTime"
-        if (Math.floor((arrival.estimated_arrival_unix - currentUNIX) / 60) < 1) {
-          arrivalTime = "A chegar"
+      let colorIndex = linesData.findIndex(line => line.line_ID === arrival.line_id)
+      color = linesData[colorIndex].line_color
+
+      // Concluded arrivals
+      if (arrival.observed_arrival_unix !== null || (arrival.scheduled_arrival_unix < currentUNIX && arrival.estimated_arrival_unix < currentUNIX)) {
+        if (arrival.observed_arrival_unix !== null) {
+          arrivingTime = arrival.observed_arrival
         } else {
-          arrivalTime = Math.floor((arrival.estimated_arrival_unix - currentUNIX) / 60) + " min"
+          arrivingTime = arrival.scheduled_arrival
+        }
+
+        let newArrival = {
+          "color": color,
+          "tripID": arrival.trip_id,
+          "lineID": arrival.line_id,
+          "lineName": arrival.headsign,
+          "time": arrivingTime.substring(0, 5),
+          "type": "concluded",
+          "delayType": null,
+          "delayTime": ""
+        }
+
+        concluded_arrivals.push(newArrival)
+      }
+      // Real Time arrivals - Already running
+      else if (arrival.observed_arrival_unix === null && arrival.estimated_arrival_unix !== null && arrival.estimated_arrival_unix > currentUNIX) {
+        if (Math.floor((arrival.estimated_arrival_unix - currentUNIX) / 60) < 1) {
+          arrivingTime = "A Chegar"
+        } else {
+          arrivingTime = Math.floor((arrival.estimated_arrival_unix - currentUNIX) / 60) + " min"
         }
         delayTime = Math.floor((arrival.estimated_arrival_unix - arrival.scheduled_arrival_unix) / 60)
+
         if (delayTime < 5) {
           delayType = 0
         } else if (delayTime < 10) {
@@ -323,53 +332,111 @@ async function loadArrivals() {
         } else {
           delayType = 2
         }
-        realTimeTrips.push({ trip: arrival, arrivalTime, color, className, delayTime, delayType })
+
+        let newArrival = {
+          "color": color,
+          "tripID": arrival.trip_id,
+          "lineID": arrival.line_id,
+          "lineName": arrival.headsign,
+          "time": arrivingTime,
+          "type": "realTime",
+          "delayType": delayType || 0,
+          "delayTime": delayTime
+        }
+
+        realTime_arrivals.push(newArrival)
+        realTime_trips.push(newArrival)
       }
-      // Check if trip is scheduled (future trip)
-      else if (arrival.observed_arrival_unix === null && arrival.scheduled_arrival_unix > currentUNIX) {
-        let lineObj = linesData.find(line => line.line_ID === arrival.line_id)
-        color = lineObj ? lineObj.line_color : null
-        className = "scheduled"
-        arrivalTime = arrival.scheduled_arrival.substring(0, 5)
-        delayTime = null
-        delayType = null
-        scheduledTrips.push({ trip: arrival, arrivalTime, color, className, delayTime, delayType })
+      // Scheduled Arrivals / Real Time unavailable
+      else {
+        arrivingTime = arrival.scheduled_arrival
+        let newArrival = {
+          "color": color,
+          "tripID": arrival.trip_id,
+          "lineID": arrival.line_id,
+          "lineName": arrival.headsign,
+          "time": arrivingTime.substring(0, 5),
+          "type": "scheduled",
+          "delayType": null,
+          "delayTime": ""
+        }
+
+        scheduled_arrivals.push(newArrival)
+        scheduled_trips.push(newArrival)
       }
     })
-
-    // Create the DOM elements for each trip
-    const createTripElement = (tripData) => {
-      const { trip, arrivalTime, color, className, delayTime, delayType } = tripData
-
+    while (pastTrips_container.firstChild) {
+      pastTrips_container.removeChild(pastTrips_container.firstChild);
+    }
+    while (futureTrips_container.firstChild) {
+      futureTrips_container.removeChild(futureTrips_container.firstChild);
+    }
+    
+    // Sort arrivals (Concluded > Real Time > Scheduled)
+    concluded_arrivals.sort((a, b) => {
+      const timeStringA = a.time.split(':').join('');
+      const timeStringB = b.time.split(':').join('');
+      return timeStringA - timeStringB;
+    });
+    realTime_arrivals.sort((a, b) => {
+      const timeStringA = a.time.split(':').join('');
+      const timeStringB = b.time.split(':').join('');
+      return timeStringA - timeStringB;
+    });
+    scheduled_arrivals.sort((a, b) => {
+      const timeStringA = a.time.split(':').join('');
+      const timeStringB = b.time.split(':').join('');
+      return timeStringA - timeStringB;
+    });
+    // Create the final trips list - 3 Previous Trips + Real Time + Scheduled
+    future_trips.push(...realTime_arrivals, ...scheduled_arrivals)
+    // If the user wants to see the full previous trips list
+    if (fullList) {
+      past_trips.push(...concluded_arrivals)
+      document.getElementById('fullPastTrips').innerText = "Esconder as viagens passadas"
+      document.getElementById('fullPastTrips').setAttribute('onclick', 'loadArrivals()')
+    } else {
+      let startIndex = Math.max(0, concluded_arrivals.length - 3) // Ensure it doesn't go negative
+      past_trips.push(...concluded_arrivals.slice(startIndex))
+      document.getElementById('fullPastTrips').innerText = "Ver viagens passadas"
+      document.getElementById('fullPastTrips').setAttribute('onclick', 'loadArrivals(true)')
+    }
+    past_trips.forEach(trip => {
       let newArrival = document.createElement('div')
-      newArrival.setAttribute('class', `arrivalTime ${className}`)
-      newArrival.setAttribute('id', 'trip_' + trip.trip_id)
+      newArrival.setAttribute('class', `arrivalTime ${trip.type}`)
+      newArrival.setAttribute('id', 'trip_' + trip.tripID)
 
       let arrivalNumber = document.createElement('div')
       arrivalNumber.setAttribute('class', 'lineNumber')
-      arrivalNumber.innerText = trip.line_id
-      arrivalNumber.style.backgroundColor = color
+      arrivalNumber.innerText = trip.lineID
+      arrivalNumber.style.backgroundColor = trip.color
 
       let arrivalName = document.createElement('div')
       arrivalName.setAttribute('class', 'lineName')
-      arrivalName.innerText = trip.headsign
+      arrivalName.innerText = trip.lineName
 
       let arrivingTime = document.createElement('div')
       arrivingTime.setAttribute('class', 'arrivingTime')
-      if (className === "realTime") {
+
+      if (trip.type === "realTime") {
         let realTimeIcon = document.createElement('div')
-        realTimeIcon.setAttribute('class', `realTimeIcon delay_${delayType}`)
+        realTimeIcon.setAttribute('class', `realTimeIcon delay_${trip.delayType}`)
+
         let realTimeDot = document.createElement('div')
-        realTimeDot.setAttribute('class', `dot delay_${delayType}`)
+        realTimeDot.setAttribute('class', `dot delay_${trip.delayType}`)
 
         realTimeIcon.appendChild(realTimeDot)
-        realTimeIcon.innerText = arrivalTime
+
+        let arrivalTimeDiv = document.createElement('div')
+        arrivalTimeDiv.setAttribute('class', 'arrivalTimeText')
+        arrivalTimeDiv.innerText = trip.time
+        realTimeIcon.appendChild(arrivalTimeDiv)
 
         let delayDisplay = document.createElement('div')
         delayDisplay.setAttribute('class', 'delayTime')
 
-        if (delayTime > 3) {
-          delayDisplay.innerText = delayTime + " min atrasado"
+        if (trip.delayTime > 3) {
+          delayDisplay.innerText = trip.delayTime + " min atrasado"
         }
 
         arrivingTime.appendChild(realTimeIcon)
@@ -377,7 +444,7 @@ async function loadArrivals() {
       } else {
         let time = document.createElement('div')
         time.setAttribute('class', 'time')
-        time.innerHTML = arrivalTime
+        time.innerHTML = trip.time
 
         arrivingTime.appendChild(time)
       }
@@ -386,31 +453,100 @@ async function loadArrivals() {
       newArrival.appendChild(arrivalName)
       newArrival.appendChild(arrivingTime)
 
-      return newArrival
+      pastTrips_container.appendChild(newArrival)
+    })
+    
+    document.getElementById('currentTimeMarker').style.display = "block"
+
+    future_trips.forEach(trip => {
+      let newArrival = document.createElement('div')
+      newArrival.setAttribute('class', `arrivalTime ${trip.type}`)
+      newArrival.setAttribute('id', 'trip_' + trip.tripID)
+
+      let arrivalNumber = document.createElement('div')
+      arrivalNumber.setAttribute('class', 'lineNumber')
+      arrivalNumber.innerText = trip.lineID
+      arrivalNumber.style.backgroundColor = trip.color
+
+      let arrivalName = document.createElement('div')
+      arrivalName.setAttribute('class', 'lineName')
+      arrivalName.innerText = trip.lineName
+
+      let arrivingTime = document.createElement('div')
+      arrivingTime.setAttribute('class', 'arrivingTime')
+
+      if (trip.type === "realTime") {
+        let realTimeIcon = document.createElement('div')
+        realTimeIcon.setAttribute('class', `realTimeIcon delay_${trip.delayType}`)
+
+        let realTimeDot = document.createElement('div')
+        realTimeDot.setAttribute('class', `dot delay_${trip.delayType}`)
+
+        realTimeIcon.appendChild(realTimeDot)
+
+        let arrivalTimeDiv = document.createElement('div')
+        arrivalTimeDiv.setAttribute('class', 'arrivalTimeText')
+        arrivalTimeDiv.innerText = trip.time
+        realTimeIcon.appendChild(arrivalTimeDiv)
+
+        let delayDisplay = document.createElement('div')
+        delayDisplay.setAttribute('class', 'delayTime')
+
+        if (trip.delayTime > 3) {
+          delayDisplay.innerText = trip.delayTime + " min atrasado"
+        }
+
+        arrivingTime.appendChild(realTimeIcon)
+        arrivingTime.appendChild(delayDisplay)
+      } else {
+        let time = document.createElement('div')
+        time.setAttribute('class', 'time')
+        time.innerHTML = trip.time
+
+        arrivingTime.appendChild(time)
+      }
+
+      newArrival.appendChild(arrivalNumber)
+      newArrival.appendChild(arrivalName)
+      newArrival.appendChild(arrivingTime)
+
+      futureTrips_container.appendChild(newArrival)
+    })
+    if (future_trips.length === 0 && past_trips.length > 0) {
+      // End of Day Text
+      var span = document.createElement('span')
+      span.setAttribute('id', 'EOD_Text')
+      span.innerText = "FIM DE SERVIÇO"
+      span.style.marginTop = "2rem"
+      futureTrips_container.appendChild(span)
+    }
+    if (past_trips.length === 0 && future_trips.length > 0) {
+      // End of Day Text
+      var span = document.createElement('span')
+      span.setAttribute('id', 'EOD_Text')
+      span.innerText = "INICIO DO DIA"
+      span.style.marginTop = "2rem"
+      pastTrips_container.appendChild(span)
+      document.getElementById('fullPastTrips').style.display = "none"
+    }
+    if (past_trips.length === 0 && future_trips.length === 0) {
+      // End of Day Text
+      var span = document.createElement('span')
+      span.setAttribute('id', 'EOD_Text')
+      span.innerText = "SEM VIAGENS HOJE"
+      span.style.marginTop = "2rem"
+      futureTrips_container.appendChild(span)
+      document.getElementById('currentTimeMarker').style.display = "none"
+      document.getElementById('fullPastTrips').style.display = "none"
     }
 
-    // Clear the past container and append the last 3 concluded trips
-    pastContainer.innerHTML = ''
-    pastTrips.slice(-3).forEach(tripData => {
-      pastContainer.appendChild(createTripElement(tripData))  // Append last 3 past trips
-    })
-
-    // Clear the future container and append real-time first, then scheduled trips
-    futureContainer.innerHTML = ''
-    realTimeTrips.forEach(tripData => {
-      futureContainer.appendChild(createTripElement(tripData))  // Append real-time trips first
-    })
-    scheduledTrips.forEach(tripData => {
-      futureContainer.appendChild(createTripElement(tripData))  // Append scheduled trips after
-    })
-
-    setInterval(currentTimeMarker, 500)
+    if (currentTimeInterval) clearInterval(currentTimeInterval)
+      currentTimeInterval = setInterval(() => currentTimeMarker(), 500)
   } catch (error) {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as passagens desta paragem")
   }
 }
-
 
 // Current Time Marker
 function currentTimeMarker() {
