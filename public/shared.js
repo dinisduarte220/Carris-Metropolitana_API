@@ -6,6 +6,9 @@ async function getAPI(endpoint) {
   return fetch(fullURL)
   .then(response => {
     if (!response.ok) {
+      if (response.status === 404 || response.status === 400) {
+        return {}
+      }
       throw new Error('[ERROR] Something wrong as occurred with the network')
     }
     return response.json()

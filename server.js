@@ -27,9 +27,8 @@ app.get('/page/:path' , (req , res)=>{
 
 // Lines Endpoint - Details for a specific Line
 app.use('/page/lines/:line_id', express.static(path.join(__dirname, 'public', 'endpoints', 'lines', 'line_id')))
-app.get('/page/stops/:stop_id', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'endpoints', 'stops', 'index.html'))
-})
+// Stops Endpoint - Details for a specific Stop
+app.use('/page/stops/:stop_id', express.static(path.join(__dirname, 'public', 'endpoints', 'stops', 'stop_id')))
 
 // Storage Endpoints - Get & Store
 app.get('/storage', (req, res) => {

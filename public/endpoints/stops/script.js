@@ -1,10 +1,3 @@
-// Extract the current line_id from URL
-const pathParts = window.location.pathname.split('/')
-const stopId = pathParts[3]
-if (stopId) {
-  selectStop(stopId)
-}
-
 async function searchStop() {
   const searchInput = document.getElementById('searchStop_input').value.toLowerCase()
   const searchResults = document.getElementById('searchResults')
@@ -41,50 +34,60 @@ async function loadAllStops() {
   let pointFeatures = []
   try {
     const stops_data = await getAPI("stops")
+    const existingIds = new Set()
+
     stops_data.forEach(stop => {
-      coords = [stop.lon, stop.lat]
-      pointFeatures.push({
+      if (!existingIds.has(stop.id)) {
+        existingIds.add(stop.id)
+        const coords = [stop.lon, stop.lat]
+        pointFeatures.push({
           type: "Feature",
           properties: {
-              id: stop.id,
+            id: stop.id,
           },
           geometry: {
-              type: "Point",
-              coordinates: coords
+            type: "Point",
+            coordinates: coords
           }
-      })
-  })
-  const geoJsonPoints = {
-    type: "FeatureCollection",
-    features: pointFeatures,
-  }
-  map.addSource("points", { type: "geojson", data: geoJsonPoints })
-  map.addLayer({
-    id: "points",
-    type: "circle",
-    source: "points",
-    paint: {
-      'circle-radius': 3,
-      'circle-color': "#ba7c18",
-      'circle-stroke-width': 1,
-      'circle-stroke-color': '#FFFFFF'
-    },
-  })
-  // Onclick function to select the wanted stop on the list
-  map.on('click', 'points', (e) => {
-    const stopId = e.features[0].properties.id
-    selectStop(stopId)
-    // window.location.href = "#newStop_" + stopId
-  })
+        })
+      }
+    })
 
-  // Change the cursor to a pointer when hovering over the points
-  map.on('mouseenter', 'points', () => {
-    map.getCanvas().style.cursor = 'pointer'
-  })
+    const geoJsonPoints = {
+      type: "FeatureCollection",
+      features: pointFeatures,
+    }
 
-  map.on('mouseleave', 'points', () => {
-    map.getCanvas().style.cursor = ''
-  })
+    map.addSource("points", { type: "geojson", data: geoJsonPoints })
+    map.addLayer({
+      id: "points",
+      type: "circle",
+      source: "points",
+      paint: {
+        'circle-radius': 3,
+        'circle-color': "#ba7c18",
+        'circle-stroke-width': 1,
+        'circle-stroke-color': '#FFFFFF'
+      },
+    })
+
+    // Onclick function to select the wanted stop on the list
+    map.on('click', 'points', (e) => {
+      const stop_id = e.features[0].properties.id
+      if (typeof stopId !== 'undefined' && stopId === stop_id) {
+        return
+      }
+      window.location.href = "/page/stops/" + stop_id
+    })
+
+    // Change the cursor to a pointer when hovering over the points
+    map.on('mouseenter', 'points', () => {
+      map.getCanvas().style.cursor = 'pointer'
+    })
+
+    map.on('mouseleave', 'points', () => {
+      map.getCanvas().style.cursor = ''
+    })
   } catch (error) {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as paragens no mapa")
@@ -108,5 +111,3 @@ map.addControl(
       trackUserLocation: true
   })
 )
-// Make sure map is loaded before loading the stops
-map.on('load', loadAllStops)

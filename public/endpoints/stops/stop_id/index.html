@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang='pt'>
+<head>
+    <meta charset='UTF-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <!-- CSS -->
+    <link rel="stylesheet" href="../../../style.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel='shortcut icon' href='../../../IMG/icon.ico' type='image/x-icon'>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <script src='https://kit.fontawesome.com/207c253573.js' crossorigin='anonymous'></script>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <!-- Map API -->
+    <script src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"></script>
+    <link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet" />
+    <title>Carris Metropolitana - API [BETA]</title>
+</head>
+<body>
+    <!-- NavBar -->
+    <div id="topBar">
+       <a id="logo" href="/"><img src="../../../IMG/logo.png" alt="logo"></a>
+       <div id="links">
+           <a href="/"><i class="fa-solid fa-home"></i> Inicio</a>
+           <a href="/page/lines"><i class="fa-solid fa-route"></i> Linhas</a>
+           <a class="active"><i class="fa-solid fa-map-location-dot"></i> Paragens</a>
+       </div>
+    </div>
+    <div id="inputStops">
+        <input type="text" id="searchStop_input" oninput="searchStop()" placeholder="Pesquisar por Nome, ID, ou Localidade">
+        <div id="searchResults">
+        </div>
+    </div>
+    <div id="content">
+        <div id="map"></div>
+        <div id="stopContainer">
+            <div id="stopInformation">
+                <p id="stopName">Stop Name</p>
+                <p id="stopID">#000000</p>
+                <div id="stopActions">
+                    <i onclick="favoriteStops()" id="favoritesIcon" class="fa-regular fa-heart" title="Favoritos"></i>
+                    <i onclick="toggleNotifications()" id="notificationsIcon" class="fa-regular fa-bell" title="Notificações"></i>
+                    <i onclick="togglePictureInPicture()" id="pipIcon" class="fa-regular fa-clone" title="MiniLeitor"></i>
+                </div>
+                <div id="stopLines">
+                </div>
+            </div>
+            <div id="stopArrivals">
+                <div class="arrivalTime concluded">
+                    <div class="lineNumber">0000</div>
+                    <div class="lineName">Past Trip</div>
+                    <div class="arrivingTime">
+                        <div class="time">00:00</div>
+                    </div>
+                </div>
+                <div class="arrivalTime concluded">
+                    <div class="lineNumber">0000</div>
+                    <div class="lineName">Past Trip</div>
+                    <div class="arrivingTime">
+                        <div class="time">00:00</div>
+                    </div>
+                </div>
+                <div class="arrivalTime concluded">
+                    <div class="lineNumber">0000</div>
+                    <div class="lineName">Past Trip</div>
+                    <div class="arrivingTime">
+                        <div class="time">00:00</div>
+                    </div>
+                </div>
+                <div class="currentTimeMarker">
+                    <div id="currentTimeMarker_text">00:00</div>
+                </div>
+                <div class="arrivalTime realTime">
+                    <div class="lineNumber">0000</div>
+                    <div class="lineName">Real Time Trip</div>
+                    <div class="arrivingTime">
+                        <div class="realTimeIcon">
+                            <div class="dot"></div>
+                            00 min
+                        </div>
+                        <div class="delayTime">0 min atrasado</div>
+                    </div>
+                </div>
+                <div class="arrivalTime scheduled">
+                    <div class="lineNumber">0000</div>
+                    <div class="lineName">Scheduled Trip</div>
+                    <div class="arrivingTime">
+                        <div class="time">00:00</div>
+                    </div>
+                </div>
+                <div class="arrivalTime scheduled">
+                    <div class="lineNumber">0000</div>
+                    <div class="lineName">Scheduled Trip</div>
+                    <div class="arrivingTime">
+                        <div class="time">00:00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="map"></div>
+    <!-- SnackBar Notifications -->
+    <div id="snackbar">
+        <i class="fa-regular fa-bell"></i> Isto é uma snackbar
+    </div>
+    <!-- JS Files -->
+    <script src="../../../shared.js"></script>
+    <script src="../script.js"></script> <!-- Share the search and load stops functions -->
+    <script src="script.js"></script>
+</body>
+</html>

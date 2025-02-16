@@ -9,7 +9,6 @@ let pipWindow = null
 
 // Check if the user wants to receive line notifications
 let receiveNotifications
-// Fetch settings and update icon
 fetch('/settings')
   .then(response => response.json())
   .then(settings => {
@@ -27,7 +26,6 @@ function updateNotificationIcon() {
   }
 }
 
-addLineToRecents()
 
 // Store current date in YYYYMMDD format
 let date = new Date()
@@ -35,12 +33,13 @@ let currentDate = date.toISOString().split("T")[0].replace(/-/g, '') // Date for
 let formatedDate = date.toISOString().split("T")[0] // Date for the date selector
 document.getElementById("date_input").value = formatedDate
 
-// Get and load first pattern from line (To start displaying information)
+// Check if line is valid
 async function checkLine() {
   try {
     const data = await getAPI("lines/" + lineId)
     // If line exists continue. If not, return to lines page
     if (data && Object.keys(data).length > 0) {
+      addLineToRecents()
       lineInformationDisplay()
     } else {
       window.location.href = '/page/lines'
@@ -104,7 +103,7 @@ async function addLineToRecents() {
     }
   } catch (error) {
     console.error(error.message)
-    snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as tuas linhas favoritas")
+    snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao adicionar esta linha às tuas linhas recentes")
   }
 }
 
@@ -155,7 +154,6 @@ async function favoriteLines() {
       // Add the lineId if it's not a favorite
       data.push(lineId)
     }
-    console.log(data)
     // Update the favorites on the server
     const finalRes = await fetch('/storage', {
       method: 'POST',
