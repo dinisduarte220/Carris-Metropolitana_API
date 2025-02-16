@@ -173,6 +173,14 @@
     margin-top: 10px;
     background-color: rgb(25, 25, 25);
     border-radius: 10px;
+    cursor: pointer;
+    transition: .3s;
+}
+#stopContainer #stopArrivals .arrivalTime:not(.concluded):hover {
+    opacity: .5;
+}
+#stopContainer #stopArrivals .arrivalTime.concluded {
+    opacity: .3;
 }
 #stopContainer #stopArrivals .arrivalTime .lineNumber {
     padding: 5px 10px;
@@ -218,7 +226,7 @@
     right: calc(1rem + 15px); /* Right + Main Padding (15px) */
     font-weight: 600;
     color: whitesmoke;
-    font-size: 18px;
+    font-size: 16px;
 }
 #stopContainer #stopArrivals .arrivingTime .delayTime {
     font-size: 12px;
@@ -233,7 +241,7 @@
     justify-content: end;
     gap: 15px;
     color: #00cd32;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
 }
 .dot {
