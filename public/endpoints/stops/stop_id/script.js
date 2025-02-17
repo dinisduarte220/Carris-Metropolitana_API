@@ -274,15 +274,22 @@ function filterLines(line_id) {
   loadArrivals()
 }
 
+// Current Time Marker
+function currentTimeMarker() {
+  let date = new Date()
+  let currentTime = date.getHours().toLocaleString(undefined, {minimumIntegerDigits: 2}) + ":" + date.getMinutes().toLocaleString(undefined, {minimumIntegerDigits: 2})
+  document.getElementById('currentTimeMarker_text').innerText = currentTime
+}
+// Intervals
 let updateInterval, currentTimeInterval
-
 // Load Arrivals for the stop
+let realTime_trips = [], scheduled_trips = [], future_trips = [], past_trips = [], tripsToBeUpdated = []
 async function loadArrivals(fullList) {
   document.getElementById('fullPastTrips').style.display = "block"
   var pastTrips_container = document.getElementById('pastTrips')
   var futureTrips_container = document.getElementById('futureTrips')
   let concluded_arrivals = [], realTime_arrivals = [], scheduled_arrivals = []
-  let realTime_trips = [], scheduled_trips = [], future_trips = [], past_trips = []
+  realTime_trips = [], scheduled_trips = [], future_trips = [], past_trips = [], tripsToBeUpdated = []
   let color, arrivingTime, delayTime, delayType, delayText
 
   const currentUNIX = Math.floor(Date.now() / 1000);
@@ -346,6 +353,7 @@ async function loadArrivals(fullList) {
 
         realTime_arrivals.push(newArrival)
         realTime_trips.push(newArrival)
+        tripsToBeUpdated.push(arrival.trip_id)
       }
       // Scheduled Arrivals / Real Time unavailable
       else {
@@ -363,6 +371,7 @@ async function loadArrivals(fullList) {
 
         scheduled_arrivals.push(newArrival)
         scheduled_trips.push(newArrival)
+        tripsToBeUpdated.push(arrival.trip_id)
       }
     })
     while (pastTrips_container.firstChild) {
@@ -379,10 +388,16 @@ async function loadArrivals(fullList) {
       return timeStringA - timeStringB;
     });
     realTime_arrivals.sort((a, b) => {
-      const timeStringA = a.time.split(':').join('');
-      const timeStringB = b.time.split(':').join('');
-      return timeStringA - timeStringB;
-    });
+      const getMinutes = (time) => {
+        if (time === "A Chegar") return -1 // Prioritize "A Chegar" at the top
+        if (time.includes("min")) return parseInt(time) // Extracts the number from "X min"
+        
+        let [hours, minutes] = time.split(":").map(Number) // Handles normal HH:MM format
+        return hours * 60 + minutes
+      }
+      
+      return getMinutes(a.time) - getMinutes(b.time)
+    })
     scheduled_arrivals.sort((a, b) => {
       const timeStringA = a.time.split(':').join('');
       const timeStringB = b.time.split(':').join('');
@@ -542,15 +557,122 @@ async function loadArrivals(fullList) {
 
     if (currentTimeInterval) clearInterval(currentTimeInterval)
       currentTimeInterval = setInterval(() => currentTimeMarker(), 500)
+    if (updateInterval) clearInterval(updateInterval)
+      updateInterval = setInterval(() => updateArrivals(), 15000)
   } catch (error) {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as passagens desta paragem")
   }
 }
 
-// Current Time Marker
-function currentTimeMarker() {
-  let date = new Date()
-  let currentTime = date.getHours().toLocaleString(undefined, {minimumIntegerDigits: 2}) + ":" + date.getMinutes().toLocaleString(undefined, {minimumIntegerDigits: 2})
-  document.getElementById('currentTimeMarker_text').innerText = currentTime
+async function updateArrivals() {
+  console.log(`
+
+      :::::::::: ARRIVALS UPDATED ::::::::::
+
+      Stop ID: ${stopId}
+      Time: ${new Date().getHours().toLocaleString(undefined, {minimumIntegerDigits: 2}) + ":" + new Date().getMinutes().toLocaleString(undefined, {minimumIntegerDigits: 2}) + ":" + new Date().getSeconds().toLocaleString(undefined, {minimumIntegerDigits: 2})}
+      Trips: ${tripsToBeUpdated.length}
+      
+  `)
+  const currentUNIX = Math.floor(Date.now() / 1000);
+  const pastTrips_container = document.getElementById('pastTrips')
+  const futureTrips_container = document.getElementById('futureTrips')
+  try {
+    let arrivals_data = await getAPI(`stops/${stopId}/realtime`)
+    arrivals_data.forEach(arrival => {
+      const item = document.getElementById('trip_' + arrival.trip_id)
+      // Only continue if item exists and its a future trip
+      if (!item || (!tripsToBeUpdated.includes(arrival.trip_id) && item.classList.contains('concluded'))) {
+        return
+      }
+      if (arrival.observed_arrival_unix !== null || (arrival.scheduled_arrival_unix < currentUNIX && arrival.estimated_arrival_unix < currentUNIX)) {
+        let arrivingTime = item.querySelector('.arrivingTime')
+        let delayTime = item.querySelector('.arrivingTime .delayTime')
+        let time = document.createElement('div')
+        time.setAttribute('class', 'time')
+        if (arrival.observed_arrival_unix !== null) {
+          time.innerHTML = arrival.observed_arrival.substring(0, 5)
+        } else {
+          time.innerHTML = arrival.scheduled_arrival.substring(0, 5)
+        }
+        arrivingTime.innerHTML = ""
+        arrivingTime.appendChild(time)
+        if (delayTime) {
+          delayTime.innerHTML = ""
+        }
+        let indexPast = tripsToBeUpdated.indexOf(arrival.trip_id)
+        if (indexPast !== -1) {
+          tripsToBeUpdated.splice(indexPast, 1);
+        }
+        futureTrips_container.removeChild(item)
+        pastTrips_container.appendChild(item)
+        pastTrips_container.removeChild(pastTrips_container.firstChild)
+        item.setAttribute('class', 'arrivalTime concluded')
+      } else if (arrival.observed_arrival_unix === null && arrival.estimated_arrival_unix !== null) {
+        let arrivingTime = item.querySelector('.arrivingTime')
+        let existingRealTimeIcon = arrivingTime.querySelector('.realTimeIcon')
+        
+        if (!existingRealTimeIcon) {
+          arrivingTime.innerHTML = ""
+        }
+        let passageTime, delayTime, delayType
+        if (Math.floor((arrival.estimated_arrival_unix - currentUNIX) / 60) < 1) {
+          passageTime = "A Chegar"
+        } else {
+          passageTime = Math.floor((arrival.estimated_arrival_unix - currentUNIX) / 60) + " min"
+        }
+        delayTime = Math.floor((arrival.estimated_arrival_unix - arrival.scheduled_arrival_unix) / 60)
+        if (delayTime < 5) {
+          delayType = 0
+        } else if (delayTime < 10) {
+          delayType = 1
+        } else {
+          delayType = 2
+        }
+        let arrivalTimeDiv, delayDisplay
+        
+        if (existingRealTimeIcon) {
+          // Update existing elements
+          arrivalTimeDiv = existingRealTimeIcon.querySelector('.arrivalTimeText')
+          delayDisplay = arrivingTime.querySelector('.delayTime')
+        } else {
+          // Clear only if there's no realTimeIcon to avoid duplicates
+          arrivingTime.innerHTML = ""
+        
+          // Create new elements
+          existingRealTimeIcon = document.createElement('div')
+          existingRealTimeIcon.setAttribute('class', `realTimeIcon delay_${delayType}`)
+        
+          let realTimeDot = document.createElement('div')
+          realTimeDot.setAttribute('class', `dot delay_${delayType}`)
+          existingRealTimeIcon.appendChild(realTimeDot)
+        
+          arrivalTimeDiv = document.createElement('div')
+          arrivalTimeDiv.setAttribute('class', 'arrivalTimeText')
+          existingRealTimeIcon.appendChild(arrivalTimeDiv)
+        
+          delayDisplay = document.createElement('div')
+          delayDisplay.setAttribute('class', 'delayTime')
+        
+          arrivingTime.appendChild(existingRealTimeIcon)
+          arrivingTime.appendChild(delayDisplay)
+        }
+        
+        // Update values
+        arrivalTimeDiv.innerText = passageTime
+        delayDisplay.innerText = delayTime > 3 ? `${delayTime} min atrasado` : ""
+        item.setAttribute('class', 'arrivalTime realTime')
+      } else {
+        let arrivingTime = item.querySelector('.arrivingTime .time')
+        if (arrivingTime) {
+          arrivingTime.innerHTML = arrival.scheduled_arrival.substring(0, 5)
+        }
+        item.setAttribute('class', 'arrivalTime scheduled')
+      }
+    })
+  } catch (error) {
+    console.error(error.message)
+    snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao atualizar as passagens desta paragem")
+  }
 }
