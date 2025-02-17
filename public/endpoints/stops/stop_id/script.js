@@ -284,6 +284,7 @@ function currentTimeMarker() {
 let updateInterval, currentTimeInterval
 // Load Arrivals for the stop
 let realTime_trips = [], scheduled_trips = [], future_trips = [], past_trips = [], tripsToBeUpdated = []
+let fullArrivalsList = false
 async function loadArrivals(fullList) {
   document.getElementById('fullPastTrips').style.display = "block"
   var pastTrips_container = document.getElementById('pastTrips')
@@ -407,10 +408,12 @@ async function loadArrivals(fullList) {
     future_trips.push(...realTime_arrivals, ...scheduled_arrivals)
     // If the user wants to see the full previous trips list
     if (fullList) {
+      fullArrivalsList = true
       past_trips.push(...concluded_arrivals)
       document.getElementById('fullPastTrips').innerText = "Esconder as viagens passadas"
       document.getElementById('fullPastTrips').setAttribute('onclick', 'loadArrivals()')
     } else {
+      fullArrivalsList = false
       let startIndex = Math.max(0, concluded_arrivals.length - 3) // Ensure it doesn't go negative
       past_trips.push(...concluded_arrivals.slice(startIndex))
       document.getElementById('fullPastTrips').innerText = "Ver viagens passadas"
@@ -607,7 +610,9 @@ async function updateArrivals() {
         }
         futureTrips_container.removeChild(item)
         pastTrips_container.appendChild(item)
-        pastTrips_container.removeChild(pastTrips_container.firstChild)
+        if (fullArrivalsList === false) {
+          pastTrips_container.removeChild(pastTrips_container.firstChild)
+        }
         item.setAttribute('class', 'arrivalTime concluded')
       } else if (arrival.observed_arrival_unix === null && arrival.estimated_arrival_unix !== null) {
         let arrivingTime = item.querySelector('.arrivingTime')
