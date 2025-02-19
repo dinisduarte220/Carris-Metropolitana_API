@@ -191,6 +191,9 @@
     cursor: pointer;
     transition: .3s;
 }
+#stopContainer #stopArrivals .arrivalTime.active {
+    opacity: .5;
+}
 /* #stopContainer #stopArrivals .arrivalTime:not(.concluded):hover {
     opacity: .5;
 } */

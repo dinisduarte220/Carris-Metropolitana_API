@@ -283,7 +283,7 @@ function currentTimeMarker() {
 // Intervals
 let updateInterval, currentTimeInterval
 // Load Arrivals for the stop
-let realTime_trips = [], scheduled_trips = [], future_trips = [], past_trips = [], tripsToBeUpdated = []
+let realTime_trips = [], scheduled_trips = [], future_trips = [], past_trips = [], tripsToBeUpdated = [], vehiclesToBeUpdated = []
 let fullArrivalsList = false
 async function loadArrivals(fullList) {
   document.getElementById('fullPastTrips').style.display = "block"
@@ -314,6 +314,8 @@ async function loadArrivals(fullList) {
         let newArrival = {
           "color": color,
           "tripID": arrival.trip_id,
+          "vehicleID": arrival.vehicle_id,
+          "patternID": arrival.pattern_id,
           "lineID": arrival.line_id,
           "lineName": arrival.headsign,
           "time": arrivingTime.substring(0, 5),
@@ -344,6 +346,8 @@ async function loadArrivals(fullList) {
         let newArrival = {
           "color": color,
           "tripID": arrival.trip_id,
+          "vehicleID": arrival.vehicle_id,
+          "patternID": arrival.pattern_id,
           "lineID": arrival.line_id,
           "lineName": arrival.headsign,
           "time": arrivingTime,
@@ -355,6 +359,7 @@ async function loadArrivals(fullList) {
         realTime_arrivals.push(newArrival)
         realTime_trips.push(newArrival)
         tripsToBeUpdated.push(arrival.trip_id)
+        vehiclesToBeUpdated.push(arrival.vehicle_id)
       }
       // Scheduled Arrivals / Real Time unavailable
       else {
@@ -362,6 +367,8 @@ async function loadArrivals(fullList) {
         let newArrival = {
           "color": color,
           "tripID": arrival.trip_id,
+          "vehicleID": arrival.vehicle_id,
+          "patternID": arrival.pattern_id,
           "lineID": arrival.line_id,
           "lineName": arrival.headsign,
           "time": arrivingTime.substring(0, 5),
@@ -373,6 +380,7 @@ async function loadArrivals(fullList) {
         scheduled_arrivals.push(newArrival)
         scheduled_trips.push(newArrival)
         tripsToBeUpdated.push(arrival.trip_id)
+        vehiclesToBeUpdated.push(arrival.vehicle_id)
       }
     })
     while (pastTrips_container.firstChild) {
@@ -423,6 +431,7 @@ async function loadArrivals(fullList) {
       let newArrival = document.createElement('div')
       newArrival.setAttribute('class', `arrivalTime ${trip.type}`)
       newArrival.setAttribute('id', 'trip_' + trip.tripID)
+      newArrival.setAttribute('onclick', `console.log("Trip ID: ${trip.tripID}\\nVehicle ID: ${trip.vehicleID}\\nPattern ID: ${trip.patternID}")`)
 
       let arrivalNumber = document.createElement('div')
       arrivalNumber.setAttribute('class', 'lineNumber')
@@ -480,6 +489,10 @@ async function loadArrivals(fullList) {
       let newArrival = document.createElement('div')
       newArrival.setAttribute('class', `arrivalTime ${trip.type}`)
       newArrival.setAttribute('id', 'trip_' + trip.tripID)
+      newArrival.onclick = () => {
+        selectTrip(trip.tripID, trip.patternID, trip.color, trip.vehicleID)
+        console.log(`Trip ID: ${trip.tripID}\nVehicle ID: ${trip.vehicleID}\nPattern ID: ${trip.patternID}`)
+      }
 
       let arrivalNumber = document.createElement('div')
       arrivalNumber.setAttribute('class', 'lineNumber')
@@ -568,6 +581,7 @@ async function loadArrivals(fullList) {
   }
 }
 
+let notifiedBuses = new Set()
 async function updateArrivals() {
   console.log(`
 
@@ -582,6 +596,7 @@ async function updateArrivals() {
   const pastTrips_container = document.getElementById('pastTrips')
   const futureTrips_container = document.getElementById('futureTrips')
   try {
+    const stop_data = await getAPI("stops/" + stopId)
     let arrivals_data = await getAPI(`stops/${stopId}/realtime`)
     arrivals_data.forEach(arrival => {
       const item = document.getElementById('trip_' + arrival.trip_id)
@@ -614,7 +629,8 @@ async function updateArrivals() {
           pastTrips_container.removeChild(pastTrips_container.firstChild)
         }
         item.setAttribute('class', 'arrivalTime concluded')
-      } else if (arrival.observed_arrival_unix === null && arrival.estimated_arrival_unix !== null) {
+        item.setAttribute('onclick', '')
+      } else if (arrival.observed_arrival_unix === null && arrival.estimated_arrival_unix !== null && arrival.estimated_arrival_unix > currentUNIX) {
         let arrivingTime = item.querySelector('.arrivingTime')
         let existingRealTimeIcon = arrivingTime.querySelector('.realTimeIcon')
         
@@ -624,6 +640,24 @@ async function updateArrivals() {
         let passageTime, delayTime, delayType
         if (Math.floor((arrival.estimated_arrival_unix - currentUNIX) / 60) < 1) {
           passageTime = "A Chegar"
+          if ('Notification' in window && Notification.permission === 'granted' && receiveNotifications === true) {
+            // Trigger notification only once
+            if (!notifiedBuses.has(arrival.trip_id)) {
+              notifiedBuses.add(arrival.trip_id)
+              new Notification(`🚍 ${arrival.line_id} - ${arrival.headsign}`, {
+                body: `O autocarro está perto de ${stop_data.name} !`
+              })
+            }
+          } else if (Notification.permission !== 'denied' && receiveNotifications === true) {
+            Notification.requestPermission().then(permission => {
+              if (permission === 'granted' && !notifiedBuses.has(arrival.trip_id)) {
+                notifiedBuses.add(arrival.trip_id)
+                new Notification(`🚍 ${arrival.line_id} - ${arrival.headsign}`, {
+                  body: `O autocarro está perto de ${stop_data.name} !`
+                })
+              }
+            })
+          }
         } else {
           passageTime = Math.floor((arrival.estimated_arrival_unix - currentUNIX) / 60) + " min"
         }
@@ -667,17 +701,185 @@ async function updateArrivals() {
         // Update values
         arrivalTimeDiv.innerText = passageTime
         delayDisplay.innerText = delayTime > 3 ? `${delayTime} min atrasado` : ""
-        item.setAttribute('class', 'arrivalTime realTime')
+        if (item.classList.contains('active')) {
+          item.setAttribute('class', 'arrivalTime realTime active')
+        } else {
+          item.setAttribute('class', 'arrivalTime realTime')
+        }
       } else {
         let arrivingTime = item.querySelector('.arrivingTime .time')
         if (arrivingTime) {
           arrivingTime.innerHTML = arrival.scheduled_arrival.substring(0, 5)
         }
-        item.setAttribute('class', 'arrivalTime scheduled')
+        if (item.classList.contains('active')) {
+          item.setAttribute('class', 'arrivalTime scheduled active')
+        } else {
+          item.setAttribute('class', 'arrivalTime scheduled')
+        }
       }
     })
   } catch (error) {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao atualizar as passagens desta paragem")
+  }
+}
+
+async function selectTrip(trip_id, pattern_id, color, vehicle_id) {
+  try {
+    // Change the trip status to active (If is already active, remove it)
+    const tripDiv = document.getElementById(`trip_${trip_id}`)
+    if (tripDiv.classList.contains('active')) {
+      tripDiv.classList.remove('active')
+      if (map.getLayer("lineString")) {
+        map.removeLayer("lineString")
+        map.removeSource("lineString")
+      }
+      if (map.getLayer("pointsbus")) {
+        map.removeLayer("pointsbus")
+        map.removeSource("pointsbus")
+      }
+      if (map.hasImage("bus-icon")) {
+        map.removeImage("bus-icon")
+      }
+      const stop_data = await getAPI("stops/" + stopId)
+      setSelectedStop(stop_data.lon, stop_data.lat, stop_data.id)
+    } else {
+      const activeTrip = document.querySelectorAll('.arrivalTime.active')
+      activeTrip.forEach(trip => {
+        trip.classList.remove('active')
+      })
+      const pattern_data = await getAPI(`patterns/${pattern_id}`)
+      let shape_id = pattern_data.shape_id
+      const shape_data = await getAPI(`shapes/${shape_id}`)
+      const lineCoords = shape_data.geojson.geometry.coordinates
+  
+      if (map.getLayer("lineString")) {
+        map.removeLayer("lineString")
+        map.removeSource("lineString")
+      }
+  
+      const lineStringGeojson = {
+        type: "FeatureCollection",
+        features: [{
+          type: "Feature",
+          geometry: {
+            type: "LineString",
+            coordinates: lineCoords
+          }
+        }]
+      }
+  
+      map.addSource("lineString", {
+        type: "geojson",
+        data: lineStringGeojson
+      })
+  
+      map.addLayer({
+        id: "lineString",
+        type: "line",
+        source: "lineString",
+        layout: {
+          "line-cap": "round",
+          "line-join": "round"
+        },
+        paint: {
+          "line-color": color,
+          "line-width": 4
+        }
+      })
+  
+      if (!vehicle_id) {
+        const allCoordinates = lineStringGeojson.features[0].geometry.coordinates
+  
+        const bounds = new maplibregl.LngLatBounds()
+        allCoordinates.forEach((coord) => bounds.extend(coord))
+  
+        map.fitBounds(bounds, { padding: 50, animate: true })
+      } else {
+        let vehicle_data = await getAPI("vehicles")
+        vehicle_data = vehicle_data.find(vehicle => vehicle.id === vehicle_id)
+
+        if (!vehicle_data) {
+          snackbar("fa-solid fa-triangle-exclamation", "Veículo não encontrado")
+          return
+        }
+
+        if (map.getLayer("pointsbus")) {
+          map.removeLayer("pointsbus")
+          map.removeSource("pointsbus")
+        }
+
+        const busCoords = [vehicle_data.lon, vehicle_data.lat]
+        const stop_data = await getAPI("stops/" + stopId)
+        const stopCoords = [stop_data.lon, stop_data.lat]
+
+        const geoJsonPoints = {
+          type: "FeatureCollection",
+          features: [{
+            type: "Feature",
+            properties: {
+              name: vehicle_data.id,
+              className: "iconBus",
+              bearing: vehicle_data.bearing,
+              timeStamp: vehicle_data.timestamp,
+              description: `Line: <b>${vehicle_data.line_id}</b><br>
+              Route: <b>${vehicle_data.route_id}</b><br>
+              Pattern: <b>${vehicle_data.pattern_id}</b><br>
+              State: <b>${vehicle_data.current_status}</b><br>
+              Stop: <b>${vehicle_data.stop_id}</b><br>
+              Vehicle ID: <b>${vehicle_data.id}</b>`
+            },
+            geometry: { type: "Point", coordinates: busCoords }
+          }]
+        }
+
+        map.addSource("pointsbus", { type: "geojson", data: geoJsonPoints })
+
+        if (map.hasImage("bus-icon")) {
+          map.removeImage("bus-icon")
+        }
+
+        const image = await map.loadImage("../../../IMG/busIcon.png")
+        map.addImage("bus-icon", image.data)
+
+        map.addLayer({
+          id: "pointsbus",
+          type: "symbol",
+          source: "pointsbus",
+          layout: {
+            "icon-image": "bus-icon",
+            "icon-size": ["interpolate", ["linear", 0.5], ["zoom"], 10, 0.05, 20, 0.15],
+            "icon-allow-overlap": true,
+            "icon-offset": [0, -15],
+            "icon-rotate": ["get", "bearing"]
+          }
+        })
+
+        const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, className: "popupBus" })
+        map.on('mouseenter', 'pointsbus', (e) => {
+          map.getCanvas().style.cursor = 'pointer'
+          const coordinates = e.features[0].geometry.coordinates.slice()
+          const description = e.features[0].properties.description
+          while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360
+          }
+          popup.setLngLat(coordinates).setHTML(description).addTo(map)
+        })
+        map.on('mouseleave', 'pointsbus', () => {
+          map.getCanvas().style.cursor = 'default'
+          popup.remove()
+        })
+
+        // Adjusting zoom to fit both bus and selected stop
+        const bounds = new maplibregl.LngLatBounds()
+        bounds.extend(busCoords)
+        bounds.extend(stopCoords)
+        map.fitBounds(bounds, { padding: 80, animate: true })
+      }
+        tripDiv.classList.add('active')
+    }
+  } catch (error) {
+    console.error(error.message)
+    snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar a rota ou o veiculo para esta passagem")
   }
 }
