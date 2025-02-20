@@ -281,11 +281,12 @@ function currentTimeMarker() {
   document.getElementById('currentTimeMarker_text').innerText = currentTime
 }
 // Intervals
-let updateInterval, currentTimeInterval
+let updateInterval, currentTimeInterval, vehiclesUpdateInterval
 // Load Arrivals for the stop
 let realTime_trips = [], scheduled_trips = [], future_trips = [], past_trips = [], tripsToBeUpdated = [], vehiclesToBeUpdated = []
 let fullArrivalsList = false
 async function loadArrivals(fullList) {
+
   document.getElementById('fullPastTrips').style.display = "block"
   var pastTrips_container = document.getElementById('pastTrips')
   var futureTrips_container = document.getElementById('futureTrips')
@@ -294,7 +295,20 @@ async function loadArrivals(fullList) {
   let color, arrivingTime, delayTime, delayType, delayText
 
   const currentUNIX = Math.floor(Date.now() / 1000);
-  try {
+    try {
+      const stop_data = await getAPI("stops/" + stopId)
+    if (map.getLayer("pointsbus")) {
+      map.removeLayer("pointsbus")
+      map.removeSource("pointsbus")
+    }
+    if (map.hasImage("bus-icon")) {
+      map.removeImage("bus-icon")
+    }  
+    if (map.getLayer("lineString")) {
+      map.removeLayer("lineString")
+      map.removeSource("lineString")
+    }
+    setSelectedStop(stop_data.lon, stop_data.lat, stopId)
     let arrivals_data = await getAPI(`stops/${stopId}/realtime`)
     arrivals_data.forEach(arrival => {
       if (linesFiltered.length > 0 && !linesFiltered.includes(Number(arrival.line_id))) {
@@ -306,9 +320,21 @@ async function loadArrivals(fullList) {
       // Concluded arrivals
       if (arrival.observed_arrival_unix !== null || (arrival.scheduled_arrival_unix < currentUNIX && arrival.estimated_arrival_unix < currentUNIX)) {
         if (arrival.observed_arrival_unix !== null) {
-          arrivingTime = arrival.observed_arrival
+          let timeParts = arrival.observed_arrival.split(":")
+          let hours = parseInt(timeParts[0])
+          let minutes = timeParts[1]
+          if (hours >= 24) {
+            hours -= 24
+          }
+          arrivingTime = `${hours.toString().padStart(2, "0")}:${minutes}`
         } else {
-          arrivingTime = arrival.scheduled_arrival
+          let timeParts = arrival.scheduled_arrival.split(":")
+          let hours = parseInt(timeParts[0])
+          let minutes = timeParts[1]
+          if (hours >= 24) {
+            hours -= 24
+          }
+          arrivingTime = `${hours.toString().padStart(2, "0")}:${minutes}`
         }
 
         let newArrival = {
@@ -318,7 +344,7 @@ async function loadArrivals(fullList) {
           "patternID": arrival.pattern_id,
           "lineID": arrival.line_id,
           "lineName": arrival.headsign,
-          "time": arrivingTime.substring(0, 5),
+          "time": arrivingTime,
           "type": "concluded",
           "delayType": null,
           "delayTime": ""
@@ -363,7 +389,13 @@ async function loadArrivals(fullList) {
       }
       // Scheduled Arrivals / Real Time unavailable
       else {
-        arrivingTime = arrival.scheduled_arrival
+        let timeParts = arrival.scheduled_arrival.split(":")
+        let hours = parseInt(timeParts[0])
+        let minutes = timeParts[1]
+        if (hours >= 24) {
+          hours = hours - 24
+        }
+        arrivingTime = `${hours.toString().padStart(2, "0")}:${minutes}`
         let newArrival = {
           "color": color,
           "tripID": arrival.trip_id,
@@ -371,7 +403,7 @@ async function loadArrivals(fullList) {
           "patternID": arrival.pattern_id,
           "lineID": arrival.line_id,
           "lineName": arrival.headsign,
-          "time": arrivingTime.substring(0, 5),
+          "time": arrivingTime,
           "type": "scheduled",
           "delayType": null,
           "delayTime": ""
@@ -391,27 +423,23 @@ async function loadArrivals(fullList) {
     }
     
     // Sort arrivals (Concluded > Real Time > Scheduled)
-    concluded_arrivals.sort((a, b) => {
-      const timeStringA = a.time.split(':').join('');
-      const timeStringB = b.time.split(':').join('');
-      return timeStringA - timeStringB;
-    });
-    realTime_arrivals.sort((a, b) => {
-      const getMinutes = (time) => {
-        if (time === "A Chegar") return -1 // Prioritize "A Chegar" at the top
-        if (time.includes("min")) return parseInt(time) // Extracts the number from "X min"
-        
-        let [hours, minutes] = time.split(":").map(Number) // Handles normal HH:MM format
-        return hours * 60 + minutes
+    const getSortableMinutes = (time) => {
+      if (time === "A Chegar") return -1 // Prioritize "A Chegar" at the top
+      if (time.includes("min")) return parseInt(time) // Extracts the number from "X min"
+    
+      let [hours, minutes] = time.split(":").map(Number)
+    
+      // If the time is between 00 and 04 am, its still on the current day
+      if (hours < 4) {
+        hours += 24
       }
-      
-      return getMinutes(a.time) - getMinutes(b.time)
-    })
-    scheduled_arrivals.sort((a, b) => {
-      const timeStringA = a.time.split(':').join('');
-      const timeStringB = b.time.split(':').join('');
-      return timeStringA - timeStringB;
-    });
+    
+      return hours * 60 + minutes
+    }
+    
+    concluded_arrivals.sort((a, b) => getSortableMinutes(a.time) - getSortableMinutes(b.time))
+    realTime_arrivals.sort((a, b) => getSortableMinutes(a.time) - getSortableMinutes(b.time))
+    scheduled_arrivals.sort((a, b) => getSortableMinutes(a.time) - getSortableMinutes(b.time))
     // Create the final trips list - 3 Previous Trips + Real Time + Scheduled
     future_trips.push(...realTime_arrivals, ...scheduled_arrivals)
     // If the user wants to see the full previous trips list
@@ -604,15 +632,27 @@ async function updateArrivals() {
       if (!item || (!tripsToBeUpdated.includes(arrival.trip_id) && item.classList.contains('concluded'))) {
         return
       }
-      if (arrival.observed_arrival_unix !== null || (arrival.scheduled_arrival_unix < currentUNIX && arrival.estimated_arrival_unix < currentUNIX)) {
+      if (arrival.observed_arrival_unix !== null || (arrival.estimated_arrival_unix !== null && arrival.estimated_arrival_unix < currentUNIX) || arrival.scheduled_arrival_unix < currentUNIX) {
         let arrivingTime = item.querySelector('.arrivingTime')
         let delayTime = item.querySelector('.arrivingTime .delayTime')
         let time = document.createElement('div')
         time.setAttribute('class', 'time')
         if (arrival.observed_arrival_unix !== null) {
-          time.innerHTML = arrival.observed_arrival.substring(0, 5)
+          let timeParts = arrival.observed_arrival.split(":")
+          let hours = parseInt(timeParts[0])
+          let minutes = timeParts[1]
+          if (hours >= 24) {
+            hours -= 24
+          }
+          time.innerHTML = `${hours.toString().padStart(2, "0")}:${minutes}`
         } else {
-          time.innerHTML = arrival.scheduled_arrival.substring(0, 5)
+          let timeParts = arrival.scheduled_arrival.split(":")
+          let hours = parseInt(timeParts[0])
+          let minutes = timeParts[1]
+          if (hours >= 24) {
+            hours -= 24
+          }
+          time.innerHTML = `${hours.toString().padStart(2, "0")}:${minutes}`
         }
         arrivingTime.innerHTML = ""
         arrivingTime.appendChild(time)
@@ -628,6 +668,20 @@ async function updateArrivals() {
         if (fullArrivalsList === false) {
           pastTrips_container.removeChild(pastTrips_container.firstChild)
         }
+        if (item.classList.contains('active')) {
+          if (map.getLayer("pointsbus")) {
+            map.removeLayer("pointsbus")
+            map.removeSource("pointsbus")
+          }
+          if (map.hasImage("bus-icon")) {
+            map.removeImage("bus-icon")
+          }  
+          if (map.getLayer("lineString")) {
+            map.removeLayer("lineString")
+            map.removeSource("lineString")
+          }
+        }
+        setSelectedStop(stop_data.lon, stop_data.lat, stop_data.id)
         item.setAttribute('class', 'arrivalTime concluded')
         item.setAttribute('onclick', '')
       } else if (arrival.observed_arrival_unix === null && arrival.estimated_arrival_unix !== null && arrival.estimated_arrival_unix > currentUNIX) {
@@ -701,6 +755,11 @@ async function updateArrivals() {
         // Update values
         arrivalTimeDiv.innerText = passageTime
         delayDisplay.innerText = delayTime > 3 ? `${delayTime} min atrasado` : ""
+        let color = window.getComputedStyle(item.querySelector('.lineNumber')).backgroundColor
+        item.onclick = () => {
+          selectTrip(arrival.trip_id, arrival.pattern_id, color, arrival.vehicle_id)
+          console.log(`Trip ID: ${arrival.trip_id}\nVehicle ID: ${arrival.pattern_id}\nPattern ID: ${arrival.vehicle_id}`)
+        }
         if (item.classList.contains('active')) {
           item.setAttribute('class', 'arrivalTime realTime active')
         } else {
@@ -709,7 +768,18 @@ async function updateArrivals() {
       } else {
         let arrivingTime = item.querySelector('.arrivingTime .time')
         if (arrivingTime) {
-          arrivingTime.innerHTML = arrival.scheduled_arrival.substring(0, 5)
+          let timeParts = arrival.scheduled_arrival.split(":")
+          let hours = parseInt(timeParts[0])
+          let minutes = timeParts[1]
+          if (hours >= 24) {
+            hours = hours - 24
+          }
+          arrivingTime.innerHTML = `${hours.toString().padStart(2, "0")}:${minutes}`
+        }
+        let color = window.getComputedStyle(item.querySelector('.lineNumber')).backgroundColor
+        item.onclick = () => {
+          selectTrip(arrival.trip_id, arrival.pattern_id, color, arrival.vehicle_id)
+          console.log(`Trip ID: ${arrival.trip_id}\nVehicle ID: ${arrival.pattern_id}\nPattern ID: ${arrival.vehicle_id}`)
         }
         if (item.classList.contains('active')) {
           item.setAttribute('class', 'arrivalTime scheduled active')
@@ -724,6 +794,7 @@ async function updateArrivals() {
   }
 }
 
+let lineStringGeojson
 async function selectTrip(trip_id, pattern_id, color, vehicle_id) {
   try {
     // Change the trip status to active (If is already active, remove it)
@@ -758,7 +829,7 @@ async function selectTrip(trip_id, pattern_id, color, vehicle_id) {
         map.removeSource("lineString")
       }
   
-      const lineStringGeojson = {
+      lineStringGeojson = {
         type: "FeatureCollection",
         features: [{
           type: "Feature",
@@ -874,12 +945,71 @@ async function selectTrip(trip_id, pattern_id, color, vehicle_id) {
         const bounds = new maplibregl.LngLatBounds()
         bounds.extend(busCoords)
         bounds.extend(stopCoords)
-        map.fitBounds(bounds, { padding: 80, animate: true })
+        map.fitBounds(bounds, { padding: 65, animate: true, maxZoom: 17 })
+
+        if (vehiclesUpdateInterval) clearInterval(vehiclesUpdateInterval)
+          vehiclesUpdateInterval = setInterval(() => updateVehicle(vehicle_id), 15000)
       }
         tripDiv.classList.add('active')
     }
   } catch (error) {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar a rota ou o veiculo para esta passagem")
+  }
+}
+
+async function updateVehicle(vehicle_id) {
+  try {
+    let vehicle_data = await getAPI("vehicles")
+    vehicle_data = vehicle_data.find(vehicle => vehicle.id === vehicle_id)
+
+    const busCoords = [vehicle_data.lon, vehicle_data.lat]
+    const stop_data = await getAPI("stops/" + stopId)
+    const stopCoords = [stop_data.lon, stop_data.lat]
+
+    const source = map.getSource("pointsbus");
+    if (source) {
+      const data = source._data;
+      const coords = [vehicle_data.lon, vehicle_data.lat];
+      const feature = data.features.find(f => f.properties.name === vehicle_data.id);
+      if (feature) {
+        // Update vehicle properties
+        feature.geometry.coordinates = coords;
+        feature.properties.bearing = vehicle_data.bearing;
+        feature.properties.timeStamp = vehicle_data.timestamp;
+        feature.properties.description = `Line: <b>${vehicle_data.line_id}</b><br>
+          Route: <b>${vehicle_data.route_id}</b><br>
+          Pattern: <b>${vehicle_data.pattern_id}</b><br>
+          State: <b>${vehicle_data.current_status}</b><br>
+          Stop: <b>${vehicle_data.stop_id}</b><br>
+          Vehicle ID: <b>${vehicle_data.id}</b>`;
+      } else {
+        // If the vehicle is not on the map, add it
+        data.features.push({
+          type: "Feature",
+          geometry: { type: "Point", coordinates: coords },
+          properties: {
+            name: vehicle_data.id,
+            bearing: vehicle_data.bearing,
+            timeStamp: vehicle_data.timestamp,
+            description: `Line: <b>${vehicle_data.line_id}</b><br>
+              Route: <b>${vehicle_data.route_id}</b><br>
+              Pattern: <b>${vehicle_data.pattern_id}</b><br>
+              State: <b>${vehicle_data.current_status}</b><br>
+              Stop: <b>${vehicle_data.stop_id}</b><br>
+              Vehicle ID: <b>${vehicle_data.id}</b>`
+          }
+        });
+      }
+      source.setData(data);
+
+      const bounds = new maplibregl.LngLatBounds()
+      bounds.extend(busCoords)
+      bounds.extend(stopCoords)
+      map.fitBounds(bounds, { padding: 65, animate: true, maxZoom: 17 })
+    }
+  } catch (error) {
+    console.error(error.message)
+    snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao atualizar os autocarros")
   }
 }
