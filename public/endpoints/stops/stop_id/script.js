@@ -286,7 +286,6 @@ let updateInterval, currentTimeInterval, vehiclesUpdateInterval
 let realTime_trips = [], scheduled_trips = [], future_trips = [], past_trips = [], tripsToBeUpdated = [], vehiclesToBeUpdated = []
 let fullArrivalsList = false
 async function loadArrivals(fullList) {
-
   document.getElementById('fullPastTrips').style.display = "block"
   var pastTrips_container = document.getElementById('pastTrips')
   var futureTrips_container = document.getElementById('futureTrips')
@@ -632,7 +631,7 @@ async function updateArrivals() {
       if (!item || (!tripsToBeUpdated.includes(arrival.trip_id) && item.classList.contains('concluded'))) {
         return
       }
-      if (arrival.observed_arrival_unix !== null || (arrival.estimated_arrival_unix !== null && arrival.estimated_arrival_unix < currentUNIX) || arrival.scheduled_arrival_unix < currentUNIX) {
+      if (arrival.observed_arrival_unix !== null || (arrival.estimated_arrival_unix !== null && arrival.estimated_arrival_unix < currentUNIX && arrival.scheduled_arrival_unix < currentUNIX)) {
         let arrivingTime = item.querySelector('.arrivingTime')
         let delayTime = item.querySelector('.arrivingTime .delayTime')
         let time = document.createElement('div')
@@ -694,23 +693,31 @@ async function updateArrivals() {
         let passageTime, delayTime, delayType
         if (Math.floor((arrival.estimated_arrival_unix - currentUNIX) / 60) < 1) {
           passageTime = "A Chegar"
-          if ('Notification' in window && Notification.permission === 'granted' && receiveNotifications === true) {
-            // Trigger notification only once
-            if (!notifiedBuses.has(arrival.trip_id)) {
-              notifiedBuses.add(arrival.trip_id)
-              new Notification(`🚍 ${arrival.line_id} - ${arrival.headsign}`, {
-                body: `O autocarro está perto de ${stop_data.name} !`
-              })
-            }
-          } else if (Notification.permission !== 'denied' && receiveNotifications === true) {
-            Notification.requestPermission().then(permission => {
-              if (permission === 'granted' && !notifiedBuses.has(arrival.trip_id)) {
+          // If there is an active trip (User selected) only show notifications for that trip. Otherwise show for all the incoming arrivals
+          let activeTrip = document.querySelectorAll('.arrivalTime.active')
+          let activeTripId = activeTrip.length > 0 ? activeTrip[0].getAttribute('id')?.replace('trip_', '') : null
+          if (
+            (activeTrip.length === 0) ||
+            (activeTripId && arrival.trip_id === activeTripId)
+          ) {
+            if ('Notification' in window && Notification.permission === 'granted' && receiveNotifications === true) {
+              // Trigger notification only once
+              if (!notifiedBuses.has(arrival.trip_id)) {
                 notifiedBuses.add(arrival.trip_id)
                 new Notification(`🚍 ${arrival.line_id} - ${arrival.headsign}`, {
                   body: `O autocarro está perto de ${stop_data.name} !`
                 })
               }
-            })
+            } else if (Notification.permission !== 'denied' && receiveNotifications === true) {
+              Notification.requestPermission().then(permission => {
+                if (permission === 'granted' && !notifiedBuses.has(arrival.trip_id)) {
+                  notifiedBuses.add(arrival.trip_id)
+                  new Notification(`🚍 ${arrival.line_id} - ${arrival.headsign}`, {
+                    body: `O autocarro está perto de ${stop_data.name} !`
+                  })
+                }
+              })
+            }
           }
         } else {
           passageTime = Math.floor((arrival.estimated_arrival_unix - currentUNIX) / 60) + " min"
