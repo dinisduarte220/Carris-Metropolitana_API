@@ -6,6 +6,9 @@ let linesFiltered = []
 // Picture in Picture Element
 let pipWindow = null
 
+// DEBUG Mode
+let debugMode = false
+
 // Check if user wants to receive stop notifications
 let receiveNotifications
 fetch('/settings')
@@ -458,7 +461,6 @@ async function loadArrivals(fullList) {
       let newArrival = document.createElement('div')
       newArrival.setAttribute('class', `arrivalTime ${trip.type}`)
       newArrival.setAttribute('id', 'trip_' + trip.tripID)
-      newArrival.setAttribute('onclick', `console.log("Trip ID: ${trip.tripID}\\nVehicle ID: ${trip.vehicleID}\\nPattern ID: ${trip.patternID}")`)
 
       let arrivalNumber = document.createElement('div')
       arrivalNumber.setAttribute('class', 'lineNumber')
@@ -518,7 +520,6 @@ async function loadArrivals(fullList) {
       newArrival.setAttribute('id', 'trip_' + trip.tripID)
       newArrival.onclick = () => {
         selectTrip(trip.tripID, trip.patternID, trip.color, trip.vehicleID)
-        console.log(`Trip ID: ${trip.tripID}\nVehicle ID: ${trip.vehicleID}\nPattern ID: ${trip.patternID}`)
       }
 
       let arrivalNumber = document.createElement('div')
@@ -610,7 +611,8 @@ async function loadArrivals(fullList) {
 
 let notifiedBuses = new Set()
 async function updateArrivals() {
-  console.log(`
+  if (debugMode) {
+    console.log(`
 
       :::::::::: ARRIVALS UPDATED ::::::::::
 
@@ -618,7 +620,8 @@ async function updateArrivals() {
       Time: ${new Date().getHours().toLocaleString(undefined, {minimumIntegerDigits: 2}) + ":" + new Date().getMinutes().toLocaleString(undefined, {minimumIntegerDigits: 2}) + ":" + new Date().getSeconds().toLocaleString(undefined, {minimumIntegerDigits: 2})}
       Trips: ${tripsToBeUpdated.length}
       
-  `)
+    `)
+  }
   const currentUNIX = Math.floor(Date.now() / 1000);
   const pastTrips_container = document.getElementById('pastTrips')
   const futureTrips_container = document.getElementById('futureTrips')
@@ -765,7 +768,6 @@ async function updateArrivals() {
         let color = window.getComputedStyle(item.querySelector('.lineNumber')).backgroundColor
         item.onclick = () => {
           selectTrip(arrival.trip_id, arrival.pattern_id, color, arrival.vehicle_id)
-          console.log(`Trip ID: ${arrival.trip_id}\nVehicle ID: ${arrival.pattern_id}\nPattern ID: ${arrival.vehicle_id}`)
         }
         if (item.classList.contains('active')) {
           item.setAttribute('class', 'arrivalTime realTime active')
@@ -786,7 +788,6 @@ async function updateArrivals() {
         let color = window.getComputedStyle(item.querySelector('.lineNumber')).backgroundColor
         item.onclick = () => {
           selectTrip(arrival.trip_id, arrival.pattern_id, color, arrival.vehicle_id)
-          console.log(`Trip ID: ${arrival.trip_id}\nVehicle ID: ${arrival.pattern_id}\nPattern ID: ${arrival.vehicle_id}`)
         }
         if (item.classList.contains('active')) {
           item.setAttribute('class', 'arrivalTime scheduled active')
@@ -804,6 +805,9 @@ async function updateArrivals() {
 let lineStringGeojson
 async function selectTrip(trip_id, pattern_id, color, vehicle_id) {
   try {
+    if (debugMode) {
+      console.log(`Trip ID: ${trip_id}\nVehicle ID: ${vehicle_id}\nPattern ID: ${pattern_id}`)
+    }
     // Change the trip status to active (If is already active, remove it)
     const tripDiv = document.getElementById(`trip_${trip_id}`)
     if (tripDiv.classList.contains('active')) {
@@ -1019,4 +1023,90 @@ async function updateVehicle(vehicle_id) {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao atualizar os autocarros")
   }
+}
+
+async function toggleDebug() {
+  debugMode = !debugMode
+  snackbar("fa-solid fa-bug", "DEBUG Mode: " + debugMode)
+}
+
+// Picture in Picture
+async function togglePictureInPicture() {
+  let pipIcon = document.getElementById('pipIcon')
+  // Close PIP if it exists
+  if (pipWindow) {
+    pipWindow.close()
+    pipWindow = null
+    pipIcon.className = "fa-regular fa-clone"
+    return
+  }
+  pipIcon.className = "fa-solid fa-clone"
+  let pipOptions = {
+    width: 350,
+    height: 150
+  }
+  pipWindow = await documentPictureInPicture.requestWindow(pipOptions)
+  let style = document.createElement("link");
+  style.rel = "stylesheet";
+  style.href = "style.css"
+  pipWindow.document.head.append(style);
+  let style2 = document.createElement("link");
+  style2.rel = "stylesheet";
+  style2.href = "../../../style.css"
+  pipWindow.document.head.append(style2);
+
+  pipWindow.addEventListener("pagehide", () => {
+    pipWindow = null
+    pipIcon.className = "fa-regular fa-clone"
+  })
+
+  let pipContainer = document.createElement('div')
+  pipContainer.setAttribute('class', 'pipContainer')
+  pipContainer.style.display = 'flex'
+  pipContainer.style.flexDirection = 'column'
+  pipContainer.style.alignItems = 'center'
+  pipContainer.style.justifyContent = 'center'
+  pipContainer.style.height = '100%'
+
+  let arrivingTimes = document.createElement('h3')
+  arrivingTimes.setAttribute('class', 'pipTitle')
+  arrivingTimes.innerText = "Próximas chegadas"
+
+  let arrivalContainer = document.createElement('div')
+  arrivalContainer.setAttribute('class', 'pipStopsContainer')
+  arrivalContainer.setAttribute('id', 'pip_arrivals')
+
+  pipContainer.appendChild(arrivingTimes)
+  pipContainer.appendChild(arrivalContainer)
+
+  pipWindow.document.body.appendChild(pipContainer)
+
+  updatePipArrivals()
+  setInterval(updatePipArrivals, 15000)
+
+  // Listen for visibility change to keep updating PiP when the tab is not active
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && pipWindow) {
+      updatePipArrivals()
+    }
+  })
+}
+
+function updatePipArrivals() {
+  if (!pipWindow) return
+
+  let arrivalContainer = pipWindow.document.getElementById('pip_arrivals')
+  if (!arrivalContainer) return
+
+  arrivalContainer.innerHTML = ""
+
+  let arrivals = document.querySelectorAll('.arrivalTime.realTime, .arrivalTime.scheduled')
+  arrivals = Array.from(arrivals).slice(0, 3)
+
+  arrivals.forEach(arrival => {
+    let newArrival = document.createElement('p')
+    newArrival.setAttribute('class', 'pipArrivalTime')
+    newArrival.innerText = arrival.innerText
+    arrivalContainer.appendChild(newArrival)
+  })
 }
