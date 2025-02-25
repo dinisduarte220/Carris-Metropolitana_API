@@ -517,12 +517,14 @@ async function selectStop(stop_id) {
     // Remove all existing schedules in the stops container
     const previousSchedules = stopsContainer.querySelectorAll('.newStop .timeTable')
     const previousScheduleTitles = stopsContainer.querySelectorAll('.newStop .scheduleTitle')
+    const previousStopDetails = stopsContainer.querySelectorAll('.newStop .stopDetails')
     const previousArrivalTimes = stopsContainer.querySelectorAll('.newStop .arrivalTimes')
     const previousArrivalTimesTitle = stopsContainer.querySelectorAll('.newStop .arrivalTimesTitle')
     previousArrivalTimes.forEach(schedule => schedule.remove())
     previousArrivalTimesTitle.forEach(schedule => schedule.remove())
     previousSchedules.forEach(schedule => schedule.remove())
     previousScheduleTitles.forEach(schedule => schedule.remove())
+    previousStopDetails.forEach(schedule => schedule.remove())
     // Add next arrival times
     if (hasArrivals) {
       let arrivalTimesTitle = document.createElement('p')
@@ -537,6 +539,14 @@ async function selectStop(stop_id) {
     scheduleTitle.innerHTML = "Horário para esta paragem:"
     stopDiv.appendChild(scheduleTitle)
     stopDiv.appendChild(scheduleContainer)
+
+    let stopDetails = document.createElement('a')
+    stopDetails.setAttribute('class', 'stopDetails')
+    stopDetails.setAttribute('href', '/page/stops/' + stop_id)
+    stopDetails.setAttribute('target', '_blank')
+stopDetails.setAttribute('rel', 'noopener noreferrer')
+    stopDetails.innerHTML = 'Ver paragem <i class="fa-solid fa-arrow-up-right-from-square"></i>'
+    stopDiv.appendChild(stopDetails)
 
     const clickedFeature = pointFeatures.find(feature => feature.properties.id === stop_id);
     if (clickedFeature) {

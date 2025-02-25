@@ -173,9 +173,6 @@ body {
     font-size: 15px;
     border-radius: 50px;
 }
-#lineStops #stopsContainer .newStop:hover .stopName {
-    margin-left: 10px;
-}
 #lineStops #stopsContainer .newStop:not(:last-child) {
     margin: 5px 0 15px 0;
 }
@@ -228,6 +225,17 @@ body {
     font-size: 14px;
     font-weight: 500;
 }
+#lineStops #stopsContainer .newStop .stopDetails {
+    text-decoration: none;
+    color: rgb(150, 150, 150);
+    font-size: 14px;
+    font-weight: 500;
+    margin-left: 15px;
+}
+#lineStops #stopsContainer .newStop .stopDetails i {
+    vertical-align: middle;
+    margin-left: 3px;
+}
 #lineStops #stopsContainer .newStop .timeTable {
     color: whitesmoke;
     display: flex;
@@ -237,6 +245,7 @@ body {
     padding: 10px;
     border-radius: 15px;
     width: fit-content;
+    margin-bottom: 5px;
 }
 #lineStops #stopsContainer .newStop .timeTable ul {
   display: flex;

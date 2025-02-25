@@ -683,7 +683,9 @@ async function updateArrivals() {
             map.removeSource("lineString")
           }
         }
-        setSelectedStop(stop_data.lon, stop_data.lat, stop_data.id)
+        if (item.classList.contains('active')) {
+          setSelectedStop(stop_data.lon, stop_data.lat, stop_data.id)
+        }
         item.setAttribute('class', 'arrivalTime concluded')
         item.setAttribute('onclick', '')
       } else if (arrival.observed_arrival_unix === null && arrival.estimated_arrival_unix !== null && arrival.estimated_arrival_unix > currentUNIX) {
@@ -877,6 +879,9 @@ async function selectTrip(trip_id, pattern_id, color, vehicle_id) {
         allCoordinates.forEach((coord) => bounds.extend(coord))
   
         map.fitBounds(bounds, { padding: 50, animate: true })
+        if (map.hasImage("bus-icon")) {
+          map.removeImage("bus-icon")
+        }
       } else {
         let vehicle_data = await getAPI("vehicles")
         vehicle_data = vehicle_data.find(vehicle => vehicle.id === vehicle_id)
@@ -1028,6 +1033,15 @@ async function updateVehicle(vehicle_id) {
 async function toggleDebug() {
   debugMode = !debugMode
   snackbar("fa-solid fa-bug", "DEBUG Mode: " + debugMode)
+  fetch('/log', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+    },
+    body: JSON.stringify({ message: 'DEBUG Mode: ' + debugMode }),
+  })
+    .then(response => response.text())
+    .catch(error => console.error('Error:', error));
 }
 
 // Picture in Picture
@@ -1040,6 +1054,7 @@ async function togglePictureInPicture() {
     pipIcon.className = "fa-regular fa-clone"
     return
   }
+
   pipIcon.className = "fa-solid fa-clone"
   let pipOptions = {
     width: 350,

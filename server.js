@@ -8,6 +8,41 @@ const PORT = 3000;
 const possiblePaths = ["lines", "stops"]
 app.use(bodyParser.json());
 
+// Logging System
+const logFilePath = 'server.log'
+
+// Clear log file on startup
+fs.writeFileSync(logFilePath, '');
+
+function logMessage(message) {const date = new Date();
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+
+  const timestamp = `${day}-${month}-${year} - ${hours}:${minutes}`;
+  const logEntry = `[${timestamp}] ${message}\n`;
+  fs.appendFileSync(logFilePath, logEntry);
+}
+
+logMessage("SERVER STARTED")
+
+// POST endpoint to log messages
+app.post('/log', (req, res) => {
+  const { message } = req.body;
+  
+  if (!message) {
+    return res.status(400).json({ error: 'Message is required' });
+  }
+
+  // Log the message to the server log
+  logMessage(message);
+
+  // Respond to the client
+  res.status(200).json({ success: true, message: 'Log entry added' });
+});
+
 // Define Storage and Settings files locations
 const storageFilePath = path.join(__dirname, 'JSON', 'storage.json');
 const settingsFilePath = path.join(__dirname, 'JSON', 'settings.json');
@@ -135,6 +170,7 @@ app.post('/settings', (req, res) => {
               message: '[SUCCESS] Configurações atualizadas com sucesso!',
               settings
           })
+          logMessage("Settings updated")
       } catch (writeError) {
           console.error(writeError)
           res.status(500).json({
