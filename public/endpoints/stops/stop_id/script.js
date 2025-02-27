@@ -1,6 +1,6 @@
 // Extract the current line_id from URL
 const pathParts = window.location.pathname.split('/')
-const stopId = pathParts[3]
+const stopId = pathParts[2]
 let linesFiltered = []
 
 // Picture in Picture Element
@@ -38,7 +38,7 @@ async function checkStop() {
       stopInformationDisplay()
       addStopToRecents()
     } else {
-      window.location.href = '/page/stops'
+      window.location.href = '/stops'
     }
   } catch (error) {
     console.error(error.message)
@@ -966,7 +966,11 @@ async function selectTrip(trip_id, pattern_id, color, vehicle_id) {
         if (vehiclesUpdateInterval) clearInterval(vehiclesUpdateInterval)
           vehiclesUpdateInterval = setInterval(() => updateVehicle(vehicle_id), 15000)
       }
-        tripDiv.classList.add('active')
+      tripDiv.classList.add('active')
+      map.moveLayer("points")
+      if (map.getLayer("pointsbus")) {
+        map.moveLayer("pointsbus")
+      }
     }
   } catch (error) {
     console.error(error.message)
@@ -1057,8 +1061,8 @@ async function togglePictureInPicture() {
 
   pipIcon.className = "fa-solid fa-clone"
   let pipOptions = {
-    width: 350,
-    height: 150
+    width: 450,
+    height: 230
   }
   pipWindow = await documentPictureInPicture.requestWindow(pipOptions)
   let style = document.createElement("link");
@@ -1119,9 +1123,40 @@ function updatePipArrivals() {
   arrivals = Array.from(arrivals).slice(0, 3)
 
   arrivals.forEach(arrival => {
-    let newArrival = document.createElement('p')
-    newArrival.setAttribute('class', 'pipArrivalTime')
-    newArrival.innerText = arrival.innerText
-    arrivalContainer.appendChild(newArrival)
+    let pipItem = document.createElement('div')
+    pipItem.setAttribute('class', 'pipArrivalTime')
+    if (arrival.classList.contains('realTime')) {
+      pipItem.classList.add('realTime')
+    }
+
+    let lineNumber = document.createElement('div')
+    lineNumber.setAttribute('class', 'lineNumber')
+    lineNumber.innerText = arrival.querySelector('.lineNumber')?.innerText || ''
+    lineNumber.style.backgroundColor = window.getComputedStyle(arrival.querySelector('.lineNumber')).backgroundColor
+
+    let lineName = document.createElement('div')
+    lineName.setAttribute('class', 'lineName')
+    lineName.innerText = arrival.querySelector('.lineName')?.innerText || ''
+
+    let arrivingTime = document.createElement('div')
+    arrivingTime.setAttribute('class', 'arrivingTime')
+    arrivingTime.innerText = arrival.querySelector('.arrivalTimeText')?.innerText || arrival.querySelector('.time')?.innerText || '' // Only get the time, excluding delay
+
+    if (arrival.classList.contains('realTime')) {
+      let realTimeIcon = document.createElement('div')
+      realTimeIcon.setAttribute('class', `realTimeIcon`)
+
+      let realTimeDot = document.createElement('div')
+      realTimeDot.setAttribute('class', `dot`)
+
+      realTimeIcon.appendChild(realTimeDot)
+      arrivingTime.prepend(realTimeIcon) // Add the icon before the time text
+    }
+
+    pipItem.appendChild(lineNumber)
+    pipItem.appendChild(lineName)
+    pipItem.appendChild(arrivingTime)
+
+    arrivalContainer.appendChild(pipItem)
   })
 }

@@ -77,7 +77,7 @@ async function loadAllStops() {
       if (typeof stopId !== 'undefined' && stopId === stop_id) {
         return
       }
-      window.location.href = "/page/stops/" + stop_id
+      window.location.href = "/stops/" + stop_id
     })
 
     // Change the cursor to a pointer when hovering over the points

@@ -194,9 +194,6 @@
 #stopContainer #stopArrivals .arrivalTime.active {
     opacity: .5;
 }
-/* #stopContainer #stopArrivals .arrivalTime:not(.concluded):hover {
-    opacity: .5;
-} */
 #stopContainer #stopArrivals .arrivalTime.concluded {
     opacity: .3;
 }
@@ -313,4 +310,48 @@
 @keyframes pulse {
     0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
     100% { transform: translate(-50%, -50%) scale(3); opacity: 0; }
+}
+
+/* Picture in Picture */
+.pipTitle {
+    padding: 10px 0;
+    color: whitesmoke;
+}
+.pipArrivalTime {
+    position: relative;
+    padding: 10px;
+    display: flex;
+    width: calc(400px - 15px);
+    align-items: center;
+    gap: 10px;
+    color: whitesmoke;
+    font-weight: 500;
+    font-size: 15px;
+    background-color: rgb(50, 50, 50);
+    border-radius: 5px;
+}
+.pipArrivalTime.realTime {
+    color: #00cd32;
+}
+.pipArrivalTime:not(:last-child) {
+    margin-bottom: 10px;
+}
+.pipArrivalTime .lineNumber {
+    padding: 5px 10px;
+    border-radius: 25px;
+    width: 3rem;
+    font-weight: 600;
+    color: whitesmoke;
+    text-align: center;
+}
+.pipArrivalTime .lineName {
+    color: whitesmoke;
+    font-weight: 500;
+    font-size: 15px;
+    max-width: 70%;
+}
+.pipArrivalTime .arrivingTime {
+    display: flex;
+    position: absolute;
+    right: 10px;
 }

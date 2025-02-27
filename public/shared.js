@@ -25,7 +25,7 @@ function renderLines(lines, container) {
     let newLine = document.createElement('a')
     newLine.classList.add('item')
     newLine.classList.add('line')
-    newLine.setAttribute('href', `/page/lines/` + line.id)
+    newLine.setAttribute('href', `/lines/` + line.id)
     let lineNumber = document.createElement('p')
     lineNumber.setAttribute('class', 'lineID')
     lineNumber.style.backgroundColor = line.color
@@ -50,7 +50,7 @@ function renderStops(stops, container) {
     let newStop = document.createElement('a')
     newStop.classList.add('item')
     newStop.classList.add('stop')
-    newStop.setAttribute('href', `/page/stops/` + stop.id)
+    newStop.setAttribute('href', `/stops/` + stop.id)
     let stopID = document.createElement('p')
     stopID.setAttribute('class', 'stopID')
     stopID.setAttribute('onclick', `event.stopPropagation(); copyText("${stop.id}")`)

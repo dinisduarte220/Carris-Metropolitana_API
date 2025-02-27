@@ -5,7 +5,6 @@ const path = require('path');
 const app = express();
 const PORT = 3000;
 
-const possiblePaths = ["lines", "stops"]
 app.use(bodyParser.json());
 
 // Logging System
@@ -47,23 +46,15 @@ app.post('/log', (req, res) => {
 const storageFilePath = path.join(__dirname, 'JSON', 'storage.json');
 const settingsFilePath = path.join(__dirname, 'JSON', 'settings.json');
 
-// Check paths
-possiblePaths.forEach((route) => {
-    app.use(`/page/${route}`, express.static(path.join(__dirname, 'public/endpoints', route)));
-});
-app.get('/page/:path' , (req , res)=>{
-    var userPath = req.params.path
-    if (!possiblePaths.includes(userPath)) {
-        res.status(404).send("Caminho Inválido");
-    } else {
-        res.status(404).send("Diretório não encontrado");
-    }
-})
+// Lines Endpoint
+app.use('/lines', express.static(path.join(__dirname, 'public', 'endpoints', 'lines')))
+// Stops Endpoint
+app.use('/stops', express.static(path.join(__dirname, 'public', 'endpoints', 'stops')))
 
 // Lines Endpoint - Details for a specific Line
-app.use('/page/lines/:line_id', express.static(path.join(__dirname, 'public', 'endpoints', 'lines', 'line_id')))
+app.use('/lines/:line_id', express.static(path.join(__dirname, 'public', 'endpoints', 'lines', 'line_id')))
 // Stops Endpoint - Details for a specific Stop
-app.use('/page/stops/:stop_id', express.static(path.join(__dirname, 'public', 'endpoints', 'stops', 'stop_id')))
+app.use('/stops/:stop_id', express.static(path.join(__dirname, 'public', 'endpoints', 'stops', 'stop_id')))
 
 // Storage Endpoints - Get & Store
 app.get('/storage', (req, res) => {

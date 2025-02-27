@@ -1,6 +1,6 @@
 // Extract the current line_id from URL
 const pathParts = window.location.pathname.split('/')
-const lineId = pathParts[3]
+const lineId = pathParts[2]
 let patternId, stopId // Store the active pattern and stop
 let tripId // Store trip ID
 
@@ -42,7 +42,7 @@ async function checkLine() {
       addLineToRecents()
       lineInformationDisplay()
     } else {
-      window.location.href = '/page/lines'
+      window.location.href = '/lines'
     }
   } catch (error) {
     console.error(error.message)
@@ -542,9 +542,9 @@ async function selectStop(stop_id) {
 
     let stopDetails = document.createElement('a')
     stopDetails.setAttribute('class', 'stopDetails')
-    stopDetails.setAttribute('href', '/page/stops/' + stop_id)
+    stopDetails.setAttribute('href', '/stops/' + stop_id)
     stopDetails.setAttribute('target', '_blank')
-stopDetails.setAttribute('rel', 'noopener noreferrer')
+    stopDetails.setAttribute('rel', 'noopener noreferrer')
     stopDetails.innerHTML = 'Ver paragem <i class="fa-solid fa-arrow-up-right-from-square"></i>'
     stopDiv.appendChild(stopDetails)
 
