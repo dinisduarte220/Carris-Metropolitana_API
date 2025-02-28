@@ -372,12 +372,16 @@ body {
     #lineStops {
         margin: 2rem 0 2rem 3rem;
     }
+    #lineStops #stopsContainer .newStop .busIcon {
+        top: -5px;
+    }
     #lineStops #stopsContainer .newStop .stopName {
         font-size: 14px;
         max-width: calc(100vw - 3rem - 20px - 3rem);
     }
     #lineStops #stopsContainer .newStop:before {
         margin-top: -3px;
+        margin-left: -1.83rem;
     }
     #lineStops #stopsContainer .newStop .timeTable {
         font-size: 12px;
