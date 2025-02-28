@@ -147,7 +147,7 @@ body {
     scale: 1.25
 }
 
-/* Stop List */
+/* Stops List */
 #lineStops {
     display: flex;
     gap: 1rem;
@@ -315,4 +315,87 @@ body {
 }
 .pipArrivalTime.realTime {
     color: rgb(0, 205, 50);
+}
+
+/* Responsive */
+@media only screen and (max-width: 750px) {
+    /* Top Information */
+    #topInformation {
+        font-size: 14px;
+        gap: 10px;
+        width: 95vw;
+    }
+    #topInformation a {
+        min-width: 35px;
+        max-height: 35px;
+        display: flex;
+        align-items: center;
+    }
+    #topInformation #lineNumber {
+        margin-left: 10px;
+    }
+    #topInformation #lineName {
+        width: calc(100vw - 2rem - 2.5rem - 3rem);
+    }
+    #notificationsIcon, #pipIcon {
+        display: none;
+    }
+
+    /* Line Parameters */
+    #lineParameters {
+        flex-direction: column-reverse;
+        align-items: center;
+        margin-top: 1rem;
+        gap: 10px;
+    }
+    #lineParameters .selectMenu {
+        width: calc(90vw - 2rem - 20px);
+        font-size: 14px;
+    }
+    #lineParameters #date_input {
+        font-size: 14px;
+        outline: none;
+    }
+    #lineParameters .selectOptions {
+        width: calc(90vw - 2rem - 20px);
+        margin-top: 40px;
+        max-height: 10rem;
+    }
+    #lineParameters #pattern_selectOptions .newRoute {
+        font-size: 12px;
+    }
+    #lineParameters #pattern_selectOptions .newPattern {
+        font-size: 14px;
+    }
+
+    /* Stops List */
+    #lineStops {
+        margin: 2rem 0 2rem 3rem;
+    }
+    #lineStops #stopsContainer .newStop .stopName {
+        font-size: 14px;
+        max-width: calc(100vw - 3rem - 20px - 3rem);
+    }
+    #lineStops #stopsContainer .newStop:before {
+        margin-top: -3px;
+    }
+    #lineStops #stopsContainer .newStop .timeTable {
+        font-size: 12px;
+        max-width: calc(100vw - 3rem - 25px - 3rem);
+        padding: 5px;
+        flex-wrap: wrap;
+    }
+    #lineStops #stopsContainer .newStop .arrivalTimes {
+        font-size: 14px;
+    }
+
+    /* Map */
+    #map {
+        position: relative;
+        width: calc(100vw - 50px);
+        height: 30vh;
+        margin: 2rem 0 1rem 25px;
+        bottom: auto;
+        right: auto;
+    }
 }

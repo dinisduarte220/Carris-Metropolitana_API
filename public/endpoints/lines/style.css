@@ -66,3 +66,20 @@
 #linesContainer .item .lineName {
   text-align: left;
 }
+
+/* Responsive */
+
+@media only screen and (max-width: 650px) {
+    #allLinesDisplay {
+        margin-left: 1rem;
+        width: calc(100vw - 2rem - 20px);
+    }
+    #inputLines input {
+        width: 75%;
+        height: 2rem;
+        font-size: 15px;
+    }
+    #linesContainer .item {
+        font-size: 14px;
+    }
+}

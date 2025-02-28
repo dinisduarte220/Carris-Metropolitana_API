@@ -3,6 +3,7 @@ const pathParts = window.location.pathname.split('/')
 const lineId = pathParts[2]
 let patternId, stopId // Store the active pattern and stop
 let tripId // Store trip ID
+let debugMode = false
 
 // Picture in Picture Element
 let pipWindow = null
@@ -342,19 +343,21 @@ async function loadStops() {
       closeOnClick: false,
       className: "popupStop",
     })
-    map.on('mouseenter', 'points', (e) => {
-      map.getCanvas().style.cursor = 'pointer'
-      const coordinates = e.features[0].geometry.coordinates.slice()
-      const description = e.features[0].properties.description
-      while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-          coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360
-      }
-      popup.setLngLat(coordinates).setHTML(description).addTo(map)
-    })
-    map.on('mouseleave', 'points', () => {
-      map.getCanvas().style.cursor = 'default'
-      popup.remove()
-    });
+    if (debugMode) {
+      map.on('mouseenter', 'points', (e) => {
+        map.getCanvas().style.cursor = 'pointer'
+        const coordinates = e.features[0].geometry.coordinates.slice()
+        const description = e.features[0].properties.description
+        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360
+        }
+        popup.setLngLat(coordinates).setHTML(description).addTo(map)
+      })
+      map.on('mouseleave', 'points', () => {
+        map.getCanvas().style.cursor = 'default'
+        popup.remove()
+      });
+    }
     map.addSource("points", { type: "geojson", data: geoJsonPoints })
 
     map.addLayer({
