@@ -31,7 +31,7 @@
 /* Lines Container */
 #linesContainer {
     margin-top: 1rem;
-    height: calc(100% - 10px);
+    height: calc(100vh - 5rem - 4rem - 6rem);
     border: 1px solid rgb(125, 125, 125);
     border-radius: 10px;
     padding: 10px;
@@ -73,11 +73,17 @@
     #allLinesDisplay {
         margin-left: 1rem;
         width: calc(100vw - 2rem - 20px);
+        height: calc(100vh - 4rem - 2rem - 20px);
+        background-color: green;
     }
     #inputLines input {
         width: 75%;
         height: 2rem;
         font-size: 15px;
+    }
+    #linesContainer {
+        margin-top: 10px;
+        height: calc(100vh - 4rem - 4rem - 6rem);
     }
     #linesContainer .item {
         font-size: 14px;
