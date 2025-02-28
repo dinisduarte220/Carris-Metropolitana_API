@@ -178,6 +178,9 @@ body {
 
 @media only screen and (max-width: 750px) {
   /* Tob Bar */
+  #topBar img {
+    height: 2rem;
+  }
   #topBar #links {
     display: none;
   }
@@ -189,6 +192,9 @@ body {
     display: grid;
     grid-template-columns: repeat(1, 1fr);
     grid-template-rows: repeat(1, 1fr);
+    margin-left: 50%;
+    transform: translate(-50%, 0);
+    padding: 3rem 1rem;
     overflow-y: auto;
   }
   #homeGrid .gridItem {
@@ -202,5 +208,12 @@ body {
     padding: 15px;
     color: whitesmoke;
     transition: .3s;
+    font-size: 14px;
+  }
+  #homeGrid .gridItem:hover {
+    box-shadow: none;
+  }
+  #homeGrid .gridItem .itemsContainer .item {
+    padding: 5px 10px;
   }
 }
