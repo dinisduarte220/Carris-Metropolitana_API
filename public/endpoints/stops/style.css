@@ -136,6 +136,7 @@
         width: calc(90vw);
     }
     #content #stopContainer {
+        height: calc(100% - 1rem);
         width: calc(100% - 3px);
     }
 }
