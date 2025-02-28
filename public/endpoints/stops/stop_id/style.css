@@ -403,4 +403,11 @@
     #stopContainer #stopInformation #stopID {
         font-size: 14px;
     }
+    #stopContainer #stopInformation #stopActions {
+        display: none;
+    }
+    #stopContainer #stopInformation #stopLines.line {
+        padding: 3px 7px;
+        font-size: 14px;
+    }
 }
