@@ -331,6 +331,9 @@ body {
         display: flex;
         align-items: center;
     }
+    #topInformation i {
+        font-size: 16px;
+    }
     #topInformation #lineNumber {
         margin-left: 10px;
     }
@@ -355,6 +358,7 @@ body {
     #lineParameters #date_input {
         font-size: 14px;
         outline: none;
+        text-align: center;
     }
     #lineParameters .selectOptions {
         width: calc(90vw - 2rem - 20px);

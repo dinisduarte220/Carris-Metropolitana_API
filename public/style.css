@@ -64,6 +64,7 @@ body {
   border-radius: 10px;
   font-weight: 600;
   z-index: 9999999;
+  width: max-content;
   animation: snackbar_anim .5s ease;
 }
 

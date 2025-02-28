@@ -102,3 +102,40 @@
     width: max-content;
     color: rgb(75, 75, 75);
 }
+
+@media only screen and (max-width: 650px) {
+    /* Stop Input */
+    #inputStops {
+        margin-top: 1.5rem;
+    }
+    #inputStops input {
+        width: 75vw;
+        min-width: 0;
+        font-size: 14px;
+        padding: 5px;
+    }
+    #searchResults {
+        margin-top: 41px;
+        width: calc(75vw - 10px);
+        max-height: 10rem;
+    }
+    #searchResults .item {
+        font-size: 14px;
+    }
+
+    #content {
+        flex-direction: column;
+        width: 90vw;
+        margin-left: 5vw;
+        height: calc(100vh - 7rem - 4rem);
+        margin-top: 1rem;
+    }
+    #content #map {
+        margin-bottom: 15px;
+        height: 50vh;
+        width: calc(90vw);
+    }
+    #content #stopContainer {
+        width: calc(100% - 3px);
+    }
+}
