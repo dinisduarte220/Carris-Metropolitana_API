@@ -53,6 +53,8 @@ app.use('/stops', express.static(path.join(__dirname, 'public', 'endpoints', 'st
 
 // Lines Endpoint - Details for a specific Line
 app.use('/lines/:line_id', express.static(path.join(__dirname, 'public', 'endpoints', 'lines', 'line_id')))
+// app.use('/lines/:line_id?pattern=:pattern&active_stop=:stop_id&date=:date')
+
 // Stops Endpoint - Details for a specific Stop
 app.use('/stops/:stop_id', express.static(path.join(__dirname, 'public', 'endpoints', 'stops', 'stop_id')))
 

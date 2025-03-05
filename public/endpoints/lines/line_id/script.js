@@ -1,6 +1,18 @@
 // Extract the current line_id from URL
 const pathParts = window.location.pathname.split('/')
 const lineId = pathParts[2]
+
+function getQueryParams() {
+  const params = new URLSearchParams(window.location.search)
+  return {
+      pattern: params.get('pattern'),
+      active_stop: params.get('active_stop'),
+      date: params.get('date')
+  }
+}
+
+const params = getQueryParams()
+console.log(params)
 let patternId, stopId // Store the active pattern and stop
 let tripId // Store trip ID
 let debugMode = false
@@ -648,7 +660,6 @@ async function updateStopArrivals(id) {
         } else {
           item.innerText = arrivalTime + " min"
         }
-        console.log("ITEM UPDATED")
       }
       // Check if scheduled time is now a real-time and trigger notification if necessary
       else if (dataItem.observed_arrival_unix === null && dataItem.estimated_arrival_unix !== null && dataItem.scheduled_arrival_unix > currentUNIX && item.classList.contains('scheduleTime')) {
@@ -815,7 +826,12 @@ async function loadVehicles() {
         }
         let busIcon = document.createElement('i')
         busIcon.setAttribute('class', 'busIcon fa-solid fa-bus')
-        stopDIV.appendChild(busIcon)
+        if (stopDIV) {
+          stopDIV.appendChild(busIcon)
+          if (debugMode) {
+            console.log(`BUS Icon at: ${vehicle.stop_id} (${currentStopID + 1})`)
+          }
+        }
       }
     })
     const geoJsonPoints = {
@@ -956,6 +972,17 @@ async function updateTimes_vehicles() {
               busIcon.setAttribute('class', 'busIcon fa-solid fa-bus');
               busIcon.setAttribute('data-bus-id', vehicle.id);
               stopDIV.appendChild(busIcon);
+              if (debugMode) {
+                console.log(`
+
+                  :::::::::: BUS ICONS ::::::::::
+            
+                  Stop ID: ${stopId}
+                  Stop Sequence: ${currentStopID + 1}
+                  Time: ${new Date().getHours().toLocaleString(undefined, {minimumIntegerDigits: 2}) + ":" + new Date().getMinutes().toLocaleString(undefined, {minimumIntegerDigits: 2}) + ":" + new Date().getSeconds().toLocaleString(undefined, {minimumIntegerDigits: 2})}
+                  
+                `)
+              }
             }
           }
         }

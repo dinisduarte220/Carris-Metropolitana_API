@@ -386,7 +386,7 @@
     }
     #content #map {
         margin-bottom: 15px;
-        height: 50vh;
+        height: calc(50vh - 15px);
         width: calc(90vw);
     }
     #content #stopContainer {
