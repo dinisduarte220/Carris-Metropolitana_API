@@ -133,5 +133,5 @@ dist
 *.Zone.Identifier
 
 # Custom Storage
-JSON/
+# JSON/
 .vercel
