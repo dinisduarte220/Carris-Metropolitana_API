@@ -17,6 +17,8 @@ let patternId, stopId // Store the active pattern and stop
 let tripId // Store trip ID
 let debugMode = false
 
+
+
 // Picture in Picture Element
 let pipWindow = null
 
@@ -43,8 +45,13 @@ function updateNotificationIcon() {
 // Store current date in YYYYMMDD format
 let date = new Date()
 let currentDate = date.toISOString().split("T")[0].replace(/-/g, '') // Date for the pattern selector
-let formatedDate = date.toISOString().split("T")[0] // Date for the date selector
-document.getElementById("date_input").value = formatedDate
+if (params.date !== null) {
+  let dateChanged = params.date.substring(0, 4) + "-" + params.date.substring(4, 6) + "-" + params.date.substring(6, 8)
+  document.getElementById('date_input').value = dateChanged
+} else {
+  let formatedDate = date.toISOString().split("T")[0] // Date for the date selector
+  document.getElementById("date_input").value = formatedDate
+}
 
 // Check if line is valid
 async function checkLine() {
@@ -247,12 +254,17 @@ async function loadRoutes() {
         patternsDiv.appendChild(newPattern)
 
         // Set the first pattern as activePatternDisplay
-        if (!firstPatternSet) {
+        if (!firstPatternSet && params.pattern === null) {
           patternId = pattern_data.id
-          selectPattern(patternId)
+          selectPattern(patternId)  // Directly use patternId
           firstPatternSet = true
         }
       }
+    }
+    if (!firstPatternSet && params.pattern !== null) {
+      patternId = params.pattern
+      selectPattern(patternId)  // Directly use params.pattern
+      firstPatternSet = true
     }
   } catch (error) {
     console.error(error.message)
@@ -262,16 +274,25 @@ async function loadRoutes() {
 loadRoutes()
 
 async function selectPattern(pattern_id) {
+  params.pattern = pattern_id
+
+  // Update URL without reloading
+  const newUrl = new URL(window.location)
+  newUrl.searchParams.set('pattern', pattern_id)
+  window.history.replaceState(null, '', newUrl)
+
   const activePatternDisplay = document.getElementById('activePatternText')
+
   // If there was another active pattern, remove the class and change it to the new pattern
   let activePattern = document.querySelector('.newPattern.active')
   if (activePattern) {
     activePattern.classList.remove('active')
-    // Close patterns select menu, just if its not the first time loading (To avoid opening the select menu when the first pattern is selected)
-    select('pattern')
+    select('pattern') // Close select menu if applicable
   }
+
   let newActivePattern = document.getElementById('newPattern_' + pattern_id)
   newActivePattern.classList.add('active')
+
   // Change active pattern name on select menu
   try {
     const data = await getAPI("patterns/" + pattern_id)
@@ -280,8 +301,25 @@ async function selectPattern(pattern_id) {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as rotas / sentidos para esta linha")
   }
+
   // Store current pattern for future uses
   patternId = pattern_id
+  await loadStops()
+  if (params.active_stop !== null) {
+    selectStop(String(params.active_stop))
+  }
+}
+
+// Change URL date
+function changeDate(date) {
+  let formattedDate = date.replace(/-/g, '') // Remove dashes to get YYYYMMDD
+  params.date = formattedDate
+
+  // Update URL without reloading
+  const newUrl = new URL(window.location)
+  newUrl.searchParams.set('date', formattedDate)
+  window.history.replaceState(null, '', newUrl)
+
   loadStops()
 }
 
@@ -407,12 +445,20 @@ async function loadStops() {
 let updateInterval_stop
 async function selectStop(stop_id) {
   try {
+    params.active_stop = stop_id
+
+    // Update URL without reloading
+    const newUrl = new URL(window.location)
+    newUrl.searchParams.set('active_stop', stop_id)
+    window.history.replaceState(null, '', newUrl)
+
     const stopDiv = document.getElementById('newStop_' + stop_id)
     const stopsContainer = document.getElementById('stopsContainer')
 
     let schedules = [], trips = []
 
     const dateSelected = document.getElementById('date_input').value
+    console.log(dateSelected)
     let changedDate = dateSelected.replace(/-/g, '')
     const data = await getAPI("patterns/" + patternId)
     data.trips.forEach(trip => {
