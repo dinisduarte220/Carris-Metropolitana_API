@@ -12,7 +12,9 @@ function getQueryParams() {
 }
 
 const params = getQueryParams()
-console.log(params)
+if (debugMode) {
+  console.log(params)
+}
 let patternId, stopId // Store the active pattern and stop
 let tripId // Store trip ID
 let debugMode = false
@@ -276,7 +278,6 @@ loadRoutes()
 async function selectPattern(pattern_id) {
   params.pattern = pattern_id
 
-  // Update URL without reloading
   const newUrl = new URL(window.location)
   newUrl.searchParams.set('pattern', pattern_id)
   window.history.replaceState(null, '', newUrl)
@@ -312,10 +313,9 @@ async function selectPattern(pattern_id) {
 
 // Change URL date
 function changeDate(date) {
-  let formattedDate = date.replace(/-/g, '') // Remove dashes to get YYYYMMDD
+  let formattedDate = date.replace(/-/g, '')
   params.date = formattedDate
 
-  // Update URL without reloading
   const newUrl = new URL(window.location)
   newUrl.searchParams.set('date', formattedDate)
   window.history.replaceState(null, '', newUrl)
@@ -447,7 +447,6 @@ async function selectStop(stop_id) {
   try {
     params.active_stop = stop_id
 
-    // Update URL without reloading
     const newUrl = new URL(window.location)
     newUrl.searchParams.set('active_stop', stop_id)
     window.history.replaceState(null, '', newUrl)

@@ -505,9 +505,13 @@ async function loadArrivals(fullList) {
         arrivingTime.appendChild(time)
       }
 
-      newArrival.appendChild(arrivalNumber)
-      newArrival.appendChild(arrivalName)
-      newArrival.appendChild(arrivingTime)
+      let arrivalInfo = document.createElement('div')
+      arrivalInfo.setAttribute('class', 'arrivalInfo')
+      arrivalInfo.appendChild(arrivalNumber)
+      arrivalInfo.appendChild(arrivalName)
+      arrivalInfo.appendChild(arrivingTime)
+
+      newArrival.appendChild(arrivalInfo)
 
       pastTrips_container.appendChild(newArrival)
     })
@@ -564,10 +568,13 @@ async function loadArrivals(fullList) {
 
         arrivingTime.appendChild(time)
       }
+      let arrivalInfo = document.createElement('div')
+      arrivalInfo.setAttribute('class', 'arrivalInfo')
+      arrivalInfo.appendChild(arrivalNumber)
+      arrivalInfo.appendChild(arrivalName)
+      arrivalInfo.appendChild(arrivingTime)
 
-      newArrival.appendChild(arrivalNumber)
-      newArrival.appendChild(arrivalName)
-      newArrival.appendChild(arrivingTime)
+      newArrival.appendChild(arrivalInfo)
 
       futureTrips_container.appendChild(newArrival)
     })
@@ -807,9 +814,15 @@ async function updateArrivals() {
 let lineStringGeojson
 async function selectTrip(trip_id, pattern_id, color, vehicle_id) {
   try {
+    const activePatternDisplay = document.getElementById('activePatternText')
+
     if (debugMode) {
       console.log(`Trip ID: ${trip_id}\nVehicle ID: ${vehicle_id}\nPattern ID: ${pattern_id}`)
     }
+    let allExtraInfo = document.querySelectorAll('.extraInfo');
+    allExtraInfo.forEach(item => {
+      item.remove(); // Remove only the .extraInfo element, not the tripDiv
+    });
     // Change the trip status to active (If is already active, remove it)
     const tripDiv = document.getElementById(`trip_${trip_id}`)
     if (tripDiv.classList.contains('active')) {
@@ -872,7 +885,7 @@ async function selectTrip(trip_id, pattern_id, color, vehicle_id) {
         }
       })
   
-      if (!vehicle_id) {
+      if (!vehicle_id || vehicle_id === null) {
         const allCoordinates = lineStringGeojson.features[0].geometry.coordinates
   
         const bounds = new maplibregl.LngLatBounds()
@@ -971,7 +984,79 @@ async function selectTrip(trip_id, pattern_id, color, vehicle_id) {
       if (map.getLayer("pointsbus")) {
         map.moveLayer("pointsbus")
       }
+
+    // Show the estimated Time (HH:MM), Scheduled Time (HH:MM) and Next Arrival for this line
+    const realtime_data = await getAPI(`/stops/${stopId}/realtime`)
+    let thisArrival = realtime_data.find(item => item.trip_id === trip_id);
+    let nextArrival
+
+    if (thisArrival) {
+      // Check if estimated arrival exists
+      if (thisArrival.estimated_arrival_unix !== null) {
+        const thisArrivalTime = thisArrival.estimated_arrival_unix;
+    
+        nextArrival = realtime_data
+          .filter(item => item.line_id === thisArrival.line_id && item.trip_id !== thisArrival.trip_id &&
+                          (item.estimated_arrival_unix > thisArrivalTime || item.scheduled_arrival_unix > thisArrivalTime))
+          .sort((a, b) => {
+            // First compare estimated arrival times
+            const aArrivalTime = a.estimated_arrival_unix !== null ? a.estimated_arrival_unix : a.scheduled_arrival_unix;
+            const bArrivalTime = b.estimated_arrival_unix !== null ? b.estimated_arrival_unix : b.scheduled_arrival_unix;
+    
+            return aArrivalTime - bArrivalTime; // Sort by earliest arrival
+          })[0];
+      } else {
+        const thisArrivalTime = thisArrival.scheduled_arrival_unix;
+    
+        nextArrival = realtime_data
+          .filter(item => item.line_id === thisArrival.line_id && 
+                          item.scheduled_arrival_unix > thisArrivalTime)
+          .sort((a, b) => a.scheduled_arrival_unix - b.scheduled_arrival_unix)[0];
+      }
     }
+
+    let extraInfo = document.createElement('div')
+    extraInfo.setAttribute('class', 'extraInfo')
+
+    let newEstimateTime = document.createElement('p')
+    newEstimateTime.setAttribute('class', 'newEstimateTime')
+    newEstimateTime.innerText = "Chegada Estimada: " + thisArrival.estimated_arrival
+
+    let newScheduleTime = document.createElement('p')
+    newScheduleTime.setAttribute('class', 'newScheduleTime')
+    newScheduleTime.innerText = "Chegada Agendada: " + thisArrival.scheduled_arrival
+
+    let newNextArrival = document.createElement('p')
+    newNextArrival.setAttribute('class', 'newNextArrival')
+    let colorIndex = linesData.findIndex(line => line.line_ID === nextArrival.line_id)
+    arrivalColor = linesData[colorIndex].line_color
+    newNextArrival.setAttribute('onclick', `event.stopPropagation(); selectTrip('${nextArrival.trip_id}', '${nextArrival.pattern_id}', '${arrivalColor}', '${nextArrival.vehicle_id ?? ""}')`);
+
+    if (nextArrival.estimated_arrival !== null) {
+      newNextArrival.innerText = "Próxima passagem: " + nextArrival.estimated_arrival.substring(0, 5)
+    } else {
+      newNextArrival.innerText = "Próxima passagem: " + nextArrival.scheduled_arrival.substring(0, 5)
+    }
+
+    let routeDetails = document.createElement('a')
+    routeDetails.setAttribute('class', 'routeDetails')
+    routeDetails.setAttribute('href', `/lines/${thisArrival.line_id}?pattern=${thisArrival.pattern_id}&active_stop=${stopId}`)
+    routeDetails.setAttribute('onclick', `event.stopPropagation()`)
+    routeDetails.setAttribute('target', '_blank')
+    routeDetails.innerHTML = 'Ver percurso <i class="fa-solid fa-arrow-up-right-from-square"></i>'
+
+    extraInfo.appendChild(newEstimateTime)
+    extraInfo.appendChild(newScheduleTime)
+    extraInfo.appendChild(newNextArrival)
+    extraInfo.appendChild(routeDetails)
+
+    tripDiv.appendChild(extraInfo)
+    tripDiv.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    })
+    }
+
   } catch (error) {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar a rota ou o veiculo para esta passagem")

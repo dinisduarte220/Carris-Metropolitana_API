@@ -183,21 +183,27 @@
 #stopContainer #stopArrivals .arrivalTime {
     padding: 15px;
     display: flex;
+    flex-direction: column;
     gap: 10px;
-    align-items: center;
     margin-top: 10px;
     background-color: rgb(25, 25, 25);
     border-radius: 10px;
     cursor: pointer;
     transition: .3s;
 }
+#stopContainer #stopArrivals .arrivalInfo {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
 #stopContainer #stopArrivals .arrivalTime.active {
-    opacity: .5;
+    background-color: rgb(15, 15, 15);
+    /* opacity: .5; */
 }
 #stopContainer #stopArrivals .arrivalTime.concluded {
     opacity: .3;
 }
-#stopContainer #stopArrivals .arrivalTime .lineNumber {
+#stopContainer #stopArrivals .arrivalTime .arrivalInfo .lineNumber {
     padding: 5px 10px;
     border-radius: 25px;
     width: 3rem;
@@ -206,7 +212,7 @@
     text-align: center;
     background-color: rgb(50, 50, 50); /* FOR TESTING */
 }
-#stopContainer #stopArrivals .arrivalTime .lineName {
+#stopContainer #stopArrivals .arrivalTime .arrivalInfo .lineName {
     color: whitesmoke;
     font-weight: 500;
     font-size: 17px;
@@ -310,6 +316,30 @@
 @keyframes pulse {
     0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
     100% { transform: translate(-50%, -50%) scale(3); opacity: 0; }
+}
+
+/* Extra Info */
+#stopContainer #stopArrivals .extraInfo {
+    margin-top: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+#stopContainer #stopArrivals .extraInfo p {
+    background-color: rgb(25, 25, 25);
+    border: 2px solid rgb(75, 75, 75);
+    width: fit-content;
+    border-radius: 50px;
+    padding: 5px 10px;
+    color: whitesmoke;
+    font-weight: 500;
+    font-size: 13px;
+}
+#stopContainer #stopArrivals .extraInfo a {
+    color: rgb(150, 150, 150);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
 }
 
 /* Picture in Picture */
