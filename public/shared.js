@@ -2,7 +2,7 @@
 
 // API Calls
 async function getAPI(endpoint) {
-  const fullURL = "https://api.carrismetropolitana.pt/" + endpoint
+  const fullURL = "https://api.carrismetropolitana.pt/v1/" + endpoint
   return fetch(fullURL)
   .then(response => {
     if (!response.ok) {
