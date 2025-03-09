@@ -695,6 +695,10 @@ async function updateArrivals() {
         }
         item.setAttribute('class', 'arrivalTime concluded')
         item.setAttribute('onclick', '')
+        let allExtraInfo = item.querySelectorAll('.extraInfo');
+        allExtraInfo.forEach(item => {
+          item.remove();
+        });
       } else if (arrival.observed_arrival_unix === null && arrival.estimated_arrival_unix !== null && arrival.estimated_arrival_unix > currentUNIX) {
         let arrivingTime = item.querySelector('.arrivingTime')
         let existingRealTimeIcon = arrivingTime.querySelector('.realTimeIcon')
@@ -782,6 +786,21 @@ async function updateArrivals() {
           item.setAttribute('class', 'arrivalTime realTime active')
         } else {
           item.setAttribute('class', 'arrivalTime realTime')
+        }
+        let newEstimateTime = item.querySelector('.newEstimateTime')
+        if (newEstimateTime) {
+          if (arrival.estimated_arrival !== null) {
+            let timeParts = arrival.estimated_arrival.split(":")
+            let hours = parseInt(timeParts[0])
+            if (hours >= 24) {
+              hours -= 24
+            }
+            let formattedHours = String(hours).padStart(2, '0')
+            
+            newEstimateTime.innerText = "Chegada Estimada: " + formattedHours + arrival.estimated_arrival.substring(2, 8)
+          } else {
+            newEstimateTime.innerText = "Chegada Estimada: " + arrival.estimated_arrival
+          }
         }
       } else {
         let arrivingTime = item.querySelector('.arrivingTime .time')
@@ -1020,23 +1039,36 @@ async function selectTrip(trip_id, pattern_id, color, vehicle_id) {
 
     let newEstimateTime = document.createElement('p')
     newEstimateTime.setAttribute('class', 'newEstimateTime')
-    newEstimateTime.innerText = "Chegada Estimada: " + thisArrival.estimated_arrival
-
+    
+    if (thisArrival.estimated_arrival !== null) {
+      let timeParts = thisArrival.estimated_arrival.split(":")
+      let hours = parseInt(timeParts[0])
+      if (hours >= 24) {
+        hours -= 24
+      }
+      let formattedHours = String(hours).padStart(2, '0')
+      
+      newEstimateTime.innerText = "Chegada Estimada: " + formattedHours + thisArrival.estimated_arrival.substring(2, 8)
+    } else {
+      newEstimateTime.innerText = "Chegada Estimada: " + thisArrival.estimated_arrival
+    }
+    
     let newScheduleTime = document.createElement('p')
     newScheduleTime.setAttribute('class', 'newScheduleTime')
-    newScheduleTime.innerText = "Chegada Agendada: " + thisArrival.scheduled_arrival
-
-    let newNextArrival = document.createElement('p')
-    newNextArrival.setAttribute('class', 'newNextArrival')
-    let colorIndex = linesData.findIndex(line => line.line_ID === nextArrival.line_id)
-    arrivalColor = linesData[colorIndex].line_color
-    newNextArrival.setAttribute('onclick', `event.stopPropagation(); selectTrip('${nextArrival.trip_id}', '${nextArrival.pattern_id}', '${arrivalColor}', '${nextArrival.vehicle_id ?? ""}')`);
-
-    if (nextArrival.estimated_arrival !== null) {
-      newNextArrival.innerText = "Próxima passagem: " + nextArrival.estimated_arrival.substring(0, 5)
+    
+    if (thisArrival.scheduled_arrival !== null) {
+      let timeParts2 = thisArrival.scheduled_arrival.split(":")
+      let hours2 = parseInt(timeParts2[0])
+      if (hours2 >= 24) {
+        hours2 -= 24
+      }
+      let formattedHours2 = String(hours2).padStart(2, '0')
+      
+      newScheduleTime.innerText = "Chegada Agendada: " + formattedHours2 + thisArrival.scheduled_arrival.substring(2, 8)
     } else {
-      newNextArrival.innerText = "Próxima passagem: " + nextArrival.scheduled_arrival.substring(0, 5)
+      newScheduleTime.innerText = "Chegada Agendada: " + thisArrival.scheduled_arrival
     }
+
 
     let routeDetails = document.createElement('a')
     routeDetails.setAttribute('class', 'routeDetails')
@@ -1047,7 +1079,20 @@ async function selectTrip(trip_id, pattern_id, color, vehicle_id) {
 
     extraInfo.appendChild(newEstimateTime)
     extraInfo.appendChild(newScheduleTime)
-    extraInfo.appendChild(newNextArrival)
+    if (nextArrival) {
+      let newNextArrival = document.createElement('p')
+      newNextArrival.setAttribute('class', 'newNextArrival')
+      let colorIndex = linesData.findIndex(line => line.line_ID === nextArrival.line_id)
+      arrivalColor = linesData[colorIndex].line_color
+      newNextArrival.setAttribute('onclick', `event.stopPropagation(); selectTrip('${nextArrival.trip_id}', '${nextArrival.pattern_id}', '${arrivalColor}', '${nextArrival.vehicle_id ?? ""}')`);
+  
+      if (nextArrival.estimated_arrival !== null) {
+        newNextArrival.innerText = "Próxima passagem: " + nextArrival.estimated_arrival.substring(0, 5)
+      } else {
+        newNextArrival.innerText = "Próxima passagem: " + nextArrival.scheduled_arrival.substring(0, 5)
+      }
+      extraInfo.appendChild(newNextArrival)
+    }
     extraInfo.appendChild(routeDetails)
 
     tripDiv.appendChild(extraInfo)

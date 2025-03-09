@@ -12,14 +12,13 @@ function getQueryParams() {
 }
 
 const params = getQueryParams()
-if (debugMode) {
-  console.log(params)
-}
 let patternId, stopId // Store the active pattern and stop
 let tripId // Store trip ID
 let debugMode = false
 
-
+if (debugMode) {
+  console.log(params)
+}
 
 // Picture in Picture Element
 let pipWindow = null
