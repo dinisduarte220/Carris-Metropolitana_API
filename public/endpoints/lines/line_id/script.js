@@ -303,11 +303,19 @@ async function selectPattern(pattern_id) {
   }
 
   // Store current pattern for future uses
-  patternId = pattern_id
-  await loadStops()
-  if (params.active_stop !== null) {
-    selectStop(String(params.active_stop))
+
+  if (patternId === params.pattern) {
+    await loadStops()
+    if (params.active_stop !== null) {
+      selectStop(String(params.active_stop))
+    }
+  } else {
+    await loadStops()
+    const newUrl = new URL(window.location)
+    newUrl.searchParams.delete('active_stop')
+    window.history.replaceState(null, '', newUrl)
   }
+  patternId = pattern_id
 }
 
 // Change URL date
