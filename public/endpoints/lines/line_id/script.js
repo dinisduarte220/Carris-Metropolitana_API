@@ -303,19 +303,20 @@ async function selectPattern(pattern_id) {
   }
 
   // Store current pattern for future uses
-
-  if (patternId === params.pattern) {
-    await loadStops()
-    if (params.active_stop !== null) {
-      selectStop(String(params.active_stop))
-    }
-  } else {
-    await loadStops()
-    const newUrl = new URL(window.location)
-    newUrl.searchParams.delete('active_stop')
-    window.history.replaceState(null, '', newUrl)
-  }
   patternId = pattern_id
+  await loadStops()
+  console.log(params.active_stop)
+  if (params.active_stop !== null) {
+    let activeStopDIV = document.querySelector('#newStop_' + params.active_stop)
+    if (activeStopDIV) {
+      selectStop(String(params.active_stop))
+    } else {
+      const newUrl = new URL(window.location)
+      newUrl.searchParams.delete('active_stop')
+      window.history.replaceState(null, '', newUrl)
+      params.active_stop = null
+    }
+  }
 }
 
 // Change URL date
@@ -352,9 +353,10 @@ async function loadStops() {
     document.getElementById('stopsBorder').style.backgroundColor = data.color
     // Set and clear the stops container
     const stopsContainer = document.getElementById('stopsContainer')
-    while (stopsContainer.firstChild) {
-      stopsContainer.removeChild(stopsContainer.firstChild)
-    }
+    stopsContainer.innerHTML = ""
+    // while (stopsContainer.firstChild) {
+    //   stopsContainer.removeChild(stopsContainer.firstChild)
+    // }
 
     let stops = data.path
     stops.forEach(stop => {
