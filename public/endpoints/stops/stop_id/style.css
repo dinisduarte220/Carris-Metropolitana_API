@@ -185,7 +185,6 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-top: 10px;
     background-color: rgb(25, 25, 25);
     border-radius: 10px;
     cursor: pointer;
@@ -202,6 +201,7 @@
 }
 #stopContainer #stopArrivals .arrivalTime.concluded {
     opacity: .3;
+    margin-top: 10px;
 }
 #stopContainer #stopArrivals .arrivalTime .arrivalInfo .lineNumber {
     padding: 5px 10px;
@@ -221,6 +221,7 @@
 #futureTrips {
     display: flex;
     flex-direction: column;
+    gap: 10px;
 }
 /* Current Time Marker - Divider between past and future trips */
 #stopContainer #stopArrivals #currentTimeMarker {
