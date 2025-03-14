@@ -823,6 +823,26 @@ async function updateArrivals() {
         }
       }
     })
+
+    // Sort the future trips container
+    const futureTrips = Array.from(futureTrips_container.children)
+
+    futureTrips.forEach(trip => {
+      const time = trip.querySelector('.arrivalTimeText')?.innerText || trip.querySelector('.time')?.innerText
+      
+      const getTimeInMinutes = (time) => {
+        if (time === "A Chegar") return -1 // Highest priority
+        if (time.includes("min")) return parseInt(time) // Extract number
+        const [hours, minutes] = time.split(":").map(Number)
+        return hours * 60 + minutes
+      }
+    
+      const type = trip.classList.contains('realTime') ? 1 : 2
+      const timeValue = getTimeInMinutes(time)
+    
+      // Set CSS order based on type & time
+      trip.style.order = `${type}${String(timeValue).padStart(4, '0')}`
+    })
   } catch (error) {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao atualizar as passagens desta paragem")
@@ -902,8 +922,9 @@ async function selectTrip(trip_id, pattern_id, color, vehicle_id) {
           "line-width": 4
         }
       })
-  
-      if (!vehicle_id || vehicle_id === null) {
+      let vehicle_data = await getAPI("vehicles")
+      vehicle_data = vehicle_data.find(vehicle => vehicle.id === vehicle_id)
+      if (!vehicle_id || vehicle_id === null || !vehicle_data) {
         const allCoordinates = lineStringGeojson.features[0].geometry.coordinates
   
         const bounds = new maplibregl.LngLatBounds()
@@ -914,8 +935,6 @@ async function selectTrip(trip_id, pattern_id, color, vehicle_id) {
           map.removeImage("bus-icon")
         }
       } else {
-        let vehicle_data = await getAPI("vehicles")
-        vehicle_data = vehicle_data.find(vehicle => vehicle.id === vehicle_id)
 
         if (!vehicle_data) {
           snackbar("fa-solid fa-triangle-exclamation", "Veículo não encontrado")
