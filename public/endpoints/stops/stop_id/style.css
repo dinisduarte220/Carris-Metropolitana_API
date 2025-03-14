@@ -218,6 +218,10 @@
     font-size: 17px;
     max-width: 55%;
 }
+#futureTrips {
+    display: flex;
+    flex-direction: column;
+}
 /* Current Time Marker - Divider between past and future trips */
 #stopContainer #stopArrivals #currentTimeMarker {
     display: none;
