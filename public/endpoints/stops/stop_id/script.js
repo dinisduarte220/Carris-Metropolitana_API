@@ -287,6 +287,7 @@ let updateInterval, currentTimeInterval, vehiclesUpdateInterval
 // Load Arrivals for the stop
 let realTime_trips = [], scheduled_trips = [], future_trips = [], past_trips = [], tripsToBeUpdated = [], vehiclesToBeUpdated = []
 let fullArrivalsList = false
+let pastTripsToShow = 1
 async function loadArrivals(fullList) {
   document.getElementById('fullPastTrips').style.display = "block"
   var pastTrips_container = document.getElementById('pastTrips')
@@ -451,7 +452,7 @@ async function loadArrivals(fullList) {
       document.getElementById('fullPastTrips').setAttribute('onclick', 'loadArrivals()')
     } else {
       fullArrivalsList = false
-      let startIndex = Math.max(0, concluded_arrivals.length - 3) // Ensure it doesn't go negative
+      let startIndex = Math.max(0, concluded_arrivals.length - pastTripsToShow) // Use the variable here
       past_trips.push(...concluded_arrivals.slice(startIndex))
       document.getElementById('fullPastTrips').innerText = "Ver viagens passadas"
       document.getElementById('fullPastTrips').setAttribute('onclick', 'loadArrivals(true)')
@@ -834,7 +835,9 @@ async function updateArrivals() {
         if (time === "A Chegar") return -1 // Highest priority
         if (time.includes("min")) return parseInt(time) // Extract number
         const [hours, minutes] = time.split(":").map(Number)
-        return hours * 60 + minutes
+        // Treat times between 00:00 and 04:00 as being after 24:00
+        const adjustedHours = (hours < 4) ? hours + 24 : hours
+        return adjustedHours * 60 + minutes
       }
     
       const type = trip.classList.contains('realTime') ? 1 : 2
