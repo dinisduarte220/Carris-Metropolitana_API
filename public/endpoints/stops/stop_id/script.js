@@ -32,7 +32,7 @@ function updateNotificationIcon() {
 async function checkStop() {
   try {
     const data = await getAPI("stops/" + stopId)
-    // If line exists continue. If not, return to lines page
+    // If Stop exists continue. If not, return to stops page
     if (data && Object.keys(data).length > 0) {
       await loadAllStops()
       stopInformationDisplay()
@@ -46,8 +46,7 @@ async function checkStop() {
   }
 }
 // Make sure the map is loaded before executing any function
-map.on('load', checkStop)
-
+map.on('load', checkStop) 
 
 // Deactivate / Reactivate notifications
 function toggleNotifications() {

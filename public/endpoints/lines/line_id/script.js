@@ -54,6 +54,14 @@ if (params.date !== null) {
   document.getElementById("date_input").value = formatedDate
 }
 
+// Line Map
+var map = new maplibregl.Map({
+  container: "map",
+  style: "https://api.jawg.io/styles/jawg-dark.json?access-token=zyLDUYMkhQ8nsbh3NFInHcUxLoxFUPjIVXadZWrhSSKlG9LRXFceIrP4vMErY9dy",
+  center: [-9.0, 38.7],
+  zoom: 9,
+});
+
 // Check if line is valid
 async function checkLine() {
   try {
@@ -70,7 +78,7 @@ async function checkLine() {
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as informações da linha: " + lineId)
   }
 }
-checkLine()
+map.on('load', checkLine)
 
 // Deactivate / Reactivate notifications
 function toggleNotifications() {
@@ -755,13 +763,6 @@ function markTime(trip) {
   }
 }
 
-// Line Map
-var map = new maplibregl.Map({
-  container: "map",
-  style: "https://api.jawg.io/styles/jawg-dark.json?access-token=zyLDUYMkhQ8nsbh3NFInHcUxLoxFUPjIVXadZWrhSSKlG9LRXFceIrP4vMErY9dy",
-  center: [-9.0, 38.7],
-  zoom: 9,
-});
 
 // Load Map Route
 async function loadRoute(shape_id, color) {
