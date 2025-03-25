@@ -313,7 +313,6 @@ async function selectPattern(pattern_id) {
   // Store current pattern for future uses
   patternId = pattern_id
   await loadStops()
-  console.log(params.active_stop)
   if (params.active_stop !== null) {
     let activeStopDIV = document.querySelector('#newStop_' + params.active_stop)
     if (activeStopDIV) {

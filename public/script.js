@@ -5,7 +5,8 @@ async function homeFunctions() {
   await favoriteLines()
   await favoriteStops()
   await recentLines()
-  await recentStops()
+  // await recentStops()
+  await nearStops()
 }
 
 // Favorite Lines
@@ -122,4 +123,58 @@ async function recentStops() {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as paragens recentes")
   }
+}
+
+// Near Stops
+async function nearStops() {
+  let mainContainer = document.getElementById('recentStops')
+  let stopsContainer = document.getElementById('recentStops_container')
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(async function (position) {
+      const latitude = position.coords.latitude
+      const longitude = position.coords.longitude
+      console.log(`Latitude: ${latitude}, Longitude: ${longitude}`)
+
+      let nearestStops = [] // Store the 5 nearest stops
+      try {
+        const stop_data = await getAPI("stops")
+
+        stop_data.forEach(stop => {
+          const lon = stop.lon
+          const lat = stop.lat
+          const distance = haversineDistance(latitude, longitude, lat, lon)
+          nearestStops.push({ ...stop, distance })
+        })
+
+        // Sort stops by distance and keep the 5 closest
+        nearestStops.sort((a, b) => a.distance - b.distance)
+        nearestStops = nearestStops.slice(0, 10)
+
+        console.log("Nearest Stops:", nearestStops)
+        // Display filtered stops
+        renderStops(nearestStops, stopsContainer)
+      } catch (error) {
+        console.error(error.message)
+        snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as paragens perto de si")
+      }
+    }, function () {
+      snackbar("fa-solid fa-triangle-exclamation", "Não foi possível obter a sua localização")
+    })
+  } else {
+    snackbar("fa-solid fa-triangle-exclamation", "O serviço de GeoLocation não está disponível")
+  }
+}
+
+// Haversine formula to calculate distance between two coordinates
+function haversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371 // Earth radius (Km)
+  const toRad = angle => (angle * Math.PI) / 180
+
+  const dLat = toRad(lat2 - lat1)
+  const dLon = toRad(lon2 - lon1)
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c // Distance (Km)
 }

@@ -1,10 +1,8 @@
 {
   "language": "PT",
   "theme": "dark",
-  // Notifications
   "line_notifications": true,
   "stop_notifications": false,
   "arrival_time_notification": 1,
-  // Past Trips Count
   "past_trips": 1
 }

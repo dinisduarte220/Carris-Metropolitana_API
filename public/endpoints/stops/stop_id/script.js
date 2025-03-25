@@ -832,7 +832,7 @@ async function updateArrivals() {
       const time = trip.querySelector('.arrivalTimeText')?.innerText || trip.querySelector('.time')?.innerText
       
       const getTimeInMinutes = (time) => {
-        if (time === "A Chegar") return -1 // Highest priority
+        if (time === "A Chegar") return 0 // Highest priority
         if (time.includes("min")) return parseInt(time) // Extract number
         const [hours, minutes] = time.split(":").map(Number)
         // Treat times between 00:00 and 04:00 as being after 24:00
