@@ -830,8 +830,8 @@ async function updateArrivals() {
 
     futureTrips.forEach(trip => {
       const time = trip.querySelector('.arrivalTimeText')?.innerText || trip.querySelector('.time')?.innerText
-      
       const getTimeInMinutes = (time) => {
+        if (!time) return
         if (time === "A Chegar") return 0 // Highest priority
         if (time.includes("min")) return parseInt(time) // Extract number
         const [hours, minutes] = time.split(":").map(Number)
@@ -839,7 +839,7 @@ async function updateArrivals() {
         const adjustedHours = (hours < 4) ? hours + 24 : hours
         return adjustedHours * 60 + minutes
       }
-    
+
       const type = trip.classList.contains('realTime') ? 1 : 2
       const timeValue = getTimeInMinutes(time)
     
