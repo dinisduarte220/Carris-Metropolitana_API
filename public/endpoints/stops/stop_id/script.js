@@ -36,7 +36,6 @@ async function checkStop() {
     if (data && Object.keys(data).length > 0) {
       await loadAllStops()
       stopInformationDisplay()
-      addStopToRecents()
     } else {
       window.location.href = '/stops'
     }
@@ -64,43 +63,6 @@ function toggleNotifications() {
     updateNotificationIcon() // Update icon after saving the new state
   })
   .catch(error => console.error('[ERROR] Failed to update settings:', error))
-}
-// Add to the recent lines
-async function addStopToRecents() {
-  try {
-    const response = await fetch('/storage?storage_id=recent_stops')
-    if (!response.ok) {
-      throw new Error(`[ERROR] Failed to fetch recent stops: ${response.statusText}`)
-    }
-
-    let data = await response.json()
-
-    // Move stopId to the first position if it already exists, otherwise add it
-    const index = data.indexOf(stopId)
-    if (index !== -1) {
-      data.splice(index, 1) // Remove the existing stopId
-    }
-    data.unshift(stopId) // Add it to the beginning of the array
-
-    // Update the recent stops on the server
-    const finalRes = await fetch('/storage', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        storage_id: 'recent_stops',
-        value: data
-      })
-    })
-
-    if (!finalRes.ok) {
-      throw new Error(`[ERROR] Failed to update recent lines: ${finalRes.statusText}`)
-    }
-  } catch (error) {
-    console.error(error.message)
-    snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao adicionar esta paragem às tuas paragens recentes")
-  }
 }
 
 // Add / Remove to favorite stops

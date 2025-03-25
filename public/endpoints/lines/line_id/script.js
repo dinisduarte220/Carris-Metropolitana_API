@@ -68,7 +68,6 @@ async function checkLine() {
     const data = await getAPI("lines/" + lineId)
     // If line exists continue. If not, return to lines page
     if (data && Object.keys(data).length > 0) {
-      addLineToRecents()
       lineInformationDisplay()
     } else {
       window.location.href = '/lines'
@@ -97,43 +96,6 @@ function toggleNotifications() {
     updateNotificationIcon() // Update icon after saving the new state
   })
   .catch(error => console.error('[ERROR] Failed to update settings:', error))
-}
-// Add to the recent lines
-async function addLineToRecents() {
-  try {
-    const response = await fetch('/storage?storage_id=recent_lines')
-    if (!response.ok) {
-      throw new Error(`[ERROR] Failed to fetch recent lines: ${response.statusText}`)
-    }
-
-    let data = await response.json()
-
-    // Move lineId to the first position if it already exists, otherwise add it
-    const index = data.indexOf(lineId)
-    if (index !== -1) {
-      data.splice(index, 1) // Remove the existing lineId
-    }
-    data.unshift(lineId) // Add it to the beginning of the array
-
-    // Update the recent lines on the server
-    const finalRes = await fetch('/storage', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        storage_id: 'recent_lines',
-        value: data
-      })
-    })
-
-    if (!finalRes.ok) {
-      throw new Error(`[ERROR] Failed to update recent lines: ${finalRes.statusText}`)
-    }
-  } catch (error) {
-    console.error(error.message)
-    snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao adicionar esta linha às tuas linhas recentes")
-  }
 }
 
 // Line Top Information
