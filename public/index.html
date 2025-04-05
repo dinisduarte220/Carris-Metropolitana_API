@@ -27,30 +27,25 @@
     <div id="snackbar">
         <i class="fa-regular fa-bell"></i> Isto é uma snackbar
     </div>
-    <!-- Favorites Lines / Stops + Recent Lines + Near Stops (4x4 Grid)-->
+    <!-- Favorite Routes + Nearest Lines + Nearest Stops-->
     <div id="homeGrid">
-        <div class="gridItem" id="favoriteLines">
-            <h3 >Linhas Favoritas:</h3>
-            <div class="itemsContainer" id="favLines_container">
+        <div class="gridItem" id="favoriteRoutes">
+            <h3>Percursos Favoritos</h3>
+            <div class="itemsContainer" id="favoriteRoutes_container">
 
             </div>
             <div class="errorMsg">
-                SEM LINHAS FAVORITAS
+                SEM PERCURSOS FAVORITOS
             </div>
-        </div>
-        <div class="gridItem" id="favoriteStops">
-            <h3 >Paragens Favoritas:</h3>
-            <div class="itemsContainer" id="favStops_container">
-
-            </div>
-            <div class="errorMsg">
-                SEM PARAGENS FAVORITAS
-            </div>
+            <button><i class="fa-regular fa-square-plus"></i> Editar</button>
         </div>
         <div class="gridItem" id="recentLines">
-            <h3 >Linhas Próximas:</h3>
+            <h3>Linhas Próximas:</h3>
             <div class="itemsContainer" id="recentLines_container">
-
+                <div class="loadingItem"></div>
+                <div class="loadingItem"></div>
+                <div class="loadingItem"></div>
+                <div class="loadingItem"></div>
             </div>
             <div class="errorMsg">
                 SEM LINHAS PRÓXIMAS
@@ -59,7 +54,10 @@
         <div class="gridItem" id="recentStops">
             <h3>Paragens Próximas:</h3>
             <div class="itemsContainer" id="recentStops_container">
-
+                <div class="loadingItem"></div>
+                <div class="loadingItem"></div>
+                <div class="loadingItem"></div>
+                <div class="loadingItem"></div>
             </div>
             <div class="errorMsg">
                 SEM PARAGENS PRÓXIMAS

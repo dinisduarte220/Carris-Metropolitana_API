@@ -53,7 +53,6 @@ function renderStops(stops, container) {
     newStop.setAttribute('href', `/stops/` + stop.id)
     let stopID = document.createElement('p')
     stopID.setAttribute('class', 'stopID')
-    stopID.setAttribute('onclick', `event.stopPropagation(); copyText("${stop.id}")`)
     stopID.innerText = "#" + stop.id
     let stopName = document.createElement('p')
     stopName.setAttribute('class', 'stopName')
@@ -74,7 +73,7 @@ function copyText(text) {
 
 // SnackBar Notifications
 let timer, timer_out
-const snackbarTime = 5000 // 5 Seconds
+const snackbarTime = 5000
 function snackbar(icon, text) {
   let div = document.getElementById('snackbar')
   if (!icon || !text) {
@@ -90,7 +89,7 @@ function snackbar(icon, text) {
     div.style.display = "block"
     timer_out = setTimeout(() => {
       div.style.animation = "snackbar_anim_out .5s ease"
-    }, snackbarTime - 500); // Add out animation 500ms before removing the snackbar
+    }, snackbarTime - 500);
     timer = setTimeout(() => {
       div.style.display = "none"
     }, snackbarTime);

@@ -1060,8 +1060,12 @@ async function selectTrip(trip_id, pattern_id, color, vehicle_id) {
     routeDetails.setAttribute('target', '_blank')
     routeDetails.innerHTML = 'Ver percurso <i class="fa-solid fa-arrow-up-right-from-square"></i>'
 
-    extraInfo.appendChild(newEstimateTime)
-    extraInfo.appendChild(newScheduleTime)
+    if (thisArrival.estimated_arrival !== null) {
+      extraInfo.appendChild(newEstimateTime)
+    }
+    if (thisArrival.scheduled_arrival !== null) {
+      extraInfo.appendChild(newScheduleTime)
+    }
     if (nextArrival) {
       let newNextArrival = document.createElement('p')
       newNextArrival.setAttribute('class', 'newNextArrival')

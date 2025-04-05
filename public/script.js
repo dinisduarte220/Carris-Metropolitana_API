@@ -2,8 +2,6 @@ homeFunctions()
 
 // Starting Functions
 async function homeFunctions() {
-  await favoriteLines()
-  await favoriteStops()
   await nearStops()
   await nearLines()
 }

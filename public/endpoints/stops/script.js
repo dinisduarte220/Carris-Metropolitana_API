@@ -64,7 +64,7 @@ async function loadAllStops() {
       type: "circle",
       source: "points",
       paint: {
-        'circle-radius': 3,
+        'circle-radius': 4,
         'circle-color': "#ba7c18",
         'circle-stroke-width': 1,
         'circle-stroke-color': '#FFFFFF'
