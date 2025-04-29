@@ -1052,6 +1052,9 @@ async function selectTrip(trip_id, pattern_id, color, vehicle_id) {
       newScheduleTime.innerText = "Chegada Agendada: " + thisArrival.scheduled_arrival
     }
 
+    let newUpdatedTime = document.createElement('p')
+    newUpdatedTime.setAttribute('class', 'newUpdatedTime')
+    newUpdatedTime.innerText = `Atualizado há: `
 
     let routeDetails = document.createElement('a')
     routeDetails.setAttribute('class', 'routeDetails')
@@ -1062,6 +1065,9 @@ async function selectTrip(trip_id, pattern_id, color, vehicle_id) {
 
     if (thisArrival.estimated_arrival !== null) {
       extraInfo.appendChild(newEstimateTime)
+    }
+    if (thisArrival.vehicle_id !== null) {
+      extraInfo.appendChild(newUpdatedTime)
     }
     if (thisArrival.scheduled_arrival !== null) {
       extraInfo.appendChild(newScheduleTime)
@@ -1080,6 +1086,7 @@ async function selectTrip(trip_id, pattern_id, color, vehicle_id) {
       }
       extraInfo.appendChild(newNextArrival)
     }
+
     extraInfo.appendChild(routeDetails)
 
     tripDiv.appendChild(extraInfo)
@@ -1087,8 +1094,13 @@ async function selectTrip(trip_id, pattern_id, color, vehicle_id) {
       behavior: 'smooth',
       block: 'center',
     })
-    }
 
+      if (thisArrival.vehicle_id !== null) {
+        let newUpdatedTime_item = document.querySelector('.arrivalTime.active .newUpdatedTime')
+        const currentUNIX = Math.floor(Date.now() / 1000);
+        newUpdatedTime_item.innerText = `Atualizado há: ${currentUNIX - vehicle_data.timestamp} segundos`
+      }
+    }
   } catch (error) {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar a rota ou o veiculo para esta passagem")
@@ -1144,6 +1156,12 @@ async function updateVehicle(vehicle_id) {
       bounds.extend(busCoords)
       bounds.extend(stopCoords)
       map.fitBounds(bounds, { padding: 65, animate: true, maxZoom: 17 })
+    }
+
+      let newUpdatedTime_item = document.querySelector('.arrivalTime.active .newUpdatedTime')
+      if (newUpdatedTime_item) {
+      const currentUNIX = Math.floor(Date.now() / 1000);
+      newUpdatedTime_item.innerText = `Atualizado há: ${currentUNIX - vehicle_data.timestamp} segundos`
     }
   } catch (error) {
     console.error(error.message)

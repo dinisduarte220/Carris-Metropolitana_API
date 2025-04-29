@@ -116,14 +116,15 @@ body {
   position: absolute;
   bottom: 10px;
   right: 10px;
-  padding: 5px 15px;
-  border-radius: 50px;
+  padding: 5px 10px;
+  border-radius: 5px;
   background-color: rgb(75, 75, 75);
   border: 2px solid rgb(125, 125, 125);
   color: whitesmoke;
   font-size: 15px;
   font-weight: 600;
   word-spacing: 5px;
+  cursor: pointer;
 }
 #homeGrid .gridItem .errorMsg {
   display: none;
@@ -156,7 +157,6 @@ body {
   transition: .3s;
 }
 
-/* TESTING */
 #homeGrid .gridItem .itemsContainer .loadingItem {
   width: 100%;
   height: 52px;
