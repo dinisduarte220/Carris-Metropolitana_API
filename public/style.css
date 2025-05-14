@@ -142,7 +142,7 @@ body {
   height: calc(100% - 40px);
   overflow-y: scroll;
 }
-#homeGrid .gridItem .itemsContainer .item {
+#homeGrid .gridItem .itemsContainer .item, #modalFavorites #favoritesLinesContainer .item, #modalFavorites #favoritesStopsContainer .item {
   text-decoration: none;
   width: calc(100% - 20px);
   background-color: rgb(50, 50, 50);
@@ -198,20 +198,20 @@ body {
   margin-bottom: 10px;
 }
 /* Lines Style */
-#homeGrid .gridItem .itemsContainer .item.line .lineID {
+#homeGrid .gridItem .itemsContainer .item.line .lineID, #modalFavorites #favoritesLinesContainer .item.line .lineID {
   padding: 5px 15px;
   border-radius: 50px;
 }
-#homeGrid .gridItem .itemsContainer .item.line .lineName {
+#homeGrid .gridItem .itemsContainer .item.line .lineName, #modalFavorites #favoritesLinesContainer .item.line .lineName {
   text-align: left;
 }
 /* Stops Style */
-#homeGrid .gridItem .itemsContainer .item.stop .stopID {
+#homeGrid .gridItem .itemsContainer .item.stop .stopID, #modalFavorites #favoritesStopsContainer .item.stop .stopID {
   padding: 5px 15px;
   border-radius: 50px;
   background-color: rgb(75, 75, 75);
 }
-#homeGrid .gridItem .itemsContainer .item.stop .stopName {
+#homeGrid .gridItem .itemsContainer .item.stop .stopName, #modalFavorites #favoritesStopsContainer .item.stop .stopName {
   text-align: left;
 }
 
@@ -225,8 +225,138 @@ body {
   display: none;
 }
 
-/* Responsive */
+/* MODAL - Favorites */
+#modalFavorites {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  padding: 15px;
+  background-color: rgb(50, 50, 50);
+  border-radius: 10px;
+  border: 2px rgb(150, 150, 150) solid;
+  color: white;
+  text-align: center;
+}
+#modalFavorites .divType:not(.active) {
+  display: none;
+}
 
+#modalFavorites i {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  cursor: pointer;
+}
+
+#modalFavorites input {
+  margin-top: 10px;
+  width: 15rem;
+  height: 1.5rem;
+  padding: 5px;
+  background-color: rgb(35, 35, 35);
+  border: 2px solid rgb(150, 150, 150);
+  border-radius: 5px;
+  color: whitesmoke;
+  text-align: center;
+  font-weight: 500;
+  font-size: 16px;
+  outline: none;
+}
+
+#modalFavorites #favoritesLinesContainer .errorMsg,#modalFavorites #favoritesStopsContainer .errorMsg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: gray;
+  font-weight: 800;
+  font-size: 18px;
+  width: max-content;
+}
+
+#modalFavorites #favoritesLinesContainer, #modalFavorites #favoritesStopsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 10px;
+  width: 25rem;
+  height: 10rem;
+  background-color: rgb(35, 35, 35);
+  padding: 5px;
+  border: 2px solid rgb(150, 150, 150);
+  border-radius: 5px;
+  overflow-y: auto;
+}
+
+#modalFavorites #favoritesLinesContainer .item.selected, #modalFavorites #favoritesStopsContainer .item.selected {
+  background-color: rgb(100, 100, 100);
+}
+
+#modalFavorites button {
+  margin-top: 10px;
+  width: 10rem;
+  padding: 5px;
+  background-color: rgb(200, 200, 200);
+  border: none;
+  border-radius: 5px;
+  text-align: center;
+  font-weight: 500;
+  font-size: 16px;
+  outline: none;
+  transition: .3s;
+  cursor: pointer;
+}
+#modalFavorites button:disabled {
+  color: white;
+  opacity: .5;
+  cursor: not-allowed;
+}
+#modalFavorites button:hover:not(:disabled) {
+  opacity: .8;
+  scale: .95;
+}
+
+#modalFavorites #favoriteType {
+  margin-top: 10px;
+  position: relative;
+  display: flex;
+  margin-left: 50%;
+  transform: translateX(-50%);
+  gap: 10px;
+  width: 15rem;
+  height: 25px;
+  padding: 3px;
+  background-color: rgb(25, 25, 25);
+  border-radius: 10px;
+  border: 1px rgb(150, 150, 150);
+}
+#modalFavorites #favoriteType .type {
+  width: calc(15rem / 2);
+  text-align: center;
+  font-weight: 600;
+  border-radius: 5px;
+  z-index: 9999;
+  transition: .3s;
+}
+#modalFavorites #favoriteType .type:not(.active):hover {
+  cursor: pointer;
+}
+#modalFavorites #favoriteType .type.active {
+  color: black;
+}
+#modalFavorites #favoriteType #typeIndicator {
+  position: absolute;
+  background-color: rgb(255, 221, 1);
+  height: calc(100% - 6px);
+  width: calc(15rem / 2);
+  border-radius: 7px;
+  left: 3px;
+  transition: left .3s;
+}
+
+/* Responsive */
 @media only screen and (max-width: 750px) {
   /* Tob Bar */
   #topBar {

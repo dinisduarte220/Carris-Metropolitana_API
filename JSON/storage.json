@@ -1,10 +1,37 @@
-{
-  "favorite_lines": [
-    "4600",
-    "4701",
-    "1711"
-  ],
-  "favorite_stops": [
-    "100418"
-  ]
-}
+[
+  {
+    "type": "line",
+    "id": "2746",
+    "text": "Lisboa (C. Grande) - Venda do Pinheiro via Milharado e A8 Lousa",
+    "color": "rgb(198, 29, 35)"
+  },
+  {
+    "type": "line",
+    "id": "1217",
+    "text": "Agualva-Cacém (Estação) - Massamá (Urbanização Norte)",
+    "color": "rgb(198, 29, 35)"
+  },
+  {
+    "type": "line",
+    "id": "1014",
+    "text": "Amadora (Cemitério) - Vila Chã via Casas do Lago",
+    "color": "rgb(198, 29, 35)"
+  },
+  {
+    "type": "stop",
+    "id": "100179",
+    "text": "LANÇADA (R AGRICULTURA 195)"
+  },
+  {
+    "type": "line",
+    "id": "1015",
+    "text": "Reboleira (Estação) via Damaia | Circular",
+    "color": "rgb(61, 133, 198)"
+  },
+  {
+    "type": "line",
+    "id": "1013",
+    "text": "Reboleira (Estação) - Urbanização Sky City via Casas do Lago",
+    "color": "rgb(198, 29, 35)"
+  }
+]

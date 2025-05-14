@@ -572,6 +572,14 @@ async function loadArrivals(fullList) {
       currentTimeInterval = setInterval(() => currentTimeMarker(), 500)
     if (updateInterval) clearInterval(updateInterval)
       updateInterval = setInterval(() => updateArrivals(), 15000)
+
+    if (fullList) {
+      let timeMarker = document.getElementById('currentTimeMarker')
+      timeMarker.scrollIntoView({
+        behavior: 'instant',
+        block: 'center',
+      })
+    }
   } catch (error) {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as passagens desta paragem")

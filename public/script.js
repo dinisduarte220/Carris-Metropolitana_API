@@ -2,125 +2,353 @@ homeFunctions()
 
 // Starting Functions
 async function homeFunctions() {
+  await getFavorites()
   await nearStops()
   await nearLines()
 }
 
-// Favorite Lines
-async function favoriteLines() {
-  let mainContainer = document.getElementById('favoriteLines')
-  let linesContainer = document.getElementById('favLines_container')
-  let containerMessage = mainContainer.querySelector('.errorMsg')
-  containerMessage.style.display = "none"
+// Get favorites and display them on main page
+async function getFavorites() {
   try {
-    const response = await fetch('/storage?storage_id=favorite_lines')
+    const response = await fetch('/storage')
+    const container = document.getElementById('favoriteRoutes_container')
+
+    while (container.firstChild) {
+      container.removeChild(container.firstChild)
+    }
+
     if (!response.ok) {
-      throw new Error(`[ERROR] Failed to fetch favorite lines: ${response.statusText}`)
+      throw new Error(`[HTTP ${response.status}] Failed to fetch favorites`)
     }
-    const data = await response.json()
-    // If no favorite lines are stored -> show a no lines message on the container
-    if (data.length == 0) {
-      containerMessage.style.display = "block"
-      return
-    }
-    // Get all lines from Carris Metropolitana API
-    const allLines = await getAPI('lines')
-    // Just use the lines stored on favorites
-    const favoriteLinesData = allLines.filter(line => data.includes(line.id))
-    // Display filtered lines
-    renderLines(favoriteLinesData, linesContainer)
+
+    const favorites = await response.json()
+    favorites.forEach(item => {
+      if (item.type === "line") {
+        let newLine = document.createElement('a')
+        newLine.classList.add('item')
+        newLine.classList.add('line')
+        newLine.setAttribute('href', `/lines/${item.id}`)
+        let lineNumber = document.createElement('p')
+        lineNumber.setAttribute('class', 'lineID')
+        lineNumber.style.backgroundColor = item.color
+        lineNumber.innerText = item.id
+        let lineName = document.createElement('p')
+        lineName.setAttribute('class', 'lineName')
+        lineName.innerText = item.text
+        // Append number and name to the line DIV
+        newLine.appendChild(lineNumber)
+        newLine.appendChild(lineName)
+        // Append the new line to the main container
+        container.appendChild(newLine)
+      } else {
+        let newStop = document.createElement('a')
+        newStop.classList.add('item')
+        newStop.classList.add('stop')
+        newStop.setAttribute('href', `stops/${item.id}`)
+        let stopID = document.createElement('p')
+        stopID.setAttribute('class', 'stopID')
+        stopID.innerText = "#" + item.id
+        let stopName = document.createElement('p')
+        stopName.setAttribute('class', 'stopName')
+        stopName.innerText = item.text
+        // Append ID and name to the stop DIV
+        newStop.appendChild(stopID)
+        newStop.appendChild(stopName)
+        // Append the new line to the main container
+        container.appendChild(newStop)
+      }
+    })
+
   } catch (error) {
     console.error(error.message)
-    snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as tuas linhas favoritas")
+    snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar os percursos favoritos")
   }
 }
 
-// Recent Lines
-async function recentLines() {
-  let mainContainer = document.getElementById('recentLines')
-  let linesContainer = document.getElementById('recentLines_container')
-  let containerMessage = mainContainer.querySelector('.errorMsg')
-  containerMessage.style.display = "none"
-  try {
-    const response = await fetch('/storage?storage_id=recent_lines')
-    if (!response.ok) {
-      throw new Error(`[ERROR] Failed to fetch recent lines: ${response.statusText}`)
-    }
-    const data = await response.json()
-    // If no recent lines are stored -> show a no lines message on the container
-    if (data.length == 0) {
-      containerMessage.style.display = "block"
-      return
-    }
-    // Get all lines from Carris Metropolitana API
-    const allLines = await getAPI('lines')
-    // Just use the lines stored on recents
-    const recentLinesData = allLines.filter(line => data.includes(line.id))
-    // Display filtered lines
-    renderLines(recentLinesData, linesContainer)
-  } catch (error) {
-    console.error(error.message)
-    snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as linhas recentes")
+// Toggle modal visibility
+function toggleFavoritesModal() {
+  clearFavoritesSections()
+  const modal = document.getElementById('modalFavorites')
+  if (window.getComputedStyle(modal).display === "none") {
+    modal.style.display = "block"
+  } else {
+    modal.style.display = "none"
   }
 }
 
-// Favorite Stops
-async function favoriteStops() {
-  let mainContainer = document.getElementById('favoriteStops')
-  let stopsContainer = document.getElementById('favStops_container')
-  let containerMessage = mainContainer.querySelector('.errorMsg')
-  containerMessage.style.display = "none"
-  try {
-    const response = await fetch('/storage?storage_id=favorite_stops')
-    if (!response.ok) {
-      throw new Error(`[ERROR] Failed to fetch favorite stops: ${response.statusText}`)
-    }
-    const data = await response.json()
-    // If no recent stops are stored -> show a no stops message on the container
-    if (data.length == 0) {
-      containerMessage.style.display = "block"
-      return
-    }
-    // Get all stops from Carris Metropolitana API
-    const allStops = await getAPI('stops')
-    // Just use the stops stored on recents
-    const favoriteStopsData = allStops.filter(stop => data.includes(stop.id))
-    // Display filtered stops
-    renderStops(favoriteStopsData, stopsContainer)
-  } catch (error) {
-    console.error(error.message)
-    snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as tuas paragens favoritas")
+// Change between line and stop
+function changeType() {
+  clearFavoritesSections()
+  const favoriteType = document.getElementById('favoriteType')
+  const typeIndicator = document.getElementById('typeIndicator')
+  let types = favoriteType.querySelectorAll('.type')
+  let divs = document.getElementById('modalFavorites').querySelectorAll('.divType')
+  
+  if (types[0].classList.contains('active')) {
+    types[0].classList.remove('active')
+    types[1].classList.add('active')
+    types[0].setAttribute('onclick', 'changeType()')
+    types[1].removeAttribute('onclick')
+    typeIndicator.style.left = 'calc(15rem / 2 + 3px)'
+    divs[0].classList.remove('active')
+    divs[1].classList.add('active')
+  } else {
+    types[1].classList.remove('active')
+    types[0].classList.add('active')
+    types[1].setAttribute('onclick', 'changeType()')
+    types[0].removeAttribute('onclick')
+    typeIndicator.style.left = '3px'
+    divs[1].classList.remove('active')
+    divs[0].classList.add('active')
   }
 }
 
-// Recent Stops
-async function recentStops() {
-  let mainContainer = document.getElementById('recentStops')
-  let stopsContainer = document.getElementById('recentStops_container')
-  let containerMessage = mainContainer.querySelector('.errorMsg')
-  containerMessage.style.display = "none"
+// Search Lines/Stops
+async function searchLine(searchText) {
+  const container = document.getElementById('favoritesLinesContainer')
+  while (container.firstChild) {
+    container.removeChild(container.firstChild)
+  }
   try {
-    const response = await fetch('/storage?storage_id=recent_stops')
-    if (!response.ok) {
-      throw new Error(`[ERROR] Failed to fetch recent stops: ${response.statusText}`)
-    }
-    const data = await response.json()
-    // If no recent stops are stored -> show a no stops message on the container
-    if (data.length == 0) {
-      containerMessage.style.display = "block"
+    const lines_data = await getAPI("lines")
+    let linesToDisplay
+
+    if (searchText.length > 0) {
+      linesToDisplay = lines_data.filter(line => 
+        line.id.toLowerCase().includes(searchText) || 
+        line.long_name.toLowerCase().includes(searchText)
+      )
+    } else {
+      let newMsg = document.createElement('div')
+      newMsg.setAttribute('class', 'errorMsg')
+      newMsg.innerText = "PESQUISE UMA LINHA"
+      document.getElementById('btnAddLineToFavorites').setAttribute('disabled', '')
+      container.appendChild(newMsg)
       return
     }
-    // Get all stops from Carris Metropolitana API
-    const allStops = await getAPI('stops')
-    // Just use the stops stored on recents
-    const favoriteStopsData = allStops.filter(stop => data.includes(stop.id))
-    // Display filtered stops
-    renderStops(favoriteStopsData, stopsContainer)
+
+    if (!linesToDisplay.length > 0) {
+      let newMsg = document.createElement('div')
+      newMsg.setAttribute('class', 'errorMsg')
+      newMsg.innerText = "PESQUISE UMA LINHA"
+      document.getElementById('btnAddLineToFavorites').setAttribute('disabled', '')
+      container.appendChild(newMsg)
+      return
+    }
+
+    linesToDisplay.forEach(line => {
+      let newLine = document.createElement('a')
+      newLine.classList.add('item')
+      newLine.classList.add('line')
+      newLine.setAttribute('id', `item_${line.id}`)
+      newLine.setAttribute('onclick', `selectLine("item_${line.id}")`)
+      let lineNumber = document.createElement('p')
+      lineNumber.setAttribute('class', 'lineID')
+      lineNumber.style.backgroundColor = line.color
+      lineNumber.innerText = line.id
+      let lineName = document.createElement('p')
+      lineName.setAttribute('class', 'lineName')
+      lineName.innerText = line.long_name
+      // Append number and name to the line DIV
+      newLine.appendChild(lineNumber)
+      newLine.appendChild(lineName)
+      // Append the new line to the main container
+      container.appendChild(newLine)
+    });
+
+    selectLine()
   } catch (error) {
     console.error(error.message)
-    snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as paragens recentes")
+    snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as linhas")
   }
 }
+async function searchStop(searchText) {
+  const container = document.getElementById('favoritesStopsContainer')
+  while (container.firstChild) {
+    container.removeChild(container.firstChild)
+  }
+  try {
+    const stops_data = await getAPI("stops")
+    let stopsToDisplay
+
+    if (searchText.length > 3) {
+      stopsToDisplay = stops_data.filter(stop => 
+        stop.id?.toLowerCase().includes(searchText) || 
+        stop.name?.toLowerCase().includes(searchText) || 
+        stop.locality?.toLowerCase().includes(searchText)
+      )
+      while (container.firstChild) {
+        container.removeChild(container.firstChild)
+      }
+    } else {
+      let newMsg = document.createElement('div')
+      newMsg.setAttribute('class', 'errorMsg')
+      newMsg.innerText = "PESQUISE UMA PARAGEM"
+      document.getElementById('btnAddStopToFavorites').setAttribute('disabled', '')
+      container.appendChild(newMsg)
+      return
+    }
+
+    if (stopsToDisplay.length === 0) {
+      let newMsg = document.createElement('div')
+      newMsg.setAttribute('class', 'errorMsg')
+      newMsg.innerText = "PESQUISE UMA MERDAA"
+      document.getElementById('btnAddLineToFavorites').setAttribute('disabled', '')
+      container.appendChild(newMsg)
+      return
+    }
+
+    stopsToDisplay.forEach(stop => {
+      let newStop = document.createElement('a')
+      newStop.classList.add('item')
+      newStop.classList.add('stop')
+      newStop.setAttribute('id', `item_${stop.id}`)
+      newStop.setAttribute('onclick', `selectStop("item_${stop.id}")`)
+      let stopID = document.createElement('p')
+      stopID.setAttribute('class', 'stopID')
+      stopID.innerText = "#" + stop.id
+      let stopName = document.createElement('p')
+      stopName.setAttribute('class', 'stopName')
+      stopName.innerText = stop.name
+      // Append ID and name to the stop DIV
+      newStop.appendChild(stopID)
+      newStop.appendChild(stopName)
+      // Append the new line to the main container
+      container.appendChild(newStop)
+    });
+
+    selectStop()
+  } catch (error) {
+    console.error(error.message)
+    snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as paragens")
+  }
+}
+
+// Function to select item to add to favorites
+function selectLine(itemID) {
+  let itemDIV
+  if (!itemID) {
+    itemDIV = document.getElementById('modalFavorites').querySelectorAll('.item')[0]
+  } else {
+    itemDIV = document.getElementById(itemID)
+  }
+  const items = document.getElementById('favoritesLinesContainer').querySelectorAll('.item.selected')
+
+  if (items && itemDIV) {
+    items.forEach(item => {
+      item.classList.remove('selected')
+    })
+    itemDIV.classList.add('selected')
+
+    document.getElementById('btnAddLineToFavorites').removeAttribute('disabled')
+  }
+}
+function selectStop(itemID) {
+  let itemDIV
+  if (!itemID) {
+    itemDIV = document.getElementById('modalFavorites').querySelectorAll('.item')[0]
+  } else {
+    itemDIV = document.getElementById(itemID)
+  }
+  const items = document.getElementById('favoritesStopsContainer').querySelectorAll('.item.selected')
+  if (items && itemDIV) {
+    items.forEach(item => {
+      item.classList.remove('selected')
+    })
+    itemDIV.classList.add('selected')
+
+    document.getElementById('btnAddStopToFavorites').removeAttribute('disabled')
+  }
+}
+
+// Clear Favorites input and items on container
+function clearFavoritesSections() {
+  const linesContainer = document.getElementById('favoritesLinesContainer')
+  const stopsContainer = document.getElementById('favoritesStopsContainer')
+
+  while (linesContainer.firstChild) {
+    linesContainer.removeChild(linesContainer.firstChild)
+  }
+  while (stopsContainer.firstChild) {
+    stopsContainer.removeChild(stopsContainer.firstChild)
+  }
+
+  let newMsgLines = document.createElement('div')
+  newMsgLines.setAttribute('class', 'errorMsg')
+  newMsgLines.innerText = "PESQUISE UMA LINHA"
+  document.getElementById('btnAddLineToFavorites').setAttribute('disabled', '')
+  linesContainer.appendChild(newMsgLines)
+
+  let newMsgStops = document.createElement('div')
+  newMsgStops.setAttribute('class', 'errorMsg')
+  newMsgStops.innerText = "PESQUISE UMA PARAGEM"
+  document.getElementById('btnAddStopToFavorites').setAttribute('disabled', '')
+  stopsContainer.appendChild(newMsgStops)
+
+  let modal = document.getElementById('modalFavorites')
+  let inputs = modal.querySelectorAll('input')
+
+  inputs.forEach(input => {
+    input.value = ""
+  })
+}
+
+// Add the item to favorites
+async function addFavorite(type) {
+  let value
+
+  if (type === "line") {
+    let container = document.getElementById('favoritesLinesContainer')
+    let activeLine = container.querySelector('.item.selected')
+    let lineID = activeLine.querySelector('.lineID').innerText.trim()
+    let lineColor = activeLine.querySelector('.lineID').style.backgroundColor
+    let lineName = activeLine.querySelector('.lineName').innerText.trim()
+
+    value = {
+      type: "line",
+      id: lineID,
+      text: lineName,
+      color: lineColor
+    }
+
+  } else {
+    let container = document.getElementById('favoritesStopsContainer')
+    let activeStop = container.querySelector('.item.selected')
+    let stopID = activeStop.querySelector('.stopID').innerText.trim()
+    let stopName = activeStop.querySelector('.stopName').innerText.trim()
+    let stopID_split = stopID.split('#')
+
+    value = {
+      type: "stop",
+      id: stopID_split[1],
+      text: stopName
+    }
+  }
+
+  try {
+    const response = await fetch('/storage', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ value })
+    })
+
+    const result = await response.json()
+    if (!response.ok) {
+      console.error('[ERROR]', result)
+    } else {
+      console.log('[SUCCESS]', result)
+    }
+
+  } catch (err) {
+    console.error('[ERROR] Failed to upload favorite:', err)
+  }
+
+  toggleFavoritesModal()
+  getFavorites()
+}
+
 
 // Near Stops
 async function nearStops() {

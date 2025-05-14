@@ -34,7 +34,7 @@
     </div> 
     <div id="content">
         <div id="map"></div>
-        <div id="stopContainer">
+        <div id="stopContainer" onscroll="scrollChecker()">
             <div id="stopInformation">
                 <p id="stopName">Stop Name</p>
                 <p id="stopID">#000000</p>
@@ -60,8 +60,8 @@
                 </div>
             </div>
         </div>
+        <div id="scrollToTop"></div>
     </div>
-    <div id="map"></div>
     <!-- SnackBar Notifications -->
     <div id="snackbar">
         <i class="fa-regular fa-bell"></i> Isto é uma snackbar

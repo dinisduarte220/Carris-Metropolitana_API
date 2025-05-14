@@ -75,6 +75,7 @@
 
 /* Content - Map / Stop Arrivals */
 #content {
+    position: relative;
     margin-top: 2rem;
     display: flex;
     width: 100vw;
