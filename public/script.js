@@ -10,42 +10,152 @@ async function homeFunctions() {
 // Enable Drag and Drop of the favortes item
 function enableDragAndDrop() {
   const container = document.getElementById('favoriteRoutes_container')
+  const deleteButton = document.getElementById('editFavoritesBtn')
   let draggedItem = null
+  let touchTimeout = null
+  let autoScrollInterval = null
 
   container.querySelectorAll('.item').forEach(item => {
-    item.setAttribute('draggable', 'true')
+    item.setAttribute('draggable', 'false') // disable default handle
 
-    item.addEventListener('dragstart', () => {
-      draggedItem = item
-      item.style.opacity = '0.5'
-    })
-
+    // Desktop drag
+    item.addEventListener('mousedown', () => item.setAttribute('draggable', 'true'))
+    item.addEventListener('dragstart', () => startDrag(item))
     item.addEventListener('dragend', () => {
-      draggedItem = null
-      item.style.opacity = ''
+      endDrag()
+      item.setAttribute('draggable', 'false')
     })
 
-    item.addEventListener('dragover', e => {
-      e.preventDefault()
-    })
-
+    item.addEventListener('dragover', e => e.preventDefault())
     item.addEventListener('drop', e => {
       e.preventDefault()
-      if (draggedItem && draggedItem !== item) {
-        const allItems = Array.from(container.children)
-        const draggedIndex = allItems.indexOf(draggedItem)
-        const dropIndex = allItems.indexOf(item)
+      if (draggedItem && draggedItem !== item) moveItem(draggedItem, item)
+    })
 
-        if (draggedIndex < dropIndex) {
-          container.insertBefore(draggedItem, item.nextSibling)
-        } else {
-          container.insertBefore(draggedItem, item)
+    // Mobile: long press
+    item.addEventListener('touchstart', e => {
+      touchTimeout = setTimeout(() => {
+        startDrag(item)
+        item.classList.add('mobile-dragging')
+      }, 400)
+    })
+
+    item.addEventListener('touchend', e => {
+      clearTimeout(touchTimeout)
+      stopAutoScroll()
+      const touch = e.changedTouches[0]
+      const elUnder = document.elementFromPoint(touch.clientX, touch.clientY)
+      if (draggedItem && elUnder === deleteButton) {
+        draggedItem.remove()
+        saveFavoritesOrder()
+      }
+      if (draggedItem) endDrag()
+    })
+
+    item.addEventListener('touchmove', e => {
+      if (draggedItem) {
+        const touch = e.touches[0]
+        const elUnder = document.elementFromPoint(touch.clientX, touch.clientY)
+
+        if (elUnder?.classList.contains('item') && elUnder !== draggedItem) {
+          moveItem(draggedItem, elUnder)
         }
+
+        if (elUnder === deleteButton) {
+          deleteButton.classList.add('highlight-delete')
+        } else {
+          deleteButton.classList.remove('highlight-delete')
+        }
+
+        handleAutoScroll(touch.clientY)
+        e.preventDefault()
+      } else {
+        clearTimeout(touchTimeout)
       }
     })
   })
-}
 
+  function moveItem(from, to) {
+    const allItems = Array.from(container.children)
+    const fromIndex = allItems.indexOf(from)
+    const toIndex = allItems.indexOf(to)
+    if (fromIndex < toIndex) {
+      container.insertBefore(from, to.nextSibling)
+    } else {
+      container.insertBefore(from, to)
+    }
+    saveFavoritesOrder() // Save new order
+  }
+
+  function startDrag(item) {
+    draggedItem = item
+    item.style.opacity = '0.5'
+
+    deleteButton.style.backgroundColor = "rgba(204, 48, 48, 0.5)"
+    deleteButton.style.border = "2px solid rgb(168, 33, 33)"
+    deleteButton.innerHTML = '<i class="fa-regular fa-trash-can"></i> Eliminar'
+    deleteButton.classList.add('drop-zone')
+  }
+
+  function endDrag() {
+    if (draggedItem) {
+      draggedItem.style.opacity = ''
+      draggedItem.classList.remove('mobile-dragging')
+    }
+    draggedItem = null
+
+    deleteButton.style.backgroundColor = "rgb(75, 75, 75)"
+    deleteButton.style.border = "2px solid rgb(125, 125, 125)"
+    deleteButton.innerHTML = '<i class="fa-regular fa-square-plus"></i> Editar'
+    deleteButton.classList.remove('drop-zone', 'highlight-delete')
+  }
+
+  deleteButton.addEventListener('dragover', e => {
+    if (draggedItem) {
+      e.preventDefault()
+      deleteButton.classList.add('highlight-delete')
+    }
+  })
+
+  deleteButton.addEventListener('dragleave', () => {
+    deleteButton.classList.remove('highlight-delete')
+  })
+
+  deleteButton.addEventListener('drop', e => {
+    e.preventDefault()
+    if (draggedItem) {
+      draggedItem.remove()
+      saveFavoritesOrder()
+      endDrag()
+    }
+  })
+
+  // Auto-scroll when dragging near top/bottom
+  function handleAutoScroll(clientY) {
+    const rect = container.getBoundingClientRect()
+    const threshold = 60
+    const speed = 10
+
+    stopAutoScroll()
+
+    if (clientY - rect.top < threshold) {
+      autoScrollInterval = setInterval(() => {
+        container.scrollTop -= speed
+      }, 16)
+    } else if (rect.bottom - clientY < threshold) {
+      autoScrollInterval = setInterval(() => {
+        container.scrollTop += speed
+      }, 16)
+    }
+  }
+
+  function stopAutoScroll() {
+    if (autoScrollInterval) {
+      clearInterval(autoScrollInterval)
+      autoScrollInterval = null
+    }
+  }
+}
 
 // Get favorites and display them on main page
 async function getFavorites() {
@@ -75,9 +185,6 @@ async function getFavorites() {
         let lineName = document.createElement('p')
         lineName.setAttribute('class', 'lineName')
         lineName.innerText = item.text
-        let dragHandle = document.createElement('i')
-        dragHandle.className = 'fa-solid fa-sort dragHandle'
-        newLine.appendChild(dragHandle)
         // Append number and name to the line DIV
         newLine.appendChild(lineNumber)
         newLine.appendChild(lineName)
@@ -94,9 +201,6 @@ async function getFavorites() {
         let stopName = document.createElement('p')
         stopName.setAttribute('class', 'stopName')
         stopName.innerText = item.text
-        let dragHandle = document.createElement('i')
-        dragHandle.className = 'fa-solid fa-sort dragHandle'
-        newStop.appendChild(dragHandle)
         // Append ID and name to the stop DIV
         newStop.appendChild(stopID)
         newStop.appendChild(stopName)
@@ -108,6 +212,49 @@ async function getFavorites() {
   } catch (error) {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar os percursos favoritos")
+  }
+}
+
+async function saveFavoritesOrder() {
+  const container = document.getElementById('favoriteRoutes_container')
+  const items = container.querySelectorAll('.item')
+  const updatedFavorites = []
+
+  items.forEach(item => {
+    if (item.classList.contains('line')) {
+      updatedFavorites.push({
+        type: 'line',
+        id: item.querySelector('.lineID').innerText.trim(),
+        text: item.querySelector('.lineName').innerText.trim(),
+        color: item.querySelector('.lineID').style.backgroundColor
+      })
+    } else if (item.classList.contains('stop')) {
+      updatedFavorites.push({
+        type: 'stop',
+        id: item.querySelector('.stopID').innerText.trim().replace('#', ''),
+        text: item.querySelector('.stopName').innerText.trim()
+      })
+    }
+  })
+
+  try {
+    const response = await fetch('/storage', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ value: updatedFavorites })
+    })
+
+    const result = await response.json()
+    if (!response.ok) {
+      console.error('[ERROR]', result)
+    } else {
+      console.log('[SUCCESS] Favorites updated:', result)
+    }
+
+  } catch (err) {
+    console.error('[ERROR] Failed to update favorites:', err)
   }
 }
 
@@ -394,7 +541,6 @@ async function addFavorite(type) {
   toggleFavoritesModal()
   getFavorites()
 }
-
 
 // Near Stops
 async function nearStops() {

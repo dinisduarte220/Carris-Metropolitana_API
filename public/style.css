@@ -158,17 +158,9 @@ body {
   cursor: pointer;
   transition: .3s;
 }
-#homeGrid .gridItem:nth-child(1) .itemsContainer .item .dragHandle {
-  position: absolute;
-  opacity: 0;
-  cursor: grab;
-  flex-shrink: 0; /* não encolhe */
-}
-#homeGrid .gridItem:nth-child(1) .itemsContainer .item:hover .dragHandle {
-  opacity: 1;
-}
-#homeGrid .gridItem:nth-child(1) .itemsContainer .item:hover .lineID, #homeGrid .gridItem:nth-child(1) .itemsContainer .item:hover .stopID {
-  margin-left: 1.5rem;
+.mobile-dragging {
+  opacity: 0.5;
+  border: 2px dashed #ccc;
 }
 
 #homeGrid .gridItem .itemsContainer .loadingItem {
@@ -422,5 +414,31 @@ body {
   }
   #homeGrid .gridItem .itemsContainer .item {
     padding: 5px 10px;
+    font-size: 12px;
   }
+  #homeGrid .gridItem button {
+    font-size: 12px;
+    padding: 3px 5px;
+    word-spacing: 0px;
+  }
+
+  #modalFavorites {
+    width: 80vw;
+    padding: 5px;
+    font-size: 12px;
+  }
+  #modalFavorites input, #modalFavorites button {
+    font-size: 12px;
+  }
+  #modalFavorites #favoritesLinesContainer, #modalFavorites #favoritesStopsContainer {
+    width: calc(100% - 10px);
+  }
+  #modalFavorites #favoriteType {
+    width: calc(80% - 10px);
+    font-weight: 14px;
+    align-items: center;
+  }
+  #modalFavorites i {
+    font-size: 16px;
+}
 }

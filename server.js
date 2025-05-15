@@ -149,6 +149,33 @@ app.post('/storage', (req, res) => {
   }
 })
 
+app.put('/storage', (req, res) => {
+  try {
+    const { value } = req.body
+
+    if (!Array.isArray(value)) {
+      return res.status(400).json({
+        error: '[ERROR] Expected an array of items in "value"'
+      })
+    }
+
+    // Save the new array to the file
+    fs.writeFileSync(storageFilePath, JSON.stringify(value, null, 2))
+
+    res.json({
+      message: '[SUCCESS] Ordem dos favoritos atualizada com sucesso!',
+      value: value
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({
+      icon: 'fa-solid fa-triangle-exclamation',
+      message: '[ERRO] Ocorreu um erro ao atualizar os dados!'
+    })
+  }
+})
+
+
 // Settings Endpoints - Get & Update
 app.get('/settings', (req, res) => {
   try {
