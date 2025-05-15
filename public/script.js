@@ -7,6 +7,46 @@ async function homeFunctions() {
   await nearLines()
 }
 
+// Enable Drag and Drop of the favortes item
+function enableDragAndDrop() {
+  const container = document.getElementById('favoriteRoutes_container')
+  let draggedItem = null
+
+  container.querySelectorAll('.item').forEach(item => {
+    item.setAttribute('draggable', 'true')
+
+    item.addEventListener('dragstart', () => {
+      draggedItem = item
+      item.style.opacity = '0.5'
+    })
+
+    item.addEventListener('dragend', () => {
+      draggedItem = null
+      item.style.opacity = ''
+    })
+
+    item.addEventListener('dragover', e => {
+      e.preventDefault()
+    })
+
+    item.addEventListener('drop', e => {
+      e.preventDefault()
+      if (draggedItem && draggedItem !== item) {
+        const allItems = Array.from(container.children)
+        const draggedIndex = allItems.indexOf(draggedItem)
+        const dropIndex = allItems.indexOf(item)
+
+        if (draggedIndex < dropIndex) {
+          container.insertBefore(draggedItem, item.nextSibling)
+        } else {
+          container.insertBefore(draggedItem, item)
+        }
+      }
+    })
+  })
+}
+
+
 // Get favorites and display them on main page
 async function getFavorites() {
   try {
@@ -35,6 +75,9 @@ async function getFavorites() {
         let lineName = document.createElement('p')
         lineName.setAttribute('class', 'lineName')
         lineName.innerText = item.text
+        let dragHandle = document.createElement('i')
+        dragHandle.className = 'fa-solid fa-sort dragHandle'
+        newLine.appendChild(dragHandle)
         // Append number and name to the line DIV
         newLine.appendChild(lineNumber)
         newLine.appendChild(lineName)
@@ -51,6 +94,9 @@ async function getFavorites() {
         let stopName = document.createElement('p')
         stopName.setAttribute('class', 'stopName')
         stopName.innerText = item.text
+        let dragHandle = document.createElement('i')
+        dragHandle.className = 'fa-solid fa-sort dragHandle'
+        newStop.appendChild(dragHandle)
         // Append ID and name to the stop DIV
         newStop.appendChild(stopID)
         newStop.appendChild(stopName)
@@ -58,7 +104,7 @@ async function getFavorites() {
         container.appendChild(newStop)
       }
     })
-
+    enableDragAndDrop()
   } catch (error) {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar os percursos favoritos")
@@ -192,7 +238,7 @@ async function searchStop(searchText) {
     if (stopsToDisplay.length === 0) {
       let newMsg = document.createElement('div')
       newMsg.setAttribute('class', 'errorMsg')
-      newMsg.innerText = "PESQUISE UMA MERDAA"
+      newMsg.innerText = "PESQUISE UMA PARAGEM"
       document.getElementById('btnAddLineToFavorites').setAttribute('disabled', '')
       container.appendChild(newMsg)
       return

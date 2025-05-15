@@ -144,6 +144,7 @@ body {
 }
 #homeGrid .gridItem .itemsContainer .item, #modalFavorites #favoritesLinesContainer .item, #modalFavorites #favoritesStopsContainer .item {
   text-decoration: none;
+  position: relative;
   width: calc(100% - 20px);
   background-color: rgb(50, 50, 50);
   border-radius: 5px;
@@ -151,10 +152,23 @@ body {
   display: flex;
   align-items: center;
   gap: 15px;
+  /* justify-content: space-between; */
   font-weight: 600;
   color: white;
   cursor: pointer;
   transition: .3s;
+}
+#homeGrid .gridItem:nth-child(1) .itemsContainer .item .dragHandle {
+  position: absolute;
+  opacity: 0;
+  cursor: grab;
+  flex-shrink: 0; /* não encolhe */
+}
+#homeGrid .gridItem:nth-child(1) .itemsContainer .item:hover .dragHandle {
+  opacity: 1;
+}
+#homeGrid .gridItem:nth-child(1) .itemsContainer .item:hover .lineID, #homeGrid .gridItem:nth-child(1) .itemsContainer .item:hover .stopID {
+  margin-left: 1.5rem;
 }
 
 #homeGrid .gridItem .itemsContainer .loadingItem {
