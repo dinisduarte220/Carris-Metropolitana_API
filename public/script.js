@@ -282,7 +282,7 @@ function changeType() {
     types[1].classList.add('active')
     types[0].setAttribute('onclick', 'changeType()')
     types[1].removeAttribute('onclick')
-    typeIndicator.style.left = 'calc(15rem / 2 + 3px)'
+    typeIndicator.style.left = 'calc(50% - 3px)'
     divs[0].classList.remove('active')
     divs[1].classList.add('active')
   } else {

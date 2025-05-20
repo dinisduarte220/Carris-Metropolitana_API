@@ -304,6 +304,7 @@ async function loadArrivals(fullList) {
         let newArrival = {
           "color": color,
           "tripID": arrival.trip_id,
+          "stopSequence": arrival.stop_sequence,
           "vehicleID": arrival.vehicle_id,
           "patternID": arrival.pattern_id,
           "lineID": arrival.line_id,
@@ -336,6 +337,7 @@ async function loadArrivals(fullList) {
         let newArrival = {
           "color": color,
           "tripID": arrival.trip_id,
+          "stopSequence": arrival.stop_sequence,
           "vehicleID": arrival.vehicle_id,
           "patternID": arrival.pattern_id,
           "lineID": arrival.line_id,
@@ -348,7 +350,7 @@ async function loadArrivals(fullList) {
 
         realTime_arrivals.push(newArrival)
         realTime_trips.push(newArrival)
-        tripsToBeUpdated.push(arrival.trip_id)
+        tripsToBeUpdated.push(arrival.stop_sequence + '_trip_' + arrival.trip_id)
         vehiclesToBeUpdated.push(arrival.vehicle_id)
       }
       // Scheduled Arrivals / Real Time unavailable
@@ -363,6 +365,7 @@ async function loadArrivals(fullList) {
         let newArrival = {
           "color": color,
           "tripID": arrival.trip_id,
+          "stopSequence": arrival.stop_sequence,
           "vehicleID": arrival.vehicle_id,
           "patternID": arrival.pattern_id,
           "lineID": arrival.line_id,
@@ -375,7 +378,7 @@ async function loadArrivals(fullList) {
 
         scheduled_arrivals.push(newArrival)
         scheduled_trips.push(newArrival)
-        tripsToBeUpdated.push(arrival.trip_id)
+        tripsToBeUpdated.push(arrival.stop_sequence + '_trip_' + arrival.trip_id)
         vehiclesToBeUpdated.push(arrival.vehicle_id)
       }
     })
@@ -422,7 +425,7 @@ async function loadArrivals(fullList) {
     past_trips.forEach(trip => {
       let newArrival = document.createElement('div')
       newArrival.setAttribute('class', `arrivalTime ${trip.type}`)
-      newArrival.setAttribute('id', 'trip_' + trip.tripID)
+      newArrival.setAttribute('id',trip.stopSequence + '_trip_' + trip.tripID)
 
       let arrivalNumber = document.createElement('div')
       arrivalNumber.setAttribute('class', 'lineNumber')
@@ -483,9 +486,9 @@ async function loadArrivals(fullList) {
     future_trips.forEach(trip => {
       let newArrival = document.createElement('div')
       newArrival.setAttribute('class', `arrivalTime ${trip.type}`)
-      newArrival.setAttribute('id', 'trip_' + trip.tripID)
+      newArrival.setAttribute('id',trip.stopSequence + '_trip_' + trip.tripID)
       newArrival.onclick = () => {
-        selectTrip(trip.tripID, trip.patternID, trip.color, trip.vehicleID)
+        selectTrip(trip.stopSequence, trip.tripID, trip.patternID, trip.color, trip.vehicleID)
       }
 
       let arrivalNumber = document.createElement('div')
@@ -606,9 +609,9 @@ async function updateArrivals() {
     const stop_data = await getAPI("stops/" + stopId)
     let arrivals_data = await getAPI(`stops/${stopId}/realtime`)
     arrivals_data.forEach(arrival => {
-      const item = document.getElementById('trip_' + arrival.trip_id)
+      const item = document.getElementById(arrival.stop_sequence + '_trip_' + arrival.trip_id)
       // Only continue if item exists and its a future trip
-      if (!item || (!tripsToBeUpdated.includes(arrival.trip_id) && item.classList.contains('concluded'))) {
+      if (!item || (!tripsToBeUpdated.includes(arrival.stop_sequence + '_trip_' + arrival.trip_id) && item.classList.contains('concluded'))) {
         return
       }
       if (arrival.observed_arrival_unix !== null || (arrival.estimated_arrival_unix !== null && arrival.estimated_arrival_unix < currentUNIX && arrival.scheduled_arrival_unix < currentUNIX)) {
@@ -638,7 +641,7 @@ async function updateArrivals() {
         if (delayTime) {
           delayTime.innerHTML = ""
         }
-        let indexPast = tripsToBeUpdated.indexOf(arrival.trip_id)
+        let indexPast = tripsToBeUpdated.indexOf(arrival.stop_sequence + '_trip_' + arrival.trip_id)
         if (indexPast !== -1) {
           tripsToBeUpdated.splice(indexPast, 1);
         }
@@ -750,7 +753,7 @@ async function updateArrivals() {
         delayDisplay.innerText = delayTime > 3 ? `${delayTime} min atrasado` : ""
         let color = window.getComputedStyle(item.querySelector('.lineNumber')).backgroundColor
         item.onclick = () => {
-          selectTrip(arrival.trip_id, arrival.pattern_id, color, arrival.vehicle_id)
+          selectTrip(arrival.stop_sequence, arrival.trip_id, arrival.pattern_id, color, arrival.vehicle_id)
         }
         if (item.classList.contains('active')) {
           item.setAttribute('class', 'arrivalTime realTime active')
@@ -785,7 +788,7 @@ async function updateArrivals() {
         }
         let color = window.getComputedStyle(item.querySelector('.lineNumber')).backgroundColor
         item.onclick = () => {
-          selectTrip(arrival.trip_id, arrival.pattern_id, color, arrival.vehicle_id)
+          selectTrip(arrival.stop_sequence, arrival.trip_id, arrival.pattern_id, color, arrival.vehicle_id)
         }
         if (item.classList.contains('active')) {
           item.setAttribute('class', 'arrivalTime scheduled active')
@@ -823,7 +826,7 @@ async function updateArrivals() {
 }
 
 let lineStringGeojson
-async function selectTrip(trip_id, pattern_id, color, vehicle_id) {
+async function selectTrip(stop_sequence, trip_id, pattern_id, color, vehicle_id) {
   try {
     const activePatternDisplay = document.getElementById('activePatternText')
 
@@ -835,7 +838,7 @@ async function selectTrip(trip_id, pattern_id, color, vehicle_id) {
       item.remove(); // Remove only the .extraInfo element, not the tripDiv
     });
     // Change the trip status to active (If is already active, remove it)
-    const tripDiv = document.getElementById(`trip_${trip_id}`)
+    const tripDiv = document.getElementById(`${stop_sequence}_trip_${trip_id}`)
     if (tripDiv.classList.contains('active')) {
       tripDiv.classList.remove('active')
       if (map.getLayer("lineString")) {
@@ -996,121 +999,123 @@ async function selectTrip(trip_id, pattern_id, color, vehicle_id) {
       }
 
     // Show the estimated Time (HH:MM), Scheduled Time (HH:MM) and Next Arrival for this line
-    const realtime_data = await getAPI(`/stops/${stopId}/realtime`)
-    let thisArrival = realtime_data.find(item => item.trip_id === trip_id);
+    const realtime_data = await getAPI(`stops/${stopId}/realtime`)
+    let thisArrival = realtime_data.find(item => item.trip_id == trip_id && item.stop_sequence == stop_sequence)
     let nextArrival
 
     if (thisArrival) {
       // Check if estimated arrival exists
       if (thisArrival.estimated_arrival_unix !== null) {
-        const thisArrivalTime = thisArrival.estimated_arrival_unix;
-    
+        const thisArrivalTime = thisArrival.estimated_arrival_unix ?? thisArrival.scheduled_arrival_unix
+
         nextArrival = realtime_data
-          .filter(item => item.line_id === thisArrival.line_id && item.trip_id !== thisArrival.trip_id &&
-                          (item.estimated_arrival_unix > thisArrivalTime || item.scheduled_arrival_unix > thisArrivalTime))
+          .filter(item => {
+            if (item.line_id !== thisArrival.line_id) return false
+
+            const itemArrivalTime = item.estimated_arrival_unix ?? item.scheduled_arrival_unix
+            return itemArrivalTime > thisArrivalTime
+          })
           .sort((a, b) => {
-            // First compare estimated arrival times
-            const aArrivalTime = a.estimated_arrival_unix !== null ? a.estimated_arrival_unix : a.scheduled_arrival_unix;
-            const bArrivalTime = b.estimated_arrival_unix !== null ? b.estimated_arrival_unix : b.scheduled_arrival_unix;
-    
-            return aArrivalTime - bArrivalTime; // Sort by earliest arrival
-          })[0];
+            const aArrival = a.estimated_arrival_unix ?? a.scheduled_arrival_unix
+            const bArrival = b.estimated_arrival_unix ?? b.scheduled_arrival_unix
+            return aArrival - bArrival
+          })[0]
+      }
+
+      let extraInfo = document.createElement('div')
+      extraInfo.setAttribute('class', 'extraInfo')
+
+      let newEstimateTime = document.createElement('p')
+      newEstimateTime.setAttribute('class', 'newEstimateTime')
+      if (thisArrival.estimated_arrival !== null) {
+        let timeParts = thisArrival.estimated_arrival.split(":")
+        let hours = parseInt(timeParts[0])
+        if (hours >= 24) {
+          hours -= 24
+        }
+        let formattedHours = String(hours).padStart(2, '0')
+
+        newEstimateTime.innerText = "Chegada Estimada: " + formattedHours + thisArrival.estimated_arrival.substring(2, 8)
       } else {
-        const thisArrivalTime = thisArrival.scheduled_arrival_unix;
-    
-        nextArrival = realtime_data
-          .filter(item => item.line_id === thisArrival.line_id && 
-                          item.scheduled_arrival_unix > thisArrivalTime)
-          .sort((a, b) => a.scheduled_arrival_unix - b.scheduled_arrival_unix)[0];
+        newEstimateTime.innerText = "Chegada Estimada: " + thisArrival.estimated_arrival
       }
-    }
 
-    let extraInfo = document.createElement('div')
-    extraInfo.setAttribute('class', 'extraInfo')
+      let newScheduleTime = document.createElement('p')
+      newScheduleTime.setAttribute('class', 'newScheduleTime')
 
-    let newEstimateTime = document.createElement('p')
-    newEstimateTime.setAttribute('class', 'newEstimateTime')
-    
-    if (thisArrival.estimated_arrival !== null) {
-      let timeParts = thisArrival.estimated_arrival.split(":")
-      let hours = parseInt(timeParts[0])
-      if (hours >= 24) {
-        hours -= 24
-      }
-      let formattedHours = String(hours).padStart(2, '0')
-      
-      newEstimateTime.innerText = "Chegada Estimada: " + formattedHours + thisArrival.estimated_arrival.substring(2, 8)
-    } else {
-      newEstimateTime.innerText = "Chegada Estimada: " + thisArrival.estimated_arrival
-    }
-    
-    let newScheduleTime = document.createElement('p')
-    newScheduleTime.setAttribute('class', 'newScheduleTime')
-    
-    if (thisArrival.scheduled_arrival !== null) {
-      let timeParts2 = thisArrival.scheduled_arrival.split(":")
-      let hours2 = parseInt(timeParts2[0])
-      if (hours2 >= 24) {
-        hours2 -= 24
-      }
-      let formattedHours2 = String(hours2).padStart(2, '0')
-      
-      newScheduleTime.innerText = "Chegada Agendada: " + formattedHours2 + thisArrival.scheduled_arrival.substring(2, 8)
-    } else {
-      newScheduleTime.innerText = "Chegada Agendada: " + thisArrival.scheduled_arrival
-    }
+      if (thisArrival.scheduled_arrival !== null) {
+        let timeParts2 = thisArrival.scheduled_arrival.split(":")
+        let hours2 = parseInt(timeParts2[0])
+        if (hours2 >= 24) {
+          hours2 -= 24
+        }
+        let formattedHours2 = String(hours2).padStart(2, '0')
 
-    let newUpdatedTime = document.createElement('p')
-    newUpdatedTime.setAttribute('class', 'newUpdatedTime')
-    newUpdatedTime.innerText = `Atualizado há: `
-
-    let routeDetails = document.createElement('a')
-    routeDetails.setAttribute('class', 'routeDetails')
-    routeDetails.setAttribute('href', `/lines/${thisArrival.line_id}?pattern=${thisArrival.pattern_id}&active_stop=${stopId}`)
-    routeDetails.setAttribute('onclick', `event.stopPropagation()`)
-    routeDetails.setAttribute('target', '_blank')
-    routeDetails.innerHTML = 'Ver percurso <i class="fa-solid fa-arrow-up-right-from-square"></i>'
-
-    if (thisArrival.estimated_arrival !== null) {
-      extraInfo.appendChild(newEstimateTime)
-    }
-    if (thisArrival.vehicle_id !== null) {
-      extraInfo.appendChild(newUpdatedTime)
-    }
-    if (thisArrival.scheduled_arrival !== null) {
-      extraInfo.appendChild(newScheduleTime)
-    }
-    if (nextArrival) {
-      let newNextArrival = document.createElement('p')
-      newNextArrival.setAttribute('class', 'newNextArrival')
-      let colorIndex = linesData.findIndex(line => line.line_ID === nextArrival.line_id)
-      arrivalColor = linesData[colorIndex].line_color
-      newNextArrival.setAttribute('onclick', `event.stopPropagation(); selectTrip('${nextArrival.trip_id}', '${nextArrival.pattern_id}', '${arrivalColor}', '${nextArrival.vehicle_id ?? ""}')`);
-  
-      if (nextArrival.estimated_arrival !== null) {
-        newNextArrival.innerText = "Próxima passagem: " + nextArrival.estimated_arrival.substring(0, 5)
+        newScheduleTime.innerText = "Chegada Agendada: " + formattedHours2 + thisArrival.scheduled_arrival.substring(2, 8)
       } else {
-        newNextArrival.innerText = "Próxima passagem: " + nextArrival.scheduled_arrival.substring(0, 5)
+        newScheduleTime.innerText = "Chegada Agendada: " + thisArrival.scheduled_arrival
       }
-      extraInfo.appendChild(newNextArrival)
-    }
 
-    extraInfo.appendChild(routeDetails)
+      let newUpdatedTime = document.createElement('p')
+      newUpdatedTime.setAttribute('class', 'newUpdatedTime')
+      newUpdatedTime.innerText = `Atualizado há: `
 
-    tripDiv.appendChild(extraInfo)
-    tripDiv.scrollIntoView({
-      behavior: 'smooth',
-      block: 'center',
-    })
+      let routeDetails = document.createElement('a')
+      routeDetails.setAttribute('class', 'routeDetails')
+      routeDetails.setAttribute('href', `/lines/${thisArrival.line_id}?pattern=${thisArrival.pattern_id}&active_stop=${stopId}`)
+      routeDetails.setAttribute('onclick', `event.stopPropagation()`)
+      routeDetails.setAttribute('target', '_blank')
+      routeDetails.innerHTML = 'Ver percurso <i class="fa-solid fa-arrow-up-right-from-square"></i>'
 
-      if (thisArrival.vehicle_id !== null) {
-        let newUpdatedTime_item = document.querySelector('.arrivalTime.active .newUpdatedTime')
-        const currentUNIX = Math.floor(Date.now() / 1000);
-        newUpdatedTime_item.innerText = `Atualizado há: ${currentUNIX - vehicle_data.timestamp} segundos`
+      if (thisArrival.estimated_arrival !== null) {
+        extraInfo.appendChild(newEstimateTime)
+      }
+      if (vehicle_data && thisArrival.vehicle_id !== null) {
+        extraInfo.appendChild(newUpdatedTime)
+      }
+      if (thisArrival.scheduled_arrival !== null) {
+        extraInfo.appendChild(newScheduleTime)
+      }
+      if (nextArrival) {
+        let newNextArrival = document.createElement('p')
+        newNextArrival.setAttribute('class', 'newNextArrival')
+        let colorIndex = linesData.findIndex(line => line.line_ID === nextArrival.line_id)
+        arrivalColor = linesData[colorIndex].line_color
+        newNextArrival.setAttribute('onclick', `event.stopPropagation(); selectTrip('${nextArrival.stop_sequence}', '${nextArrival.trip_id}', '${nextArrival.pattern_id}', '${arrivalColor}', '${nextArrival.vehicle_id ?? ""}')`);
+      
+        if (nextArrival.estimated_arrival !== null) {
+          let [hours, minutes] = nextArrival.estimated_arrival.split(":")
+          hours = parseInt(hours)
+          if (hours >= 24) hours -= 24
+          let formattedHours = String(hours).padStart(2, '0')
+          newNextArrival.innerText = "Próxima passagem: " + formattedHours + ":" + minutes
+        } else {
+          let [hours, minutes] = nextArrival.scheduled_arrival.split(":")
+          hours = parseInt(hours)
+          if (hours >= 24) hours -= 24
+          let formattedHours = String(hours).padStart(2, '0')
+          newNextArrival.innerText = "Próxima passagem: " + formattedHours + ":" + minutes
+        }
+        extraInfo.appendChild(newNextArrival) 
+      }
+
+      extraInfo.appendChild(routeDetails)
+
+      tripDiv.appendChild(extraInfo)
+      tripDiv.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      })
+
+        if (vehicle_data && thisArrival.vehicle_id !== null) {
+          let newUpdatedTime_item = document.querySelector('.arrivalTime.active .newUpdatedTime')
+          const currentUNIX = Math.floor(Date.now() / 1000);
+          newUpdatedTime_item.innerText = `Atualizado há: ${currentUNIX - vehicle_data.timestamp} segundos`
+        }
       }
     }
   } catch (error) {
-    console.error(error.message)
+    console.error(error.stack)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar a rota ou o veiculo para esta passagem")
   }
 }

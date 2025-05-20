@@ -7,6 +7,12 @@
   },
   {
     "type": "line",
+    "id": "2206",
+    "text": "Caneças (Esc. Secundária) - Sr. Roubado (Metro)",
+    "color": "rgb(198, 29, 35)"
+  },
+  {
+    "type": "line",
     "id": "2207",
     "text": "Caneças (Esc. Secundária) - Sr. Roubado (Metro) via Odivelas (Centro)",
     "color": "rgb(198, 29, 35)"
@@ -27,6 +33,12 @@
     "id": "4600",
     "text": "Alcochete (Freeport) - Barreiro (Terminal) via Samouco",
     "color": "rgb(198, 29, 35)"
+  },
+  {
+    "type": "line",
+    "id": "4701",
+    "text": "Lisboa (Oriente) - Vale da Amoreira",
+    "color": "rgb(253, 183, 26)"
   },
   {
     "type": "stop",
