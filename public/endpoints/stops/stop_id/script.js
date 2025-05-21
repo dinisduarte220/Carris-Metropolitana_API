@@ -1006,20 +1006,31 @@ async function selectTrip(stop_sequence, trip_id, pattern_id, color, vehicle_id)
     if (thisArrival) {
       // Check if estimated arrival exists
       if (thisArrival.estimated_arrival_unix !== null) {
-        const thisArrivalTime = thisArrival.estimated_arrival_unix ?? thisArrival.scheduled_arrival_unix
+        const thisArrivalTime = thisArrival.estimated_arrival_unix
 
         nextArrival = realtime_data
           .filter(item => {
-            if (item.line_id !== thisArrival.line_id) return false
-
-            const itemArrivalTime = item.estimated_arrival_unix ?? item.scheduled_arrival_unix
+            if (item.line_id !== thisArrival.line_id || item.trip_id === thisArrival.trip_id) return false
+          
+            const itemArrivalTime = item.estimated_arrival_unix
             return itemArrivalTime > thisArrivalTime
           })
           .sort((a, b) => {
-            const aArrival = a.estimated_arrival_unix ?? a.scheduled_arrival_unix
-            const bArrival = b.estimated_arrival_unix ?? b.scheduled_arrival_unix
+            const aArrival = a.estimated_arrival_unix
+            const bArrival = b.estimated_arrival_unix
             return aArrival - bArrival
           })[0]
+
+      } else {
+        const thisArrivalTime = thisArrival.scheduled_arrival_unix
+
+        nextArrival = realtime_data
+          .filter(item =>
+            item.line_id === thisArrival.line_id &&
+            item.trip_id !== thisArrival.trip_id &&
+            item.scheduled_arrival_unix > thisArrivalTime
+          )
+          .sort((a, b) => a.scheduled_arrival_unix - b.scheduled_arrival_unix)[0]
       }
 
       let extraInfo = document.createElement('div')
