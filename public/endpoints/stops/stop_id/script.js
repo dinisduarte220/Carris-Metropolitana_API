@@ -134,21 +134,21 @@ function setSelectedStop(lon, lat, stopId) {
     "case",
     ["==", ["get", "id"], stopId],
     1,
-    0.5
+    0.3
   ])
 
   map.setPaintProperty("points", "circle-stroke-opacity", [
     "case",
     ["==", ["get", "id"], stopId],
     1,
-    0.5
+    0.3
   ])
 
   map.setPaintProperty("points", "circle-radius", [
     "case",
     ["==", ["get", "id"], stopId],
     8,
-    4
+    6
   ])
 }
 
@@ -840,6 +840,7 @@ async function selectTrip(stop_sequence, trip_id, pattern_id, color, vehicle_id)
     // Change the trip status to active (If is already active, remove it)
     const tripDiv = document.getElementById(`${stop_sequence}_trip_${trip_id}`)
     if (tripDiv.classList.contains('active')) {
+
       tripDiv.classList.remove('active')
       if (map.getLayer("lineString")) {
         map.removeLayer("lineString")
