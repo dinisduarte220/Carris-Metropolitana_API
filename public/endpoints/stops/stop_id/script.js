@@ -134,14 +134,14 @@ function setSelectedStop(lon, lat, stopId) {
     "case",
     ["==", ["get", "id"], stopId],
     1,
-    0.3
+    0.5
   ])
 
   map.setPaintProperty("points", "circle-stroke-opacity", [
     "case",
     ["==", ["get", "id"], stopId],
     1,
-    0.3
+    0.5
   ])
 
   map.setPaintProperty("points", "circle-radius", [
@@ -856,6 +856,24 @@ async function selectTrip(stop_sequence, trip_id, pattern_id, color, vehicle_id)
       const stop_data = await getAPI("stops/" + stopId)
       setSelectedStop(stop_data.lon, stop_data.lat, stop_data.id)
     } else {
+      map.setPaintProperty("points", "circle-opacity", [
+        "case",
+        ["==", ["get", "id"], stopId],
+        1,
+        0
+      ])
+      map.setPaintProperty("points", "circle-stroke-opacity", [
+        "case",
+        ["==", ["get", "id"], stopId],
+        1,
+        0
+      ])
+      map.setPaintProperty("points", "circle-radius", [
+        "case",
+        ["==", ["get", "id"], stopId],
+        6,
+        6
+      ])
       const activeTrip = document.querySelectorAll('.arrivalTime.active')
       activeTrip.forEach(trip => {
         trip.classList.remove('active')
