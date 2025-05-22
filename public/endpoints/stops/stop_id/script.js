@@ -397,7 +397,7 @@ async function loadArrivals(fullList) {
       let [hours, minutes] = time.split(":").map(Number)
     
       // If the time is between 00 and 04 am, its still on the current day
-      if (hours < 4) {
+      if (hours < 5) {
         hours += 24
       }
     
@@ -1092,7 +1092,7 @@ async function selectTrip(stop_sequence, trip_id, pattern_id, color, vehicle_id)
 
       let routeDetails = document.createElement('a')
       routeDetails.setAttribute('class', 'routeDetails')
-      routeDetails.setAttribute('href', `/lines/${thisArrival.line_id}?pattern=${thisArrival.pattern_id}&active_stop=${stopId}`)
+      routeDetails.setAttribute('href', `/lines/${thisArrival.line_id}?pattern=${thisArrival.pattern_id}&active_stop=${stopId}&stop_sequence=${stop_sequence}`)
       routeDetails.setAttribute('onclick', `event.stopPropagation()`)
       routeDetails.setAttribute('target', '_blank')
       routeDetails.innerHTML = 'Ver percurso <i class="fa-solid fa-arrow-up-right-from-square"></i>'

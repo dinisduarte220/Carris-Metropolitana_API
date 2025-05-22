@@ -549,7 +549,6 @@ async function nearStops() {
     navigator.geolocation.getCurrentPosition(async function (position) {
       const latitude = position.coords.latitude
       const longitude = position.coords.longitude
-      console.log(`Latitude: ${latitude}, Longitude: ${longitude}`)
 
       let nearestStops = [] // Store the 5 nearest stops
       try {
@@ -565,8 +564,6 @@ async function nearStops() {
         // Sort stops by distance and keep the 5 closest
         nearestStops.sort((a, b) => a.distance - b.distance)
         nearestStops = nearestStops.slice(0, 10)
-
-        console.log("Nearest Stops:", nearestStops)
         // Display filtered stops
         renderStops(nearestStops, stopsContainer)
       } catch (error) {
@@ -601,7 +598,6 @@ async function nearLines() {
     navigator.geolocation.getCurrentPosition(async function (position) {
       const latitude = position.coords.latitude
       const longitude = position.coords.longitude
-      console.log(`Latitude: ${latitude}, Longitude: ${longitude}`)
 
       let nearestStops = []
       let uniqueLineIds = new Set()
@@ -635,7 +631,6 @@ async function nearLines() {
           }
         }
 
-        console.log("Nearest Lines:", nearestLines)
         // Display the unique nearest lines
         renderLines(nearestLines, linesContainer)
       } catch (error) {

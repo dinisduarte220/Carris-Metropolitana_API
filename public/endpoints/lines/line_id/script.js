@@ -7,12 +7,13 @@ function getQueryParams() {
   return {
       pattern: params.get('pattern'),
       active_stop: params.get('active_stop'),
+      stop_sequence: params.get('stop_sequence'),
       date: params.get('date')
   }
 }
 
 const params = getQueryParams()
-let patternId, stopId // Store the active pattern and stop
+let patternId, stopId, stopSequence // Store the active pattern and stop
 let tripId // Store trip ID
 let debugMode = false
 
@@ -275,15 +276,19 @@ async function selectPattern(pattern_id) {
   // Store current pattern for future uses
   patternId = pattern_id
   await loadStops()
-  if (params.active_stop !== null) {
-    let activeStopDIV = document.querySelector('#newStop_' + params.active_stop)
+  if (params.active_stop !== null && params.stop_sequence !== null) {
+    let activeStopDIV = document.getElementById(`${params.stop_sequence}_newStop_${params.active_stop}`)
     if (activeStopDIV) {
-      selectStop(String(params.active_stop))
+      selectStop(`${params.active_stop}`, `${params.stop_sequence}`)
     } else {
       const newUrl = new URL(window.location)
       newUrl.searchParams.delete('active_stop')
       window.history.replaceState(null, '', newUrl)
       params.active_stop = null
+      const newUrl2 = new URL(window.location)
+      newUrl2.searchParams.delete('stop_sequence')
+      window.history.replaceState(null, '', newUrl2)
+      params.stop_sequence = null
     }
   }
 }
@@ -304,7 +309,9 @@ function changeDate(date) {
 let pointFeatures = []
 let allStops = []
 async function loadStops() {
+  allStops = []
   stopId = ""
+  stopSequence = ""
   if (pipWindow) {
     pipWindow.close()
     pipWindow = null
@@ -329,22 +336,24 @@ async function loadStops() {
 
     let stops = data.path
     stops.forEach(stop => {
-      allStops.push(stop.stop.id)
+      allStops.push({id: stop.stop.id, sequence: stop.stop_sequence})
       let coords = [stop.stop.lon, stop.stop.lat]
       pointFeatures.push({
         type: "Feature",
         properties: {
           name: stop.stop.name,
           id: stop.stop.id,
+          stop_sequence: stop.stop_sequence,
           description: `Name: <b>${stop.stop.name}</b><br>
-            ID: <b>${stop.stop.id}</b><br>`
+            ID: <b>${stop.stop.id}</b><br>
+            Stop Sequence: <b>${stop.stop_sequence}</b><br>`
         },
         geometry: { type: "Point", coordinates: coords },
       })
       let newStop = document.createElement('div')
       newStop.setAttribute('class', 'newStop')
-      newStop.setAttribute('id', 'newStop_' + stop.stop.id)
-      newStop.setAttribute('onclick', `selectStop("${stop.stop.id}")`)
+      newStop.setAttribute('id', stop.stop_sequence + '_newStop_' + stop.stop.id)
+      newStop.setAttribute('onclick', `selectStop("${stop.stop.id}", "${stop.stop_sequence}")`)
 
       let stopName = document.createElement('p')
       stopName.setAttribute('class', 'stopName')
@@ -402,8 +411,8 @@ async function loadStops() {
     // Onclick function to select the wanted stop on the list
     map.on('click', 'points', (e) => {
       const stopId = e.features[0].properties.id
-      selectStop(stopId)
-      // window.location.href = "#newStop_" + stopId
+      const stopSequence = e.features[0].properties.stop_sequence
+      selectStop(stopId, stopSequence)
     })
 
     // Change the cursor to a pointer when hovering over the points
@@ -421,27 +430,30 @@ async function loadStops() {
 }
 
 let updateInterval_stop
-async function selectStop(stop_id) {
+async function selectStop(stop_id, stop_sequence) {
   try {
     params.active_stop = stop_id
+    params.stop_sequence = stop_sequence
 
     const newUrl = new URL(window.location)
     newUrl.searchParams.set('active_stop', stop_id)
     window.history.replaceState(null, '', newUrl)
+    const newUrl2 = new URL(window.location)
+    newUrl2.searchParams.set('stop_sequence', stop_sequence)
+    window.history.replaceState(null, '', newUrl2)
 
-    const stopDiv = document.getElementById('newStop_' + stop_id)
+    const stopDiv = document.getElementById(stop_sequence + '_newStop_' + stop_id)
     const stopsContainer = document.getElementById('stopsContainer')
 
     let schedules = [], trips = []
 
     const dateSelected = document.getElementById('date_input').value
-    console.log(dateSelected)
     let changedDate = dateSelected.replace(/-/g, '')
     const data = await getAPI("patterns/" + patternId)
     data.trips.forEach(trip => {
       if (trip.dates.includes(changedDate)) {
         trip.schedule.forEach(scheduleItem => {
-          if (scheduleItem.stop_id === stop_id) {
+          if (scheduleItem.stop_id == stop_id && scheduleItem.stop_sequence == stop_sequence) {
             schedules.push(scheduleItem.arrival_time.substring(0, 5))
             schedules.sort((a, b) => {
               const timeA = parseArrivalTime(a)
@@ -515,12 +527,14 @@ async function selectStop(stop_id) {
       try {
         const realTime_data = await getAPI(`patterns/${patternId}/realtime`)
         const currentUNIX = Math.floor(Date.now() / 1000)
-
+        
         realTime_data.forEach(realTime => {
-          if (realTime.observed_arrival === null && realTime.estimated_arrival !== null && realTime.estimated_arrival_unix > currentUNIX && realTime.stop_id === stop_id) {
+          let stopMatch = realTime.stop_id == stop_id && realTime.stop_sequence == stop_sequence
+
+          if (stopMatch && realTime.observed_arrival === null && realTime.estimated_arrival !== null && realTime.estimated_arrival_unix > currentUNIX) {
             let newRealTime = document.createElement('p')
             newRealTime.setAttribute('class', 'realTime')
-            newRealTime.setAttribute('id', "arrivalTime_" + realTime.trip_id)
+            newRealTime.setAttribute('id', realTime.stop_sequence + "_arrivalTime_" + realTime.trip_id)
             let arrivalTime = Math.floor((realTime.estimated_arrival_unix - currentUNIX) / 60)
             if (arrivalTime < 1) {
               newRealTime.innerText = "A chegar"
@@ -529,10 +543,10 @@ async function selectStop(stop_id) {
             }
             arrivalTimes.appendChild(newRealTime)
             hasArrivals = true
-          } else if (realTime.observed_arrival === null && realTime.estimated_arrival === null && realTime.scheduled_arrival_unix > currentUNIX && realTime.stop_id === stop_id && scheduledTimesCounter < 3) {
+          } else if (stopMatch && realTime.observed_arrival === null && realTime.estimated_arrival === null && realTime.scheduled_arrival_unix > currentUNIX && scheduledTimesCounter < 3) {
             let newScheduleTime = document.createElement('p')
             newScheduleTime.setAttribute('class', 'scheduleTime')
-            newScheduleTime.setAttribute('id', "arrivalTime_" + realTime.trip_id)
+            newScheduleTime.setAttribute('id', realTime.stop_sequence + "_arrivalTime_" + realTime.trip_id)
             // Handle hours after 24h
             let rawTime = realTime.scheduled_arrival
             let hours = parseInt(rawTime.substring(0, 2)) % 24
@@ -626,7 +640,7 @@ async function selectStop(stop_id) {
     stopId = stop_id
     updatePipArrivals()
   } catch (error) {
-    console.error(error.message)
+    console.error(error.stack)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar o horário para esta paragem")
   }
 }
@@ -639,7 +653,7 @@ async function updateStopArrivals(id) {
   try {
     const data = await getAPI(`patterns/${patternId}/realtime`)
     data.forEach(dataItem => {
-      let item = document.getElementById('arrivalTime_' + dataItem.trip_id)
+      let item = document.getElementById(dataItem.stop_sequence + '_arrivalTime_' + dataItem.trip_id)
       if (!item) {
         return
       }
@@ -831,14 +845,14 @@ async function loadVehicles() {
         });
 
         // Get previous stop ID
-        const currentStopID = allStops.indexOf(vehicle.stop_id)
+        const currentStopID = allStops.findIndex(stop => stop.id === vehicle.stop_id)
         let stopDIV
 
         // Add a bus icon to the stop list, to visually represent the position of the vehicle based on the line.
         if (currentStopID > 0 && vehicle.current_status !== "STOPPED_AT") {
-          stopDIV = document.getElementById('newStop_' + allStops[currentStopID-1])
+          stopDIV = document.getElementById(allStops[currentStopID-1].sequence + '_newStop_' + allStops[currentStopID-1].id)
         } else {
-          stopDIV = document.getElementById('newStop_' + vehicle.stop_id)
+          stopDIV = document.getElementById(allStops[currentStopID].sequence + '_newStop_' + vehicle.stop_id)
         }
         let busIcon = document.createElement('i')
         busIcon.setAttribute('class', 'busIcon fa-solid fa-bus')
@@ -974,14 +988,14 @@ async function updateTimes_vehicles() {
           // Add the bus icon at the stops list
           if (vehicle.current_status !== "COMPLETED") {
             // Get next stop ID
-            const currentStopID = allStops.indexOf(vehicle.stop_id)
+            const currentStopID = allStops.findIndex(stop => stop.id === vehicle.stop_id)
             let stopDIV
             // If the vehicle is at the first stop or stopped at a stop, make it show on that stop
             // If the vehicle is not on the first stop or stopped at a stop, make it show the previous stop
             if (currentStopID > 0 && vehicle.current_status !== "STOPPED_AT") {
-              stopDIV = document.getElementById('newStop_' + allStops[currentStopID-1])
+              stopDIV = document.getElementById(allStops[currentStopID-1].sequence + '_newStop_' + allStops[currentStopID-1].id)
             } else {
-              stopDIV = document.getElementById('newStop_' + vehicle.stop_id)
+              stopDIV = document.getElementById(allStops[currentStopID].sequence + '_newStop_' + vehicle.stop_id)
             }
             if (stopDIV) {
               let busIcon = document.createElement('i');
