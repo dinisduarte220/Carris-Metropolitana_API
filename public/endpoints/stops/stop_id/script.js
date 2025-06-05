@@ -397,7 +397,7 @@ async function loadArrivals(fullList) {
       let [hours, minutes] = time.split(":").map(Number)
     
       // If the time is between 00 and 04 am, its still on the current day
-      if (hours < 5) {
+      if (hours < 4) {
         hours += 24
       }
     
@@ -809,7 +809,7 @@ async function updateArrivals() {
         if (time.includes("min")) return parseInt(time) // Extract number
         const [hours, minutes] = time.split(":").map(Number)
         // Treat times between 00:00 and 04:00 as being after 24:00
-        const adjustedHours = (hours < 4) ? hours + 24 : hours
+        const adjustedHours = (hours < 5) ? hours + 24 : hours
         return adjustedHours * 60 + minutes
       }
 

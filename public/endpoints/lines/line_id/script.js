@@ -308,6 +308,7 @@ function changeDate(date) {
 // Load stops for the active pattern
 let pointFeatures = []
 let allStops = []
+let patternColor = ''
 async function loadStops() {
   allStops = []
   stopId = ""
@@ -326,6 +327,7 @@ async function loadStops() {
   }
   try {
     const data = await getAPI("patterns/" + patternId)
+    patternColor = data.color
     document.getElementById('stopsBorder').style.backgroundColor = data.color
     // Set and clear the stops container
     const stopsContainer = document.getElementById('stopsContainer')
@@ -353,11 +355,20 @@ async function loadStops() {
       let newStop = document.createElement('div')
       newStop.setAttribute('class', 'newStop')
       newStop.setAttribute('id', stop.stop_sequence + '_newStop_' + stop.stop.id)
-      newStop.setAttribute('onclick', `selectStop("${stop.stop.id}", "${stop.stop_sequence}")`)
+
+      // newStop.setAttribute('onclick', `selectStop("${stop.stop.id}", "${stop.stop_sequence}")`)
 
       let stopName = document.createElement('p')
       stopName.setAttribute('class', 'stopName')
       stopName.innerText = stop.stop.name
+      stopName.onclick = () => {
+        if (stopId === stop.stop.id) {
+          deselectStop(stop.stop.id)
+          tripId = ""
+        } else {
+          selectStop(stop.stop.id, stop.stop_sequence)
+        }
+      }
 
       newStop.appendChild(stopName)
 
@@ -410,9 +421,15 @@ async function loadStops() {
     })
     // Onclick function to select the wanted stop on the list
     map.on('click', 'points', (e) => {
-      const stopId = e.features[0].properties.id
-      const stopSequence = e.features[0].properties.stop_sequence
-      selectStop(stopId, stopSequence)
+      const clickedStopId = e.features[0].properties.id
+      const clickedStopSequence = e.features[0].properties.stop_sequence
+      if (stopId === clickedStopId) {
+        // Deselect stop
+        deselectStop(clickedStopId)
+        tripId = ""
+      } else {
+        selectStop(clickedStopId, clickedStopSequence)
+      }
     })
 
     // Change the cursor to a pointer when hovering over the points
@@ -430,7 +447,10 @@ async function loadStops() {
 }
 
 let updateInterval_stop
-async function selectStop(stop_id, stop_sequence) {
+async function selectStop(stop_id, stop_sequence, force = false) {
+  if (!force && stopId === stop_id && params.stop_sequence === stop_sequence) {
+    return
+  }
   try {
     params.active_stop = stop_id
     params.stop_sequence = stop_sequence
@@ -443,6 +463,7 @@ async function selectStop(stop_id, stop_sequence) {
     window.history.replaceState(null, '', newUrl2)
 
     const stopDiv = document.getElementById(stop_sequence + '_newStop_' + stop_id)
+    console.log(stopDiv, stop_sequence, stop_id)
     const stopsContainer = document.getElementById('stopsContainer')
 
     let schedules = [], trips = []
@@ -638,10 +659,44 @@ async function selectStop(stop_id, stop_sequence) {
       block: 'center',
     })
     stopId = stop_id
+    stopSequence = stop_sequence
     updatePipArrivals()
   } catch (error) {
     console.error(error.stack)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar o horário para esta paragem")
+  }
+}
+
+function deselectStop(stop_id) {
+  const stopsContainer = document.getElementById('stopsContainer')
+  const stopDiv = document.getElementById(params.stop_sequence + '_newStop_' + stop_id)
+
+  // Clear stop-specific UI elements
+  const previousSchedules = stopDiv.querySelectorAll('.timeTable, .scheduleTitle, .stopDetails, .arrivalTimes, .arrivalTimesTitle')
+  previousSchedules.forEach(el => el.remove())
+
+  // Reset map styling
+  map.setPaintProperty('points', 'circle-color', patternColor) // Assume patternColor is available or store it globally
+  map.setPaintProperty('points', 'circle-radius', 3)
+
+  stopId = ""
+  params.active_stop = ""
+  params.stop_sequence = ""
+  updatePipArrivals()
+
+  // Reset URL parameters
+  const newUrl = new URL(window.location)
+  newUrl.searchParams.delete('active_stop')
+  newUrl.searchParams.delete('stop_sequence')
+  window.history.replaceState(null, '', newUrl)
+
+  if (updateInterval_stop) {
+    clearInterval(updateInterval_stop)
+    updateInterval_stop = null
+  }
+
+  if (originalBounds) {
+    map.fitBounds(originalBounds, { padding: 50, animate: true })
   }
 }
 // Update Real Times
@@ -730,16 +785,19 @@ function parseArrivalTime(arrivalTime) {
 
 // Mark times - To see the arriving time on other stops
 function markTime(trip) {
+  console.log(trip, tripId)
   // If the trip matches the stored trip, remove it (for the user to remove the mark)
   if (tripId === trip) {
     tripId = ""
   } else {
     tripId = trip
   }
+  selectStop(stopId, stopSequence, true)
+  console.log(stopId, stopSequence)
 }
 
-
 // Load Map Route
+let originalBounds
 async function loadRoute(shape_id, color) {
   try {
     const data = await getAPI("shapes/" + shape_id)
@@ -783,22 +841,14 @@ async function loadRoute(shape_id, color) {
 
     // Calculate bounds and center for the new route
     const allCoordinates = lineStringGeojson.features[0].geometry.coordinates
-    const latitudes = allCoordinates.map((coord) => coord[1])
-    const longitudes = allCoordinates.map((coord) => coord[0])
-    const centerLatitude = (Math.max(...latitudes) + Math.min(...latitudes)) / 2
-    const centerLongitude = (Math.max(...longitudes) + Math.min(...longitudes)) / 2
 
-    const bounds = new maplibregl.LngLatBounds()
-    allCoordinates.forEach((coord) => bounds.extend(coord))
-
-    map.fitBounds(bounds, { padding: 50, animate: true })
-    // const idealZoom = map.getZoom()
-    // const center = [centerLongitude, centerLatitude]
-    // map.jumpTo({ center: center, zoom: idealZoom })
+    originalBounds = new maplibregl.LngLatBounds()
+    allCoordinates.forEach(coord => originalBounds.extend(coord))
+    map.fitBounds(originalBounds, { padding: 50, animate: true })
 
     loadVehicles()
   } catch (error) {
-    console.error(error.message)
+    console.error(error.stack)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar a linha no mapa")
   }
 }
