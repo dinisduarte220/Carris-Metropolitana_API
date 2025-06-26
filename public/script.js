@@ -554,16 +554,20 @@ async function nearStops() {
       try {
         const stop_data = await getAPI("stops")
 
+        let count = 0
         stop_data.forEach(stop => {
           const lon = stop.lon
           const lat = stop.lat
           const distance = haversineDistance(latitude, longitude, lat, lon)
+          if (distance > 0.5) return
+          count++
           nearestStops.push({ ...stop, distance })
         })
 
+        console.log(count)
+
         // Sort stops by distance and keep the 5 closest
         nearestStops.sort((a, b) => a.distance - b.distance)
-        nearestStops = nearestStops.slice(0, 10)
         // Display filtered stops
         renderStops(nearestStops, stopsContainer)
       } catch (error) {
