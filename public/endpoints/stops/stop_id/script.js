@@ -112,11 +112,13 @@ async function favoriteStops() {
 }
 
 // Select stop on the map
-function setSelectedStop(lon, lat, stopId) { 
+function setSelectedStop(lon, lat, stopId) {
   map.flyTo({
     center: [lon, lat],
     zoom: 15
   })
+
+  document.getElementById('searchStop_input').setAttribute('onInput', `searchStop("${lon}", "${lat}")`)
 
   if (!map.getLayer("points")) {
     console.error("Layer 'points' not found")
@@ -147,8 +149,22 @@ function setSelectedStop(lon, lat, stopId) {
   map.setPaintProperty("points", "circle-radius", [
     "case",
     ["==", ["get", "id"], stopId],
-    8,
-    6
+    [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      10, 6,
+      14, 10,
+      18, 14
+    ],
+    [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      10, 4,
+      14, 6,
+      18, 10
+    ]
   ])
 }
 
@@ -1017,40 +1033,43 @@ async function selectTrip(stop_sequence, trip_id, pattern_id, color, vehicle_id)
         map.moveLayer("pointsbus")
       }
 
-    // Show the estimated Time (HH:MM), Scheduled Time (HH:MM) and Next Arrival for this line
-    const realtime_data = await getAPI(`stops/${stopId}/realtime`)
-    let thisArrival = realtime_data.find(item => item.trip_id == trip_id && item.stop_sequence == stop_sequence)
-    let nextArrival
+      // Show the estimated Time (HH:MM), Scheduled Time (HH:MM) and Next Arrival for this line
+      const realtime_data = await getAPI(`stops/${stopId}/realtime`)
+      let thisArrival = realtime_data.find(item => item.trip_id == trip_id && item.stop_sequence == stop_sequence)
+      let nextArrival
 
-    if (thisArrival) {
-      // Check if estimated arrival exists
-      if (thisArrival.estimated_arrival_unix !== null) {
-        const thisArrivalTime = thisArrival.estimated_arrival_unix
-
-        nextArrival = realtime_data
-          .filter(item => {
-            if (item.line_id !== thisArrival.line_id || item.trip_id === thisArrival.trip_id) return false
+      if (thisArrival) {
+        // ---------- ESTIMATED ARRIVAL BRANCH ----------
+        if (thisArrival.estimated_arrival_unix != null) {
+          const thisArrivalTime = Number(thisArrival.estimated_arrival_unix)
+        
+          nextArrival = realtime_data
+            .filter(item =>
+              // same LINE, different TRIP, and a valid estimate
+              item.line_id === thisArrival.line_id &&
+              item.trip_id !== thisArrival.trip_id &&
+              item.estimated_arrival_unix != null &&
+              Number(item.estimated_arrival_unix) > thisArrivalTime
+            )
+            .sort(
+              (a, b) => Number(a.estimated_arrival_unix) - Number(b.estimated_arrival_unix)
+            )[0]
           
-            const itemArrivalTime = item.estimated_arrival_unix
-            return itemArrivalTime > thisArrivalTime
-          })
-          .sort((a, b) => {
-            const aArrival = a.estimated_arrival_unix
-            const bArrival = b.estimated_arrival_unix
-            return aArrival - bArrival
-          })[0]
-
-      } else {
-        const thisArrivalTime = thisArrival.scheduled_arrival_unix
-
-        nextArrival = realtime_data
-          .filter(item =>
-            item.line_id === thisArrival.line_id &&
-            item.trip_id !== thisArrival.trip_id &&
-            item.scheduled_arrival_unix > thisArrivalTime
-          )
-          .sort((a, b) => a.scheduled_arrival_unix - b.scheduled_arrival_unix)[0]
-      }
+        // ---------- SCHEDULED-ONLY FALLBACK ----------
+        } else {
+          const thisArrivalTime = Number(thisArrival.scheduled_arrival_unix)
+        
+          nextArrival = realtime_data
+            .filter(item =>
+              item.line_id === thisArrival.line_id &&
+              item.trip_id !== thisArrival.trip_id &&
+              item.scheduled_arrival_unix != null &&
+              Number(item.scheduled_arrival_unix) > thisArrivalTime
+            )
+            .sort(
+              (a, b) => Number(a.scheduled_arrival_unix) - Number(b.scheduled_arrival_unix)
+            )[0]
+        }
 
       let extraInfo = document.createElement('div')
       extraInfo.setAttribute('class', 'extraInfo')

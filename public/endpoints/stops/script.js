@@ -1,23 +1,46 @@
-async function searchStop() {
+async function searchStop(lon, lat) {
   const searchInput = document.getElementById('searchStop_input').value.toLowerCase()
   const searchResults = document.getElementById('searchResults')
   try {
     const stop_data = await getAPI("stops")
-    
+
     let stopsToDisplay = []
 
     if (searchInput.length > 2) {
-      stopsToDisplay = stop_data.filter(stop => 
-        stop.id?.toLowerCase().includes(searchInput) || 
-        stop.name?.toLowerCase().includes(searchInput) || 
+      stopsToDisplay = stop_data.filter(stop =>
+        stop.id?.toLowerCase().includes(searchInput) ||
+        stop.name?.toLowerCase().includes(searchInput) ||
         stop.locality?.toLowerCase().includes(searchInput)
       )
+    } else {
+      // Reset map filter and zoom
+      map.setFilter("points", null)
+      if(!lon || !lat) {
+        map.flyTo({ center: [-9.0, 38.7], zoom: 9 })
+      } else {
+        map.flyTo({ center: [lon, lat], zoom: 15 })
+      }
     }
 
     if (stopsToDisplay.length > 0) {
       renderStops(stopsToDisplay, searchResults)
       document.getElementById('searchStop_input').classList.add('searchActive')
       searchResults.style.display = "block"
+
+      const stopIds = stopsToDisplay.map(stop => stop.id)
+      map.setFilter("points", [
+        "in",
+        ["get", "id"],
+        ["literal", stopIds]
+      ])
+
+      // Zoom into filtered stops
+      const bounds = new maplibregl.LngLatBounds()
+      stopsToDisplay.forEach(stop => {
+        bounds.extend([stop.lon, stop.lat])
+      })
+      map.fitBounds(bounds, { padding: 100, maxZoom: 16 })
+
     } else {
       document.getElementById('searchStop_input').classList.remove('searchActive')
       searchResults.style.display = "none"
@@ -64,7 +87,14 @@ async function loadAllStops() {
       type: "circle",
       source: "points",
       paint: {
-        'circle-radius': 4,
+        'circle-radius': [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          10, 2,     // zoom level 10 → radius 2
+          14, 6,     // zoom level 14 → radius 6
+          18, 12     // zoom level 18 → radius 12
+        ],
         'circle-color': "#ba7c18",
         'circle-stroke-width': 1,
         'circle-stroke-color': '#FFFFFF'
