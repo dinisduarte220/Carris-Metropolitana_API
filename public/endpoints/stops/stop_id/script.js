@@ -1040,121 +1040,107 @@ async function selectTrip(stop_sequence, trip_id, pattern_id, color, vehicle_id)
 
       if (thisArrival) {
         // ---------- ESTIMATED ARRIVAL BRANCH ----------
-        if (thisArrival.estimated_arrival_unix != null) {
-          const thisArrivalTime = Number(thisArrival.estimated_arrival_unix)
-        
-          nextArrival = realtime_data
-            .filter(item =>
-              // same LINE, different TRIP, and a valid estimate
-              item.line_id === thisArrival.line_id &&
-              item.trip_id !== thisArrival.trip_id &&
-              item.estimated_arrival_unix != null &&
-              Number(item.estimated_arrival_unix) > thisArrivalTime
-            )
-            .sort(
-              (a, b) => Number(a.estimated_arrival_unix) - Number(b.estimated_arrival_unix)
-            )[0]
+        const thisArrivalTime = Number(
+          thisArrival.estimated_arrival_unix ?? thisArrival.scheduled_arrival_unix
+        )
+
+        nextArrival = realtime_data
+          .filter(item => {
+            if (item.line_id !== thisArrival.line_id || item.trip_id === thisArrival.trip_id) return false
           
-        // ---------- SCHEDULED-ONLY FALLBACK ----------
+            const itemArrivalTime = Number(item.estimated_arrival_unix ?? item.scheduled_arrival_unix)
+            return itemArrivalTime > thisArrivalTime
+          })
+          .sort((a, b) => {
+            const aTime = Number(a.estimated_arrival_unix ?? a.scheduled_arrival_unix)
+            const bTime = Number(b.estimated_arrival_unix ?? b.scheduled_arrival_unix)
+            return aTime - bTime
+          })[0]
+
+        let extraInfo = document.createElement('div')
+        extraInfo.setAttribute('class', 'extraInfo')
+          
+        let newEstimateTime = document.createElement('p')
+        newEstimateTime.setAttribute('class', 'newEstimateTime')
+        if (thisArrival.estimated_arrival !== null) {
+          let timeParts = thisArrival.estimated_arrival.split(":")
+          let hours = parseInt(timeParts[0])
+          if (hours >= 24) {
+            hours -= 24
+          }
+          let formattedHours = String(hours).padStart(2, '0')
+
+          newEstimateTime.innerText = "Chegada Estimada: " + formattedHours + thisArrival.estimated_arrival.substring(2, 8)
         } else {
-          const thisArrivalTime = Number(thisArrival.scheduled_arrival_unix)
+          newEstimateTime.innerText = "Chegada Estimada: " + thisArrival.estimated_arrival
+        }
+
+        let newScheduleTime = document.createElement('p')
+        newScheduleTime.setAttribute('class', 'newScheduleTime')
+
+        if (thisArrival.scheduled_arrival !== null) {
+          let timeParts2 = thisArrival.scheduled_arrival.split(":")
+          let hours2 = parseInt(timeParts2[0])
+          if (hours2 >= 24) {
+            hours2 -= 24
+          }
+          let formattedHours2 = String(hours2).padStart(2, '0')
+
+          newScheduleTime.innerText = "Chegada Agendada: " + formattedHours2 + thisArrival.scheduled_arrival.substring(2, 8)
+        } else {
+          newScheduleTime.innerText = "Chegada Agendada: " + thisArrival.scheduled_arrival
+        }
+
+        let newUpdatedTime = document.createElement('p')
+        newUpdatedTime.setAttribute('class', 'newUpdatedTime')
+        newUpdatedTime.innerText = `Atualizado há: `
+
+        let routeDetails = document.createElement('a')
+        routeDetails.setAttribute('class', 'routeDetails')
+        routeDetails.setAttribute('href', `/lines/${thisArrival.line_id}?pattern=${thisArrival.pattern_id}&active_stop=${stopId}&stop_sequence=${stop_sequence}`)
+        routeDetails.setAttribute('onclick', `event.stopPropagation()`)
+        routeDetails.setAttribute('target', '_blank')
+        routeDetails.innerHTML = 'Ver percurso <i class="fa-solid fa-arrow-up-right-from-square"></i>'
+
+        if (thisArrival.estimated_arrival !== null) {
+          extraInfo.appendChild(newEstimateTime)
+        }
+        if (vehicle_data && thisArrival.vehicle_id !== null) {
+          extraInfo.appendChild(newUpdatedTime)
+        }
+        if (thisArrival.scheduled_arrival !== null) {
+          extraInfo.appendChild(newScheduleTime)
+        }
+        if (nextArrival) {
+          let newNextArrival = document.createElement('p')
+          newNextArrival.setAttribute('class', 'newNextArrival')
+          let colorIndex = linesData.findIndex(line => line.line_ID === nextArrival.line_id)
+          arrivalColor = linesData[colorIndex].line_color
+          newNextArrival.setAttribute('onclick', `event.stopPropagation(); selectTrip('${nextArrival.stop_sequence}', '${nextArrival.trip_id}', '${nextArrival.pattern_id}', '${arrivalColor}', '${nextArrival.vehicle_id ?? ""}')`);
         
-          nextArrival = realtime_data
-            .filter(item =>
-              item.line_id === thisArrival.line_id &&
-              item.trip_id !== thisArrival.trip_id &&
-              item.scheduled_arrival_unix != null &&
-              Number(item.scheduled_arrival_unix) > thisArrivalTime
-            )
-            .sort(
-              (a, b) => Number(a.scheduled_arrival_unix) - Number(b.scheduled_arrival_unix)
-            )[0]
+          if (nextArrival.estimated_arrival !== null) {
+            let [hours, minutes] = nextArrival.estimated_arrival.split(":")
+            hours = parseInt(hours)
+            if (hours >= 24) hours -= 24
+            let formattedHours = String(hours).padStart(2, '0')
+            newNextArrival.innerText = "Próxima passagem: " + formattedHours + ":" + minutes
+          } else {
+            let [hours, minutes] = nextArrival.scheduled_arrival.split(":")
+            hours = parseInt(hours)
+            if (hours >= 24) hours -= 24
+            let formattedHours = String(hours).padStart(2, '0')
+            newNextArrival.innerText = "Próxima passagem: " + formattedHours + ":" + minutes
+          }
+          extraInfo.appendChild(newNextArrival) 
         }
 
-      let extraInfo = document.createElement('div')
-      extraInfo.setAttribute('class', 'extraInfo')
+        extraInfo.appendChild(routeDetails)
 
-      let newEstimateTime = document.createElement('p')
-      newEstimateTime.setAttribute('class', 'newEstimateTime')
-      if (thisArrival.estimated_arrival !== null) {
-        let timeParts = thisArrival.estimated_arrival.split(":")
-        let hours = parseInt(timeParts[0])
-        if (hours >= 24) {
-          hours -= 24
-        }
-        let formattedHours = String(hours).padStart(2, '0')
-
-        newEstimateTime.innerText = "Chegada Estimada: " + formattedHours + thisArrival.estimated_arrival.substring(2, 8)
-      } else {
-        newEstimateTime.innerText = "Chegada Estimada: " + thisArrival.estimated_arrival
-      }
-
-      let newScheduleTime = document.createElement('p')
-      newScheduleTime.setAttribute('class', 'newScheduleTime')
-
-      if (thisArrival.scheduled_arrival !== null) {
-        let timeParts2 = thisArrival.scheduled_arrival.split(":")
-        let hours2 = parseInt(timeParts2[0])
-        if (hours2 >= 24) {
-          hours2 -= 24
-        }
-        let formattedHours2 = String(hours2).padStart(2, '0')
-
-        newScheduleTime.innerText = "Chegada Agendada: " + formattedHours2 + thisArrival.scheduled_arrival.substring(2, 8)
-      } else {
-        newScheduleTime.innerText = "Chegada Agendada: " + thisArrival.scheduled_arrival
-      }
-
-      let newUpdatedTime = document.createElement('p')
-      newUpdatedTime.setAttribute('class', 'newUpdatedTime')
-      newUpdatedTime.innerText = `Atualizado há: `
-
-      let routeDetails = document.createElement('a')
-      routeDetails.setAttribute('class', 'routeDetails')
-      routeDetails.setAttribute('href', `/lines/${thisArrival.line_id}?pattern=${thisArrival.pattern_id}&active_stop=${stopId}&stop_sequence=${stop_sequence}`)
-      routeDetails.setAttribute('onclick', `event.stopPropagation()`)
-      routeDetails.setAttribute('target', '_blank')
-      routeDetails.innerHTML = 'Ver percurso <i class="fa-solid fa-arrow-up-right-from-square"></i>'
-
-      if (thisArrival.estimated_arrival !== null) {
-        extraInfo.appendChild(newEstimateTime)
-      }
-      if (vehicle_data && thisArrival.vehicle_id !== null) {
-        extraInfo.appendChild(newUpdatedTime)
-      }
-      if (thisArrival.scheduled_arrival !== null) {
-        extraInfo.appendChild(newScheduleTime)
-      }
-      if (nextArrival) {
-        let newNextArrival = document.createElement('p')
-        newNextArrival.setAttribute('class', 'newNextArrival')
-        let colorIndex = linesData.findIndex(line => line.line_ID === nextArrival.line_id)
-        arrivalColor = linesData[colorIndex].line_color
-        newNextArrival.setAttribute('onclick', `event.stopPropagation(); selectTrip('${nextArrival.stop_sequence}', '${nextArrival.trip_id}', '${nextArrival.pattern_id}', '${arrivalColor}', '${nextArrival.vehicle_id ?? ""}')`);
-      
-        if (nextArrival.estimated_arrival !== null) {
-          let [hours, minutes] = nextArrival.estimated_arrival.split(":")
-          hours = parseInt(hours)
-          if (hours >= 24) hours -= 24
-          let formattedHours = String(hours).padStart(2, '0')
-          newNextArrival.innerText = "Próxima passagem: " + formattedHours + ":" + minutes
-        } else {
-          let [hours, minutes] = nextArrival.scheduled_arrival.split(":")
-          hours = parseInt(hours)
-          if (hours >= 24) hours -= 24
-          let formattedHours = String(hours).padStart(2, '0')
-          newNextArrival.innerText = "Próxima passagem: " + formattedHours + ":" + minutes
-        }
-        extraInfo.appendChild(newNextArrival) 
-      }
-
-      extraInfo.appendChild(routeDetails)
-
-      tripDiv.appendChild(extraInfo)
-      tripDiv.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      })
+        tripDiv.appendChild(extraInfo)
+        tripDiv.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        })
 
         if (vehicle_data && thisArrival.vehicle_id !== null) {
           let newUpdatedTime_item = document.querySelector('.arrivalTime.active .newUpdatedTime')

@@ -566,7 +566,6 @@ async function nearStops() {
 
         console.log(count)
 
-        // Sort stops by distance and keep the 5 closest
         nearestStops.sort((a, b) => a.distance - b.distance)
         // Display filtered stops
         renderStops(nearestStops, stopsContainer)
