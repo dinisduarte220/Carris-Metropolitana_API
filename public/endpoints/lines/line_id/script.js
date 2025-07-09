@@ -463,7 +463,6 @@ async function selectStop(stop_id, stop_sequence, force = false) {
     window.history.replaceState(null, '', newUrl2)
 
     const stopDiv = document.getElementById(stop_sequence + '_newStop_' + stop_id)
-    console.log(stopDiv, stop_sequence, stop_id)
     const stopsContainer = document.getElementById('stopsContainer')
 
     let schedules = [], trips = []
@@ -978,7 +977,7 @@ async function loadVehicles() {
     if (updateInterval_vehicles) clearInterval(updateInterval_vehicles)
       updateInterval_vehicles = setInterval(() => updateTimes_vehicles(), 10000)
   } catch (error) {
-    console.error(error.message)
+    console.error(error.stack)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar os veiculos desta linha")
   }
 }
