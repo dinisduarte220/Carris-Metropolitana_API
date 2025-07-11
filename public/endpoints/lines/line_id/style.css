@@ -398,12 +398,20 @@ body {
     }
 
     /* Map */
+    #mapContainer {
+        position: sticky;
+        top: calc(5rem - 15px);
+        padding: 1px 0 5px 0;
+        background-color: rgb(20, 20, 20);
+        z-index: 90; 
+    }
     #map {
-        position: relative;
+        position: sticky;
         width: calc(100vw - 50px);
         height: 30vh;
         margin: 2rem 0 1rem 25px;
         bottom: auto;
         right: auto;
+        z-index: 90;
     }
 }
