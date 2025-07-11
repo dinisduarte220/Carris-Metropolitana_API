@@ -12,7 +12,6 @@ Implemented some new features that you sure will love. Check them out!
 
 # HOW TO USE
 You can use the website [here](https://carris-metropolitana-api-1.onrender.com/)
-Or, follow the steps bellow to use it on your machine
 
 # FUTURE IDEAS
 - Change the favorites, to show the user only the routes, lines and stop info he wants
