@@ -10,12 +10,21 @@ Implemented some new features that you sure will love. Check them out!
 - More information when viewing a line and stops
 - A new notifications system thats doesn't let you miss your bus (Doesn't work on mobile for now)
 
+# HOW TO USE
+You can use the website [here](https://carris-metropolitana-api-1.onrender.com/)
+Or, follow the steps bellow to use it on your machine
+
 # FUTURE IDEAS
 - Change the favorites, to show the user only the routes, lines and stop info he wants
 - Settings page that lets user change notification times, app theme, ...
 - Locale language (Portuguese / English / Spanish)
 
-- # IMAGES
-![Home Page](IMG/image1.png)
-![Lines View](IMG/image2.png)
-![Stop View](IMG/image3.png)
+# IMAGES
+### Home Page
+<img src="IMG/image1.png" width="800"/>
+
+### Stops Page
+<img src="IMG/image2.png" width="800"/>
+
+### Lines Page
+<img src="IMG/image3.png" width="800"/>
