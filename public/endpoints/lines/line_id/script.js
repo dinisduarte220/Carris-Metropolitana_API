@@ -655,14 +655,8 @@ async function selectStop(stop_id, stop_sequence, force = false) {
     }
     stopDiv.scrollIntoView({
       behavior: 'smooth',
-      block: 'center',
+      block: 'end',
     })
-    setTimeout(() => {
-      window.scrollBy({
-        top: -120, // negative moves up, positive moves down
-        behavior: 'smooth'
-      })
-    }, 500)
     stopId = stop_id
     stopSequence = stop_sequence
     updatePipArrivals()
@@ -900,13 +894,14 @@ async function loadVehicles() {
         });
 
         // Get previous stop ID
-        const currentStopID = allStops.findIndex(stop => stop.id === vehicle.stop_id)
+        let currentStopID = allStops.findIndex(stop => stop.id === vehicle.stop_id)
+        if (currentStopID < 0) currentStopID = 0
         let stopDIV
 
         // Add a bus icon to the stop list, to visually represent the position of the vehicle based on the line.
-        if (currentStopID > 0 && vehicle.current_status !== "STOPPED_AT") {
+        if (currentStopID !== null && currentStopID > 0 && vehicle.current_status !== "STOPPED_AT") {
           stopDIV = document.getElementById(allStops[currentStopID-1].sequence + '_newStop_' + allStops[currentStopID-1].id)
-        } else {
+        } else if (currentStopID !== null) {
           stopDIV = document.getElementById(allStops[currentStopID].sequence + '_newStop_' + vehicle.stop_id)
         }
         let busIcon = document.createElement('i')
@@ -1043,13 +1038,14 @@ async function updateTimes_vehicles() {
           // Add the bus icon at the stops list
           if (vehicle.current_status !== "COMPLETED") {
             // Get next stop ID
-            const currentStopID = allStops.findIndex(stop => stop.id === vehicle.stop_id)
+            let currentStopID = allStops.findIndex(stop => stop.id === vehicle.stop_id)
+            if (currentStopID < 0) currentStopID = null
             let stopDIV
             // If the vehicle is at the first stop or stopped at a stop, make it show on that stop
             // If the vehicle is not on the first stop or stopped at a stop, make it show the previous stop
-            if (currentStopID > 0 && vehicle.current_status !== "STOPPED_AT") {
+            if (currentStopID !== null && currentStopID > 0 && vehicle.current_status !== "STOPPED_AT") {
               stopDIV = document.getElementById(allStops[currentStopID-1].sequence + '_newStop_' + allStops[currentStopID-1].id)
-            } else {
+            } else if (currentStopID !== null) {
               stopDIV = document.getElementById(allStops[currentStopID].sequence + '_newStop_' + vehicle.stop_id)
             }
             if (stopDIV) {
