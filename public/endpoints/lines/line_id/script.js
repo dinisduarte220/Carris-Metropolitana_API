@@ -657,6 +657,12 @@ async function selectStop(stop_id, stop_sequence, force = false) {
       behavior: 'smooth',
       block: 'center',
     })
+    setTimeout(() => {
+      window.scrollBy({
+        top: -120, // negative moves up, positive moves down
+        behavior: 'smooth'
+      })
+    }, 500)
     stopId = stop_id
     stopSequence = stop_sequence
     updatePipArrivals()
