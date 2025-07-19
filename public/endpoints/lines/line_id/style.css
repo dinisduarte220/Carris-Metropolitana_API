@@ -408,8 +408,8 @@ body {
     #map {
         position: sticky;
         width: calc(100vw - 50px);
-        height: 30vh;
-        margin: 2rem 0 1rem 25px;
+        height: 20vh;
+        margin: 1rem 0 .3rem 25px;
         bottom: auto;
         right: auto;
         z-index: 90;

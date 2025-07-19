@@ -655,7 +655,7 @@ async function selectStop(stop_id, stop_sequence, force = false) {
     }
     stopDiv.scrollIntoView({
       behavior: 'smooth',
-      block: 'end',
+      block: 'center',
     })
     stopId = stop_id
     stopSequence = stop_sequence
