@@ -258,6 +258,11 @@ async function saveFavoritesOrder() {
   }
 }
 
+// View Mode - List, Grid
+function viewModeModal() {
+  snackbar("fa-solid fa-hourglass-start", "Not available yet...")
+}
+
 // Toggle modal visibility
 function toggleFavoritesModal() {
   clearFavoritesSections()
@@ -559,7 +564,7 @@ async function nearStops() {
           const lon = stop.lon
           const lat = stop.lat
           const distance = haversineDistance(latitude, longitude, lat, lon)
-          if (distance > 0.5) return
+          if (distance > 1) return
           count++
           nearestStops.push({ ...stop, distance })
         })
@@ -613,6 +618,7 @@ async function nearLines() {
           const lon = stop.lon
           const lat = stop.lat
           const distance = haversineDistance(latitude, longitude, lat, lon)
+          if (distance > 1) return
           nearestStops.push({ ...stop, distance })
         })
 

@@ -112,10 +112,14 @@ body {
   color: whitesmoke;
   transition: .3s;
 }
-#homeGrid .gridItem button {
+#homeGrid .gridItem #buttons {
+  display: flex;
   position: absolute;
   bottom: 10px;
   right: 10px;
+  gap: 10px;
+}
+#homeGrid .gridItem button {
   padding: 5px 10px;
   border-radius: 5px;
   background-color: rgb(75, 75, 75);

@@ -1046,7 +1046,7 @@ async function selectTrip(stop_sequence, trip_id, pattern_id, color, vehicle_id)
 
         nextArrival = realtime_data
           .filter(item => {
-            if (item.line_id !== thisArrival.line_id || item.trip_id === thisArrival.trip_id) return false
+            if (item.line_id !== thisArrival.line_id || item.pattern_id !== thisArrival.pattern_id || item.trip_id === thisArrival.trip_id) return false
           
             const itemArrivalTime = Number(item.estimated_arrival_unix ?? item.scheduled_arrival_unix)
             return itemArrivalTime > thisArrivalTime
