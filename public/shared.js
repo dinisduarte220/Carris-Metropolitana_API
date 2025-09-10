@@ -15,6 +15,21 @@ async function getAPI(endpoint) {
   })
   .catch(error => Promise.reject(error.message))
 }
+// API Version 2
+async function getAPI_v2(endpoint) {
+  const fullURL = "https://api.carrismetropolitana.pt/v2/" + endpoint
+  return fetch(fullURL)
+  .then(response => {
+    if (!response.ok) {
+      if (response.status === 404 || response.status === 400) {
+        return {}
+      }
+      throw new Error('[ERROR] Something wrong as occurred with the network')
+    }
+    return response.json()
+  })
+  .catch(error => Promise.reject(error.message))
+}
 
 // Display lines on container
 function renderLines(lines, container) {

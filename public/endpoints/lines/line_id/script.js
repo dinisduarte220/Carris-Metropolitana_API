@@ -784,11 +784,18 @@ function parseArrivalTime(arrivalTime) {
 
 // Mark times - To see the arriving time on other stops
 function markTime(trip) {
-  console.log(trip, tripId)
   // If the trip matches the stored trip, remove it (for the user to remove the mark)
   if (tripId === trip) {
+    // let tripVehicle = document.getElementById('vehicle_' + trip)
     tripId = ""
+    // if (tripVehicle) {
+    //   tripVehicle.style.backgroundColor = "rgb(200, 200, 200)"
+    // }
   } else {
+    // let tripVehicle = document.getElementById("vehicle_" + trip)
+    // if (tripVehicle) {
+    //   tripVehicle.style.backgroundColor = "yellow"
+    // }
     tripId = trip
   }
   selectStop(stopId, stopSequence, true)
@@ -906,6 +913,7 @@ async function loadVehicles() {
         }
         let busIcon = document.createElement('i')
         busIcon.setAttribute('class', 'busIcon fa-solid fa-bus')
+        busIcon.setAttribute('id', 'vehicle_' + vehicle.trip_id)
         if (stopDIV) {
           stopDIV.appendChild(busIcon)
           if (debugMode) {
@@ -985,7 +993,7 @@ async function loadVehicles() {
 
 async function updateTimes_vehicles() {
   try {
-    const vehicle_data = await getAPI("vehicles");
+    const vehicle_data = await getAPI_v2("vehicles");
 
     // Clear all vehicle icons on map before load the new positions
     const allBusIcons = document.querySelectorAll('.busIcon');
@@ -1051,6 +1059,7 @@ async function updateTimes_vehicles() {
             if (stopDIV) {
               let busIcon = document.createElement('i');
               busIcon.setAttribute('class', 'busIcon fa-solid fa-bus');
+              busIcon.setAttribute('id', 'vehicle_' + vehicle.trip_id)
               busIcon.setAttribute('data-bus-id', vehicle.id);
               stopDIV.appendChild(busIcon);
               if (debugMode) {
