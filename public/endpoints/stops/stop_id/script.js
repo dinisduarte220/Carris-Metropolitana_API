@@ -147,23 +147,29 @@ function setSelectedStop(lon, lat, stopId) {
   ])
 
   map.setPaintProperty("points", "circle-radius", [
-    "case",
-    ["==", ["get", "id"], stopId],
-    [
-      "interpolate",
-      ["linear"],
-      ["zoom"],
-      10, 6,
-      14, 10,
-      18, 14
+    "interpolate",
+    ["linear"],
+    ["zoom"],
+
+    10, [
+      "case",
+      ["==", ["get", "id"], stopId],
+      6,  // valor se for o stop selecionado
+      4   // valor se não for
     ],
-    [
-      "interpolate",
-      ["linear"],
-      ["zoom"],
-      10, 4,
-      14, 6,
-      18, 10
+
+    14, [
+      "case",
+      ["==", ["get", "id"], stopId],
+      10,
+      6
+    ],
+
+    18, [
+      "case",
+      ["==", ["get", "id"], stopId],
+      14,
+      10
     ]
   ])
 }
@@ -226,6 +232,7 @@ async function stopInformationDisplay() {
 // Filters
 function filterLines(line_id) {
   const linesContainer = document.getElementById('stopLines')
+  const numOfLines = linesContainer.childElementCount
   if (linesFiltered.includes(line_id)) {
     let index = linesFiltered.indexOf(line_id)
     if (index > -1) {
@@ -236,11 +243,12 @@ function filterLines(line_id) {
   }
   // If there are no lines filtered, activate all
   // If 1 or more lines are filtered just show that ones
-  if (linesFiltered.length === 0) {
+  if (linesFiltered.length === 0 || linesFiltered.length === numOfLines) {
     let allLines = linesContainer.querySelectorAll('.line')
     allLines.forEach(line => {
       line.style.opacity = "1"
     })
+    linesFiltered = []
   } else {
     let allLines = linesContainer.querySelectorAll('.line')
     allLines.forEach(line => {
