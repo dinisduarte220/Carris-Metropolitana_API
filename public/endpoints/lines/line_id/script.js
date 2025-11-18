@@ -78,7 +78,7 @@ async function checkLine() {
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as informações da linha: " + lineId)
   }
 }
-map.on('load', checkLine)
+map.once("style.load", checkLine)
 
 // Deactivate / Reactivate notifications
 function toggleNotifications() {
@@ -131,48 +131,49 @@ async function lineInformationDisplay() {
 
 // Add / Remove to favorite lines
 async function favoriteLines() {
-  try {
-    const response = await fetch('/storage?storage_id=favorite_lines')
-    if (!response.ok) {
-      throw new Error(`[ERROR] Failed to fetch favorite lines: ${response.statusText}`)
-    }
+  snackbar("fa-solid fa-hourglass-start", "Esta função estará disponível em breve")
+  // try {
+  //   const response = await fetch('/storage?storage_id=favorite_lines')
+  //   if (!response.ok) {
+  //     throw new Error(`[ERROR] Failed to fetch favorite lines: ${response.statusText}`)
+  //   }
 
-    let data = await response.json()
+  //   let data = await response.json()
 
-    if (data.includes(lineId)) {
-      // Remove the lineId if it's already a favorite
-      data = data.filter(item => item !== lineId)
-    } else {
-      // Add the lineId if it's not a favorite
-      data.push(lineId)
-    }
-    // Update the favorites on the server
-    const finalRes = await fetch('/storage', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        storage_id: 'favorite_lines',
-        value: data
-      })
-    })
+  //   if (data.includes(lineId)) {
+  //     // Remove the lineId if it's already a favorite
+  //     data = data.filter(item => item !== lineId)
+  //   } else {
+  //     // Add the lineId if it's not a favorite
+  //     data.push(lineId)
+  //   }
+  //   // Update the favorites on the server
+  //   const finalRes = await fetch('/storage', {
+  //     method: 'POST',
+  //     headers: {
+  //       'Content-Type': 'application/json'
+  //     },
+  //     body: JSON.stringify({
+  //       storage_id: 'favorite_lines',
+  //       value: data
+  //     })
+  //   })
 
-    if (!finalRes.ok) {
-      throw new Error(`[ERROR] Failed to update favorite lines: ${finalRes.statusText}`)
-    }
+  //   if (!finalRes.ok) {
+  //     throw new Error(`[ERROR] Failed to update favorite lines: ${finalRes.statusText}`)
+  //   }
 
-    if (data.includes(lineId)) {
-      document.getElementById('favoritesIcon').classList.remove('fa-regular')
-      document.getElementById('favoritesIcon').classList.add('fa-solid')
-    } else {
-      document.getElementById('favoritesIcon').classList.add('fa-regular')
-      document.getElementById('favoritesIcon').classList.remove('fa-solid')
-    }
-  } catch (error) {
-    console.error(error.message)
-    snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as tuas linhas favoritas")
-  }
+  //   if (data.includes(lineId)) {
+  //     document.getElementById('favoritesIcon').classList.remove('fa-regular')
+  //     document.getElementById('favoritesIcon').classList.add('fa-solid')
+  //   } else {
+  //     document.getElementById('favoritesIcon').classList.add('fa-regular')
+  //     document.getElementById('favoritesIcon').classList.remove('fa-solid')
+  //   }
+  // } catch (error) {
+  //   console.error(error.message)
+  //   snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as tuas linhas favoritas")
+  // }
 }
 
 // Custom Select Menus
@@ -546,10 +547,12 @@ async function selectStop(stop_id, stop_sequence, force = false) {
       let scheduledTimesCounter = 0
       try {
         const realTime_data = await getAPI(`patterns/${patternId}/realtime`)
+        console.log(realTime_data)
         const currentUNIX = Math.floor(Date.now() / 1000)
         
         realTime_data.forEach(realTime => {
           let stopMatch = realTime.stop_id == stop_id && realTime.stop_sequence == stop_sequence
+          if (stopMatch) console.log(stopMatch, realTime.observed_arrival, realTime.estimated_arrival, realTime.estimated_arrival_unix)
 
           if (stopMatch && realTime.observed_arrival === null && realTime.estimated_arrival !== null && realTime.estimated_arrival_unix > currentUNIX) {
             let newRealTime = document.createElement('p')
@@ -1001,7 +1004,9 @@ async function updateTimes_vehicles() {
 
     const source = map.getSource("pointsbus");
     if (source) {
-      const data = source._data;
+      let data = JSON.parse(JSON.stringify(source._data));
+      data = data.geojson
+      console.log(data)
 
       // Remove vehicles that have completed the line
       data.features = data.features.filter(f => 

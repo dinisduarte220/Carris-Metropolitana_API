@@ -33,9 +33,10 @@
         <a href="#" onclick="window.history.length > 1 ? history.back() : window.location.href = '/lines'"><i class="fa-solid fa-angle-left"></i></a>
         <div id="lineNumber">0000</div>
         <div id="lineName">Percurso</div>
-        <i onclick="favoriteLines()" id="favoritesIcon" class="fa-regular fa-heart" title="Favoritos"></i>
+        <i onclick="favoriteLines()" style="cursor: not-allowed;" id="favoritesIcon" class="fa-regular fa-heart" title="Favoritos"></i>
         <i onclick="toggleNotifications()" id="notificationsIcon" class="fa-regular fa-bell" title="Notificações"></i>
         <i onclick="togglePictureInPicture()" id="pipIcon" class="fa-regular fa-clone" title="MiniLeitor"></i>
+        <i onclick="toggleAlerts()" id="alertsIcon" class="fa-solid fa-triangle-exclamation" title="Alertas para esta linha"></i>
     </div>
     <div id="lineParameters">
         <div id="patternSelect">

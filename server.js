@@ -50,6 +50,8 @@ const settingsFilePath = path.join(__dirname, 'JSON', 'settings.json');
 app.use('/lines', express.static(path.join(__dirname, 'public', 'endpoints', 'lines')))
 // Stops Endpoint
 app.use('/stops', express.static(path.join(__dirname, 'public', 'endpoints', 'stops')))
+// Settings Endpoint
+app.use('/settings', express.static(path.join(__dirname, 'public', 'endpoints', 'settings')))
 
 // Lines Endpoint - Details for a specific Line
 app.use('/lines/:line_id', express.static(path.join(__dirname, 'public', 'endpoints', 'lines', 'line_id')))
