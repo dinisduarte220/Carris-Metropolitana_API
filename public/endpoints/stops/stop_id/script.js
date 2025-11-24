@@ -6,6 +6,9 @@ let linesFiltered = []
 // Picture in Picture Element
 let pipWindow = null
 
+// Local countdowns
+let lastUpdate_interval
+
 // DEBUG Mode
 let debugMode = false
 
@@ -44,6 +47,7 @@ async function checkStop() {
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as informações da paragem: " + stopId)
   }
 }
+
 // Make sure the map is loaded before executing any function
 map.on('load', checkStop) 
 
@@ -852,8 +856,9 @@ async function updateArrivals() {
 let lineStringGeojson
 async function selectTrip(stop_sequence, trip_id, pattern_id, color, vehicle_id) {
   try {
-    const activePatternDisplay = document.getElementById('activePatternText')
-
+    if (lastUpdate_interval) {
+      clearInterval(lastUpdate_interval)
+    }
     if (debugMode) {
       console.log(`Trip ID: ${trip_id}\nVehicle ID: ${vehicle_id}\nPattern ID: ${pattern_id}`)
     }
@@ -1153,7 +1158,13 @@ async function selectTrip(stop_sequence, trip_id, pattern_id, color, vehicle_id)
         if (vehicle_data && thisArrival.vehicle_id !== null) {
           let newUpdatedTime_item = document.querySelector('.arrivalTime.active .newUpdatedTime')
           const currentUNIX = Math.floor(Date.now() / 1000);
-          newUpdatedTime_item.innerText = `Atualizado há: ${currentUNIX - vehicle_data.timestamp} segundos`
+          let startTime = currentUNIX - vehicle_data.timestamp
+          let lastUpdated = startTime
+          lastUpdate_interval = setInterval(() => {
+            lastUpdated = lastUpdated + 1
+            newUpdatedTime_item.innerText = `Atualizado há: ${lastUpdated} segundos`
+          }, 1000);
+          newUpdatedTime_item.innerText = `Atualizado há: ${lastUpdated} segundos`
         }
       }
     }
@@ -1174,7 +1185,8 @@ async function updateVehicle(vehicle_id) {
 
     const source = map.getSource("pointsbus");
     if (source) {
-      const data = source._data;
+      const raw = source._data;
+      const data = raw.geojson;
       const coords = [vehicle_data.lon, vehicle_data.lat];
       const feature = data.features.find(f => f.properties.name === vehicle_data.id);
       if (feature) {

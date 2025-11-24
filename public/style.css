@@ -65,6 +65,8 @@ body {
   font-weight: 600;
   z-index: 9999999;
   width: max-content;
+  max-width: 90vw;
+  text-align: center;
   animation: snackbar_anim .5s ease;
 }
 
