@@ -169,16 +169,18 @@ body {
   border: 2px dashed #ccc;
 }
 
-#homeGrid .gridItem .itemsContainer .loadingItem {
+.loadingItem {
   width: 100%;
   height: 52px;
   background-color: rgb(50, 50, 50);
   border-radius: 5px;
   position: relative;
   overflow: hidden;
+  max-width: 80vw;
+  transition: width 0s;
 }
 
-#homeGrid .gridItem .itemsContainer .loadingItem::before {
+.loadingItem::before {
   content: "";
   position: absolute;
   top: 0;

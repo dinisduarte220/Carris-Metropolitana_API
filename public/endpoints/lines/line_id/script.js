@@ -466,6 +466,83 @@ async function selectStop(stop_id, stop_sequence, force = false) {
     const stopDiv = document.getElementById(stop_sequence + '_newStop_' + stop_id)
     const stopsContainer = document.getElementById('stopsContainer')
 
+    const previousSchedules = stopsContainer.querySelectorAll('.newStop .schedule')
+    const previousScheduleTitles = stopsContainer.querySelectorAll('.newStop .scheduleTitle')
+    const previousStopDetails = stopsContainer.querySelectorAll('.newStop .stopDetails')
+    const previousArrivalTimes = stopsContainer.querySelectorAll('.newStop .arrivalTimes')
+    const previousArrivalTimesTitle = stopsContainer.querySelectorAll('.newStop .arrivalTimesTitle')
+    const previousSkeletons = stopsContainer.querySelectorAll('.newStop .loadingItem')
+    previousArrivalTimes.forEach(schedule => schedule.remove())
+    previousArrivalTimesTitle.forEach(schedule => schedule.remove())
+    previousSchedules.forEach(schedule => schedule.remove())
+    previousScheduleTitles.forEach(schedule => schedule.remove())
+    previousStopDetails.forEach(schedule => schedule.remove())
+    previousSkeletons.forEach(schedule => schedule.remove())
+
+    // Arrival times title
+    let arrivalTimesTitle = document.createElement('p')
+    arrivalTimesTitle.setAttribute('class', 'arrivalTimesTitle')
+    arrivalTimesTitle.innerHTML = 'Próximas passagens:'
+    stopDiv.appendChild(arrivalTimesTitle)
+
+    // Skeleton Loader for arrival time
+    let arrivalTimes = document.createElement('div')
+    arrivalTimes.setAttribute('class', 'arrivalTimes')
+
+    let arrivalTimes_icon = document.createElement('i')
+    arrivalTimes_icon.setAttribute('class', 'fa-regular fa-clock')
+    arrivalTimes.appendChild(arrivalTimes_icon)
+
+    for (let i = 0; i < 3; i++) {
+      let newSkeleton_arrivalTime = document.createElement('div')
+      newSkeleton_arrivalTime.classList.add('loadingItem')
+      newSkeleton_arrivalTime.style.width = "50px"
+      newSkeleton_arrivalTime.style.height = "20px"
+      arrivalTimes.appendChild(newSkeleton_arrivalTime)
+    }
+    stopDiv.appendChild(arrivalTimes)
+
+    // Schedule Title
+    let scheduleTitle = document.createElement('p')
+    scheduleTitle.setAttribute('class', 'scheduleTitle')
+    scheduleTitle.innerHTML = "Horário para esta paragem:"
+    stopDiv.appendChild(scheduleTitle)
+
+    // Skeleton Loader for schedule
+    let newSkeleton_schedule = document.createElement('div')
+    newSkeleton_schedule.setAttribute('class', 'schedule')
+    newSkeleton_schedule.className = "schedule loadingItem"
+    newSkeleton_schedule.style.width = "min(600px, 90% of viewport width)"
+    newSkeleton_schedule.style.height = "125px"
+    newSkeleton_schedule.style.borderRadius = "15px"
+    stopDiv.appendChild(newSkeleton_schedule)
+
+    let stopDetails = document.createElement('a')
+    stopDetails.setAttribute('class', 'stopDetails')
+    stopDetails.setAttribute('href', '/stops/' + stop_id)
+    stopDetails.setAttribute('target', '_blank')
+    stopDetails.setAttribute('rel', 'noopener noreferrer')
+    stopDetails.innerHTML = 'Ver paragem <i class="fa-solid fa-arrow-up-right-from-square"></i>'
+    stopDiv.appendChild(stopDetails)
+
+    // Create a new timetable for the selected stop
+    let scheduleContainer = document.createElement('div')
+    scheduleContainer.setAttribute('class', 'timeTable')
+
+    let texts = document.createElement("ul")
+    texts.setAttribute("class", "timeTable_indicators")
+
+    let hoursText = document.createElement("li")
+    hoursText.innerText = "Hora"
+    texts.appendChild(hoursText)
+    let minutesText = document.createElement("li")
+    minutesText.innerText = "Min."
+    texts.appendChild(minutesText)
+
+    scheduleContainer.appendChild(texts)
+
+    // return
+
     let schedules = [], trips = []
 
     const dateSelected = document.getElementById('date_input').value
@@ -487,143 +564,7 @@ async function selectStop(stop_id, stop_sequence, force = false) {
       }
     })
 
-    // Create a new timetable for the selected stop
-    let scheduleContainer = document.createElement('div')
-    scheduleContainer.setAttribute('class', 'timeTable')
-
-    let texts = document.createElement("ul")
-    texts.setAttribute("class", "timeTable_indicators")
-
-    let hoursText = document.createElement("li")
-    hoursText.innerText = "Hora"
-    texts.appendChild(hoursText)
-    let minutesText = document.createElement("li")
-    minutesText.innerText = "Min."
-    texts.appendChild(minutesText)
-
-    scheduleContainer.appendChild(texts)
-
-    // Create timetable
-    let verifiedHours = []
-    for (let i = 0; i < schedules.length; i++) {
-      let currentTime = schedules[i].substring(0, 2)
-
-      if (!verifiedHours.includes(currentTime)) {
-        verifiedHours.push(currentTime)
-
-        let ul = document.createElement("ul")
-        ul.setAttribute("class", "timeTable_times")
-
-        let hour = document.createElement("li")
-        hour.innerText = currentTime
-
-        ul.appendChild(hour)
-
-        for (let j = 0; j < schedules.length; j++) {
-          if (schedules[j].substring(0, 2) === currentTime) {
-            let minute = document.createElement("li")
-            minute.innerText = schedules[j].substring(3, 5)
-            minute.setAttribute('onclick', `markTime("${trips[j]}")`)
-
-            if (trips[j] === tripId) {
-              minute.classList.add('marked')
-            }
-
-            ul.appendChild(minute)
-          }
-        }
-        scheduleContainer.appendChild(ul)
-      }
-    }
-    // Just show next arrivals if the selected date is for the current day
-    let hasArrivals = false
-    // Display next arrivals (real time / scheduled)
-    let arrivalTimes = document.createElement('div')
-    arrivalTimes.setAttribute('class', 'arrivalTimes')
-    let arrivalTimes_icon = document.createElement('i')
-    arrivalTimes_icon.setAttribute('class', 'fa-regular fa-clock')
-    arrivalTimes.appendChild(arrivalTimes_icon)
-    if (changedDate === currentDate) {
-      let scheduledTimesCounter = 0
-      try {
-        const realTime_data = await getAPI(`patterns/${patternId}/realtime`)
-        console.log(realTime_data)
-        const currentUNIX = Math.floor(Date.now() / 1000)
-        
-        realTime_data.forEach(realTime => {
-          let stopMatch = realTime.stop_id == stop_id && realTime.stop_sequence == stop_sequence
-          if (stopMatch) console.log(stopMatch, realTime.observed_arrival, realTime.estimated_arrival, realTime.estimated_arrival_unix)
-
-          if (stopMatch && realTime.observed_arrival === null && realTime.estimated_arrival !== null && realTime.estimated_arrival_unix > currentUNIX) {
-            let newRealTime = document.createElement('p')
-            newRealTime.setAttribute('class', 'realTime')
-            newRealTime.setAttribute('id', realTime.stop_sequence + "_arrivalTime_" + realTime.trip_id)
-            let arrivalTime = Math.floor((realTime.estimated_arrival_unix - currentUNIX) / 60)
-            if (arrivalTime < 1) {
-              newRealTime.innerText = "A chegar"
-            } else {
-              newRealTime.innerText = arrivalTime + " min"
-            }
-            arrivalTimes.appendChild(newRealTime)
-            hasArrivals = true
-          } else if (stopMatch && realTime.observed_arrival === null && realTime.estimated_arrival === null && realTime.scheduled_arrival_unix > currentUNIX && scheduledTimesCounter < 3) {
-            let newScheduleTime = document.createElement('p')
-            newScheduleTime.setAttribute('class', 'scheduleTime')
-            newScheduleTime.setAttribute('id', realTime.stop_sequence + "_arrivalTime_" + realTime.trip_id)
-            // Handle hours after 24h
-            let rawTime = realTime.scheduled_arrival
-            let hours = parseInt(rawTime.substring(0, 2)) % 24
-            let minutes = rawTime.substring(3, 5)
-            let normalizedTime = `${hours.toString().padStart(2, '0')}:${minutes}`
-            scheduledTimesCounter++
-            newScheduleTime.innerText = normalizedTime
-            arrivalTimes.appendChild(newScheduleTime)
-            hasArrivals = true
-          }
-        })
-      } catch (error) {
-        console.error(error.message)
-        snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as próximas passagens nesta paragem")
-      }
-    }
-
-    if (updateInterval_stop) clearInterval(updateInterval_stop);
-        updateInterval_stop = setInterval(() => updateStopArrivals(stop_id), 10000);
-    // Remove all existing schedules in the stops container
-    const previousSchedules = stopsContainer.querySelectorAll('.newStop .timeTable')
-    const previousScheduleTitles = stopsContainer.querySelectorAll('.newStop .scheduleTitle')
-    const previousStopDetails = stopsContainer.querySelectorAll('.newStop .stopDetails')
-    const previousArrivalTimes = stopsContainer.querySelectorAll('.newStop .arrivalTimes')
-    const previousArrivalTimesTitle = stopsContainer.querySelectorAll('.newStop .arrivalTimesTitle')
-    previousArrivalTimes.forEach(schedule => schedule.remove())
-    previousArrivalTimesTitle.forEach(schedule => schedule.remove())
-    previousSchedules.forEach(schedule => schedule.remove())
-    previousScheduleTitles.forEach(schedule => schedule.remove())
-    previousStopDetails.forEach(schedule => schedule.remove())
-    // Add next arrival times
-    if (hasArrivals) {
-      let arrivalTimesTitle = document.createElement('p')
-      arrivalTimesTitle.setAttribute('class', 'arrivalTimesTitle')
-      arrivalTimesTitle.innerHTML = 'Próximas passagens:'
-      stopDiv.appendChild(arrivalTimesTitle)
-      stopDiv.appendChild(arrivalTimes)
-    }
-    // Add the new schedule
-    let scheduleTitle = document.createElement('p')
-    scheduleTitle.setAttribute('class', 'scheduleTitle')
-    scheduleTitle.innerHTML = "Horário para esta paragem:"
-    stopDiv.appendChild(scheduleTitle)
-    stopDiv.appendChild(scheduleContainer)
-
-    let stopDetails = document.createElement('a')
-    stopDetails.setAttribute('class', 'stopDetails')
-    stopDetails.setAttribute('href', '/stops/' + stop_id)
-    stopDetails.setAttribute('target', '_blank')
-    stopDetails.setAttribute('rel', 'noopener noreferrer')
-    stopDetails.innerHTML = 'Ver paragem <i class="fa-solid fa-arrow-up-right-from-square"></i>'
-    stopDiv.appendChild(stopDetails)
-
-    const clickedFeature = pointFeatures.find(feature => feature.properties.id === stop_id);
+        const clickedFeature = pointFeatures.find(feature => feature.properties.id === stop_id);
     if (clickedFeature) {
       // Zoom and center to the select stop
       map.flyTo({
@@ -662,6 +603,100 @@ async function selectStop(stop_id, stop_sequence, force = false) {
     })
     stopId = stop_id
     stopSequence = stop_sequence
+
+    // Create timetable
+    let verifiedHours = []
+    for (let i = 0; i < schedules.length; i++) {
+      let currentTime = schedules[i].substring(0, 2)
+
+      if (!verifiedHours.includes(currentTime)) {
+        verifiedHours.push(currentTime)
+
+        let ul = document.createElement("ul")
+        ul.setAttribute("class", "timeTable_times")
+
+        let hour = document.createElement("li")
+        hour.innerText = currentTime
+
+        ul.appendChild(hour)
+
+        for (let j = 0; j < schedules.length; j++) {
+          if (schedules[j].substring(0, 2) === currentTime) {
+            let minute = document.createElement("li")
+            minute.innerText = schedules[j].substring(3, 5)
+            minute.setAttribute('onclick', `markTime("${trips[j]}")`)
+
+            if (trips[j] === tripId) {
+              minute.classList.add('marked')
+            }
+
+            ul.appendChild(minute)
+          }
+        }
+        scheduleContainer.appendChild(ul)
+      }
+    }
+    // Just show next arrivals if the selected date is for the current day
+    let hasArrivals = false
+    let arrivalTimes_temp = document.createElement('div')
+    if (changedDate === currentDate) {
+      let scheduledTimesCounter = 0
+      try {
+        const realTime_data = await getAPI(`patterns/${patternId}/realtime`)
+        const currentUNIX = Math.floor(Date.now() / 1000)
+        
+        realTime_data.forEach(realTime => {
+          let stopMatch = realTime.stop_id == stop_id && realTime.stop_sequence == stop_sequence
+
+          if (stopMatch && realTime.observed_arrival === null && realTime.estimated_arrival !== null && realTime.estimated_arrival_unix > currentUNIX) {
+            let newRealTime = document.createElement('p')
+            newRealTime.setAttribute('class', 'realTime')
+            newRealTime.setAttribute('id', realTime.stop_sequence + "_arrivalTime_" + realTime.trip_id)
+            let arrivalTime = Math.floor((realTime.estimated_arrival_unix - currentUNIX) / 60)
+            if (arrivalTime < 1) {
+              newRealTime.innerText = "A chegar"
+            } else {
+              newRealTime.innerText = arrivalTime + " min"
+            }
+            arrivalTimes_temp.appendChild(newRealTime)
+            hasArrivals = true
+          } else if (stopMatch && realTime.observed_arrival === null && realTime.estimated_arrival === null && realTime.scheduled_arrival_unix > currentUNIX && scheduledTimesCounter < 5) {
+            let newScheduleTime = document.createElement('p')
+            newScheduleTime.setAttribute('class', 'scheduleTime')
+            newScheduleTime.setAttribute('id', realTime.stop_sequence + "_arrivalTime_" + realTime.trip_id)
+            // Handle hours after 24h
+            let rawTime = realTime.scheduled_arrival
+            let hours = parseInt(rawTime.substring(0, 2)) % 24
+            let minutes = rawTime.substring(3, 5)
+            let normalizedTime = `${hours.toString().padStart(2, '0')}:${minutes}`
+            scheduledTimesCounter++
+            newScheduleTime.innerText = normalizedTime
+            arrivalTimes_temp.appendChild(newScheduleTime)
+            hasArrivals = true
+          }
+        })
+      } catch (error) {
+        console.error(error.message)
+        snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as próximas passagens nesta paragem")
+      }
+    }
+
+    if (updateInterval_stop) clearInterval(updateInterval_stop);
+        updateInterval_stop = setInterval(() => updateStopArrivals(stop_id), 10000);
+    // Add next arrival times
+    console.log("Temp arrivals:", arrivalTimes_temp.childNodes.length)
+    if (hasArrivals) {
+      arrivalTimes.querySelectorAll('.loadingItem').forEach(el => el.remove())
+
+      Array.from(arrivalTimes_temp.childNodes).forEach(el => arrivalTimes.appendChild(el))
+    }
+
+    // Add the new schedule
+    let scheduleSkeleton = stopDiv.querySelector('.schedule.loadingItem')
+    scheduleSkeleton.replaceWith(scheduleContainer)
+    // stopDiv.appendChild(scheduleTitle)
+    // stopDiv.appendChild(scheduleContainer)
+
     updatePipArrivals()
   } catch (error) {
     console.error(error.stack)
@@ -674,7 +709,7 @@ function deselectStop(stop_id) {
   const stopDiv = document.getElementById(params.stop_sequence + '_newStop_' + stop_id)
 
   // Clear stop-specific UI elements
-  const previousSchedules = stopDiv.querySelectorAll('.timeTable, .scheduleTitle, .stopDetails, .arrivalTimes, .arrivalTimesTitle')
+  const previousSchedules = stopDiv.querySelectorAll('.loadingItem, .timeTable, .schedule, .scheduleTitle, .stopDetails, .arrivalTimes, .arrivalTimesTitle')
   previousSchedules.forEach(el => el.remove())
 
   // Reset map styling
