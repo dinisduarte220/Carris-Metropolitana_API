@@ -466,7 +466,13 @@ async function selectStop(stop_id, stop_sequence, force = false) {
     const stopDiv = document.getElementById(stop_sequence + '_newStop_' + stop_id)
     const stopsContainer = document.getElementById('stopsContainer')
 
+    stopDiv.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    })
+
     const previousSchedules = stopsContainer.querySelectorAll('.newStop .schedule')
+    const previousTimeTable = stopsContainer.querySelectorAll('.newStop .timeTable')
     const previousScheduleTitles = stopsContainer.querySelectorAll('.newStop .scheduleTitle')
     const previousStopDetails = stopsContainer.querySelectorAll('.newStop .stopDetails')
     const previousArrivalTimes = stopsContainer.querySelectorAll('.newStop .arrivalTimes')
@@ -478,6 +484,7 @@ async function selectStop(stop_id, stop_sequence, force = false) {
     previousScheduleTitles.forEach(schedule => schedule.remove())
     previousStopDetails.forEach(schedule => schedule.remove())
     previousSkeletons.forEach(schedule => schedule.remove())
+    previousTimeTable.forEach(schedule => schedule.remove())
 
     // Arrival times title
     let arrivalTimesTitle = document.createElement('p')
@@ -597,10 +604,6 @@ async function selectStop(stop_id, stop_sequence, force = false) {
           3
       ])
     }
-    stopDiv.scrollIntoView({
-      behavior: 'smooth',
-      block: 'center',
-    })
     stopId = stop_id
     stopSequence = stop_sequence
 
@@ -660,7 +663,7 @@ async function selectStop(stop_id, stop_sequence, force = false) {
             }
             arrivalTimes_temp.appendChild(newRealTime)
             hasArrivals = true
-          } else if (stopMatch && realTime.observed_arrival === null && realTime.estimated_arrival === null && realTime.scheduled_arrival_unix > currentUNIX && scheduledTimesCounter < 5) {
+          } else if (stopMatch && realTime.observed_arrival === null && realTime.estimated_arrival === null && realTime.scheduled_arrival_unix > currentUNIX && scheduledTimesCounter < 3) {
             let newScheduleTime = document.createElement('p')
             newScheduleTime.setAttribute('class', 'scheduleTime')
             newScheduleTime.setAttribute('id', realTime.stop_sequence + "_arrivalTime_" + realTime.trip_id)
@@ -689,6 +692,11 @@ async function selectStop(stop_id, stop_sequence, force = false) {
       arrivalTimes.querySelectorAll('.loadingItem').forEach(el => el.remove())
 
       Array.from(arrivalTimes_temp.childNodes).forEach(el => arrivalTimes.appendChild(el))
+    } else {
+      arrivalTimes.querySelectorAll('.loadingItem').forEach(el => el.remove())
+      let noArrivalsMessage = document.createElement('p')
+      noArrivalsMessage.innerText = "Sem próximas passagens neste dia"
+      arrivalTimes.appendChild(noArrivalsMessage)
     }
 
     // Add the new schedule

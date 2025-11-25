@@ -210,6 +210,8 @@ body {
     gap: 10px;
     align-items: center;
     margin-left: 5px;
+    max-width: 90vw;
+    flex-wrap: wrap;
 }
 #lineStops #stopsContainer .newStop .arrivalTimes .realTime {
     color: rgb(0, 205, 50);
