@@ -443,12 +443,23 @@ body {
   }
   #modalFavorites #favoriteType {
     width: calc(80% - 10px);
-    font-weight: 14px;
+    font-size: 14px;
     align-items: center;
   }
   #modalFavorites i {
     font-size: 16px;
+  }
 }
+@media only screen and (max-width: 400px) {
+  #topBar img {
+    height: 1.5rem;
+  }
+  #topBar #links a {
+    padding: 5px 10px;
+    font-size: 12px;
+    margin-right: 10px;
+    word-spacing: 5px;
+  }
 }
 
 /* Credits */
