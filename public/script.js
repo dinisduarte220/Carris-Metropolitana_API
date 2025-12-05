@@ -163,6 +163,8 @@ async function getFavorites() {
     const response = await fetch('/storage')
     const container = document.getElementById('favoriteRoutes_container')
 
+    let tempFavoritesContainer = document.createElement('div')
+
     while (container.firstChild) {
       container.removeChild(container.firstChild)
     }
@@ -172,42 +174,60 @@ async function getFavorites() {
     }
 
     const favorites = await response.json()
-    favorites.forEach(item => {
-      if (item.type === "line") {
-        let newLine = document.createElement('a')
-        newLine.classList.add('item')
-        newLine.classList.add('line')
-        newLine.setAttribute('href', `/lines/${item.id}`)
-        let lineNumber = document.createElement('p')
-        lineNumber.setAttribute('class', 'lineID')
-        lineNumber.style.backgroundColor = item.color
-        lineNumber.innerText = item.id
-        let lineName = document.createElement('p')
-        lineName.setAttribute('class', 'lineName')
-        lineName.innerText = item.text
-        // Append number and name to the line DIV
-        newLine.appendChild(lineNumber)
-        newLine.appendChild(lineName)
-        // Append the new line to the main container
-        container.appendChild(newLine)
-      } else {
-        let newStop = document.createElement('a')
-        newStop.classList.add('item')
-        newStop.classList.add('stop')
-        newStop.setAttribute('href', `stops/${item.id}`)
-        let stopID = document.createElement('p')
-        stopID.setAttribute('class', 'stopID')
-        stopID.innerText = "#" + item.id
-        let stopName = document.createElement('p')
-        stopName.setAttribute('class', 'stopName')
-        stopName.innerText = item.text
-        // Append ID and name to the stop DIV
-        newStop.appendChild(stopID)
-        newStop.appendChild(stopName)
-        // Append the new line to the main container
-        container.appendChild(newStop)
-      }
-    })
+    for (let i = 0; i < favorites.length; i++) {
+      let newFavorite_skeleton = document.createElement('div')
+      newFavorite_skeleton.className = "loadingItem"
+
+      container.appendChild(newFavorite_skeleton)
+    }
+    try {
+      const lines_data = await getAPI("lines")
+      const stops_data = await getAPI("stops")
+
+      favorites.forEach(item => {
+        if (item.type === "line") {
+          const line_data = lines_data.filter(line => line.id.toLowerCase().includes(item.id))
+          let newLine = document.createElement('a')
+          newLine.classList.add('item')
+          newLine.classList.add('line')
+          newLine.setAttribute('href', `/lines/${item.id}`)
+          let lineNumber = document.createElement('p')
+          lineNumber.setAttribute('class', 'lineID')
+          lineNumber.style.backgroundColor = line_data[0].color
+          lineNumber.innerText = item.id
+          let lineName = document.createElement('p')
+          lineName.setAttribute('class', 'lineName')
+          lineName.innerText = line_data[0].long_name
+          // Append number and name to the line DIV
+          newLine.appendChild(lineNumber)
+          newLine.appendChild(lineName)
+          // Append the new line to the main container
+          tempFavoritesContainer.appendChild(newLine)
+        } else {
+          const stop_data = stops_data.filter(stop => stop.id.toLowerCase().includes(item.id))
+          let newStop = document.createElement('a')
+          newStop.classList.add('item')
+          newStop.classList.add('stop')
+          newStop.setAttribute('href', `stops/${item.id}`)
+          let stopID = document.createElement('p')
+          stopID.setAttribute('class', 'stopID')
+          stopID.innerText = "#" + item.id
+          let stopName = document.createElement('p')
+          stopName.setAttribute('class', 'stopName')
+          stopName.innerText = stop_data[0].name
+          // Append ID and name to the stop DIV
+          newStop.appendChild(stopID)
+          newStop.appendChild(stopName)
+          // Append the new line to the main container
+          tempFavoritesContainer.appendChild(newStop)
+        }
+      })
+    } catch (error) {
+      console.error(error.message)
+      snackbar("fa-solid fa-triangle-exclamation", "Não foi possivel carregar os seus favoritos")
+    }
+    container.querySelectorAll('.loadingItem').forEach(el => el.remove())
+    Array.from(tempFavoritesContainer.childNodes).forEach(el => container.appendChild(el))
     enableDragAndDrop()
   } catch (error) {
     console.error(error.message)
