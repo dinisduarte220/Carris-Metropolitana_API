@@ -946,7 +946,7 @@ async function selectTrip(stop_sequence, trip_id, pattern_id, color, vehicle_id)
           "line-width": 4
         }
       })
-      let vehicle_data = await getAPI("vehicles")
+      let vehicle_data = await getAPI_v2("vehicles")
       vehicle_data = vehicle_data.find(vehicle => vehicle.id === vehicle_id)
       if (!vehicle_id || vehicle_id === null || !vehicle_data) {
         const allCoordinates = lineStringGeojson.features[0].geometry.coordinates
