@@ -1230,9 +1230,14 @@ async function updateVehicle(vehicle_id) {
       if (lastUpdate_interval) {
         clearInterval(lastUpdate_interval)
       }
-      if (newUpdatedTime_item) {
       const currentUNIX = Math.floor(Date.now() / 1000);
-      newUpdatedTime_item.innerText = `Atualizado há: ${currentUNIX - vehicle_data.timestamp} segundos`
+      let lastUpdated = currentUNIX - vehicle_data.timestamp
+      lastUpdate_interval = setInterval(() => {
+          lastUpdated = lastUpdated + 1
+          newUpdatedTime_item.innerText = `Atualizado há: ${lastUpdated} segundos`
+      }, 1000);
+      if (newUpdatedTime_item) {
+      newUpdatedTime_item.innerText = `Atualizado há: ${lastUpdated} segundos`
     }
   } catch (error) {
     console.error(error.message)
