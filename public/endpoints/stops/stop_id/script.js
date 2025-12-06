@@ -1176,7 +1176,7 @@ async function selectTrip(stop_sequence, trip_id, pattern_id, color, vehicle_id)
 
 async function updateVehicle(vehicle_id) {
   try {
-    let vehicle_data = await getAPI("vehicles")
+    let vehicle_data = await getAPI_v2("vehicles")
     vehicle_data = vehicle_data.find(vehicle => vehicle.id === vehicle_id)
 
     const busCoords = [vehicle_data.lon, vehicle_data.lat]
