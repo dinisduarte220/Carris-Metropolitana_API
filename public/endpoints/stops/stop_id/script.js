@@ -1227,6 +1227,9 @@ async function updateVehicle(vehicle_id) {
     }
 
       let newUpdatedTime_item = document.querySelector('.arrivalTime.active .newUpdatedTime')
+      if (lastUpdate_interval) {
+        clearInterval(lastUpdate_interval)
+      }
       if (newUpdatedTime_item) {
       const currentUNIX = Math.floor(Date.now() / 1000);
       newUpdatedTime_item.innerText = `Atualizado há: ${currentUNIX - vehicle_data.timestamp} segundos`
