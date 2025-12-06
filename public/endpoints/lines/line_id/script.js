@@ -921,7 +921,7 @@ async function loadVehicles() {
     return
   }
   try {
-    const vehicle_data = await getAPI("vehicles")
+    const vehicle_data = await getAPI_v2("vehicles")
     let pointFeatures = []
     vehicle_data.forEach(vehicle => {
       if (vehicle.pattern_id === patternId) {
