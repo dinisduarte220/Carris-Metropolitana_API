@@ -1176,7 +1176,7 @@ async function selectTrip(stop_sequence, trip_id, pattern_id, color, vehicle_id)
 
 async function updateVehicle(vehicle_id) {
   try {
-    let vehicle_data = await getAPI("vehicles")
+    let vehicle_data = await getAPI_v2("vehicles")
     vehicle_data = vehicle_data.find(vehicle => vehicle.id === vehicle_id)
 
     const busCoords = [vehicle_data.lon, vehicle_data.lat]
@@ -1227,9 +1227,17 @@ async function updateVehicle(vehicle_id) {
     }
 
       let newUpdatedTime_item = document.querySelector('.arrivalTime.active .newUpdatedTime')
-      if (newUpdatedTime_item) {
+      if (lastUpdate_interval) {
+        clearInterval(lastUpdate_interval)
+      }
       const currentUNIX = Math.floor(Date.now() / 1000);
-      newUpdatedTime_item.innerText = `Atualizado há: ${currentUNIX - vehicle_data.timestamp} segundos`
+      let lastUpdated = currentUNIX - vehicle_data.timestamp
+      lastUpdate_interval = setInterval(() => {
+          lastUpdated = lastUpdated + 1
+          newUpdatedTime_item.innerText = `Atualizado há: ${lastUpdated} segundos`
+      }, 1000);
+      if (newUpdatedTime_item) {
+      newUpdatedTime_item.innerText = `Atualizado há: ${lastUpdated} segundos`
     }
   } catch (error) {
     console.error(error.message)
