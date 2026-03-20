@@ -206,7 +206,8 @@ async function loadRoutes() {
     let firstPatternSet = false // Flag to set the active pattern text only once
 
     for (const route of routes) {
-      const route_data = await getAPI("routes/" + route)
+      const all_routes_data = await getAPI_v2("routes")
+      const route_data = all_routes_data.filter(route_result => route_result.id === route)[0]
 
       // Add the route header with a letter
       let newRoute = document.createElement('div')
@@ -216,9 +217,14 @@ async function loadRoutes() {
       routeLetter++
 
       // Fetch and add patterns for the route
-      let patterns = route_data.patterns
+      let patterns = route_data.pattern_ids
       for (const pattern of patterns) {
-        const pattern_data = await getAPI("patterns/" + pattern)
+        const all_patterns_data = await getAPI_v2("patterns/" + pattern)
+        const dateSelected = document.getElementById('date_input').value
+        let changedDate = dateSelected.replace(/-/g, '')
+        
+        // TODO - Patterns estao a ser validados pelo dia selecionado. O que nao deve acontecer pois este foreach é para os mostrar no selet dos percursos/sentidos. Fazer apenas a verificação se o pattern ja foi colocado no select
+        const pattern_data = all_patterns_data.filter(pattern_result => pattern_result.valid_on.includes(changedDate))[0]
         let newPattern = document.createElement('div')
         newPattern.setAttribute('class', 'newPattern')
         newPattern.setAttribute('id', 'newPattern_' + pattern_data.id)
@@ -240,7 +246,7 @@ async function loadRoutes() {
       firstPatternSet = true
     }
   } catch (error) {
-    console.error(error.message)
+    console.error(error.stack)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as rotas / sentidos para esta linha")
   }
 }
@@ -267,10 +273,13 @@ async function selectPattern(pattern_id) {
 
   // Change active pattern name on select menu
   try {
-    const data = await getAPI("patterns/" + pattern_id)
+    const dateSelected = document.getElementById('date_input').value
+    let changedDate = dateSelected.replace(/-/g, '')
+    const all_patterns_data = await getAPI_v2("patterns/" + pattern_id)
+    const data = all_patterns_data.filter(pattern_result => pattern_result.valid_on.includes(changedDate))[0]
     activePatternDisplay.innerText = data.headsign
   } catch (error) {
-    console.error(error.message)
+    console.error(error.stack)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as rotas / sentidos para esta linha")
   }
 
@@ -327,7 +336,10 @@ async function loadStops() {
     if (map.getSource("points")) map.removeSource("points")
   }
   try {
-    const data = await getAPI("patterns/" + patternId)
+    const dateSelected = document.getElementById('date_input').value
+    let changedDate = dateSelected.replace(/-/g, '')
+    const all_patterns_data = await getAPI_v2("patterns/" + patternId)
+    const data = all_patterns_data.filter(pattern_result => pattern_result.valid_on.includes(changedDate))[0]
     patternColor = data.color
     document.getElementById('stopsBorder').style.backgroundColor = data.color
     // Set and clear the stops container
@@ -338,36 +350,37 @@ async function loadStops() {
     // }
 
     let stops = data.path
-    stops.forEach(stop => {
-      allStops.push({id: stop.stop.id, sequence: stop.stop_sequence})
-      let coords = [stop.stop.lon, stop.stop.lat]
+    const stops_data = await getAPI_v2("stops")
+    stops.forEach( async stop_data => {
+      const stop = stops_data.filter(stop_result => stop_result.id == stop_data.stop_id)[0]
+      allStops.push({id: stop.id, sequence: stop_data.stop_sequence})
+      let coords = [stop.lon, stop.lat]
       pointFeatures.push({
         type: "Feature",
         properties: {
-          name: stop.stop.name,
-          id: stop.stop.id,
-          stop_sequence: stop.stop_sequence,
-          description: `Name: <b>${stop.stop.name}</b><br>
-            ID: <b>${stop.stop.id}</b><br>
-            Stop Sequence: <b>${stop.stop_sequence}</b><br>`
+          name: stop.long_name,
+          id: stop.id,
+          stop_sequence: stop_data.stop_sequence,
+          description: `Name: <b>${stop.long_name}</b><br>
+            ID: <b>${stop.id}</b><br>
+            Stop Sequence: <b>${stop_data.stop_sequence}</b><br>`
         },
         geometry: { type: "Point", coordinates: coords },
       })
       let newStop = document.createElement('div')
       newStop.setAttribute('class', 'newStop')
-      newStop.setAttribute('id', stop.stop_sequence + '_newStop_' + stop.stop.id)
+      newStop.setAttribute('id', stop_data.stop_sequence + '_newStop_' + stop.id)
 
       // newStop.setAttribute('onclick', `selectStop("${stop.stop.id}", "${stop.stop_sequence}")`)
-
       let stopName = document.createElement('p')
       stopName.setAttribute('class', 'stopName')
-      stopName.innerText = stop.stop.name
+      stopName.innerText = stop.long_name
       stopName.onclick = () => {
-        if (stopId === stop.stop.id) {
-          deselectStop(stop.stop.id)
+        if (stopId === stop.id) {
+          deselectStop(stop.id)
           tripId = ""
         } else {
-          selectStop(stop.stop.id, stop.stop_sequence)
+          selectStop(stop.id, stop_data.stop_sequence)
         }
       }
 
@@ -442,7 +455,7 @@ async function loadStops() {
       map.getCanvas().style.cursor = ''
     })
   } catch (error) {
-    console.error(error.message)
+    console.error(error.stack)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as paragens desta linha")
   }
 }
@@ -554,9 +567,10 @@ async function selectStop(stop_id, stop_sequence, force = false) {
 
     const dateSelected = document.getElementById('date_input').value
     let changedDate = dateSelected.replace(/-/g, '')
-    const data = await getAPI("patterns/" + patternId)
+    const all_patterns_data = await getAPI_v2("patterns/" + patternId)
+    const data = all_patterns_data.filter(pattern_result => pattern_result.valid_on.includes(changedDate))[0]
     data.trips.forEach(trip => {
-      if (trip.dates.includes(changedDate)) {
+      if (trip.valid_on.includes(changedDate)) {
         trip.schedule.forEach(scheduleItem => {
           if (scheduleItem.stop_id == stop_id && scheduleItem.stop_sequence == stop_sequence) {
             schedules.push(scheduleItem.arrival_time.substring(0, 5))
@@ -565,7 +579,7 @@ async function selectStop(stop_id, stop_sequence, force = false) {
               const timeB = parseArrivalTime(b)
               return timeA - timeB
             })
-            trips.push(trip.id)
+            trips.push(trip.trip_ids[0])
           }
         })
       }
@@ -622,13 +636,11 @@ async function selectStop(stop_id, stop_sequence, force = false) {
         hour.innerText = currentTime
 
         ul.appendChild(hour)
-
         for (let j = 0; j < schedules.length; j++) {
           if (schedules[j].substring(0, 2) === currentTime) {
             let minute = document.createElement("li")
             minute.innerText = schedules[j].substring(3, 5)
             minute.setAttribute('onclick', `markTime("${trips[j]}")`)
-
             if (trips[j] === tripId) {
               minute.classList.add('marked')
             }
@@ -645,7 +657,7 @@ async function selectStop(stop_id, stop_sequence, force = false) {
     if (changedDate === currentDate) {
       let scheduledTimesCounter = 0
       try {
-        const realTime_data = await getAPI(`patterns/${patternId}/realtime`)
+        const realTime_data = await getAPI_v2(`arrivals/by_pattern/${patternId}`)
         const currentUNIX = Math.floor(Date.now() / 1000)
         
         realTime_data.forEach(realTime => {
@@ -687,7 +699,6 @@ async function selectStop(stop_id, stop_sequence, force = false) {
     if (updateInterval_stop) clearInterval(updateInterval_stop);
         updateInterval_stop = setInterval(() => updateStopArrivals(stop_id), 10000);
     // Add next arrival times
-    console.log("Temp arrivals:", arrivalTimes_temp.childNodes.length)
     if (hasArrivals) {
       arrivalTimes.querySelectorAll('.loadingItem').forEach(el => el.remove())
 
@@ -751,7 +762,7 @@ async function updateStopArrivals(id) {
   const currentUNIX = Math.floor(Date.now() / 1000)
 
   try {
-    const data = await getAPI(`patterns/${patternId}/realtime`)
+    const data = await getAPI_v2(`/arrivals/by_pattern/${patternId}`)
     data.forEach(dataItem => {
       let item = document.getElementById(dataItem.stop_sequence + '_arrivalTime_' + dataItem.trip_id)
       if (!item) {
@@ -767,7 +778,6 @@ async function updateStopArrivals(id) {
       // Check if bus has passed
       if (dataItem.observed_arrival_unix !== null && dataItem.scheduled_arrival_unix < currentUNIX && dataItem.estimated_arrival_unix < currentUNIX) {
         item.remove()
-        console.log("ITEM REMOVED", dataItem.trip_id)
       }
       // Check if it's still realTime and update minutes
       else if (dataItem.observed_arrival_unix === null && dataItem.estimated_arrival_unix !== null && dataItem.estimated_arrival_unix > currentUNIX && !item.classList.contains('scheduleTime')) {
@@ -845,14 +855,13 @@ function markTime(trip) {
     tripId = trip
   }
   selectStop(stopId, stopSequence, true)
-  console.log(stopId, stopSequence)
 }
 
 // Load Map Route
 let originalBounds
 async function loadRoute(shape_id, color) {
   try {
-    const data = await getAPI("shapes/" + shape_id)
+    const data = await getAPI_v2("shapes/" + shape_id)
     const lineCoords = data.geojson.geometry.coordinates
     // Remove all existing line layers
     if (map.getLayer("lineString")) {
@@ -1027,7 +1036,7 @@ async function loadVehicles() {
     })
     // Missing images handler
     map.on("styleimagemissing", (e) => {
-      console.log(`Image missing: ${e.id}`)
+      console.error(`Image missing: ${e.id}`)
     })
     if (updateInterval_vehicles) clearInterval(updateInterval_vehicles)
       updateInterval_vehicles = setInterval(() => updateTimes_vehicles(), 10000)
@@ -1049,7 +1058,6 @@ async function updateTimes_vehicles() {
     if (source) {
       let data = JSON.parse(JSON.stringify(source._data));
       data = data.geojson
-      console.log(data)
 
       // Remove vehicles that have completed the line
       data.features = data.features.filter(f => 
@@ -1130,7 +1138,7 @@ async function updateTimes_vehicles() {
     }
   } catch (error) {
     snackbar("erro", "Erro no servidor");
-    console.log(error);
+    console.stack(error);
   }
 }
 

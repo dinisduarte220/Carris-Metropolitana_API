@@ -1,34 +1,48 @@
 [
   {
     "type": "line",
-    "id": "1711"
+    "id": "1711",
+    "text": "Caneças (Esc. Secundária) - Pontinha (Metro)",
+    "color": "rgb(198, 29, 35)"
   },
   {
     "type": "line",
-    "id": "2206"
+    "id": "2206",
+    "text": "Caneças (Escola Secundária) - Senhor Roubado (Metro) via Patameiras (Centro Comercial)",
+    "color": "rgb(198, 29, 35)"
   },
   {
     "type": "line",
-    "id": "2207"
+    "id": "2207",
+    "text": "Caneças (Escola Secundária) - Odivelas (Metro)",
+    "color": "rgb(198, 29, 35)"
   },
   {
     "type": "line",
-    "id": "2812"
+    "id": "2812",
+    "text": "Caneças (Esc. Secundária) - Lisboa (C. Grande) via Sr. Roubado (Metro)",
+    "color": "rgb(198, 29, 35)"
   },
   {
     "type": "stop",
-    "id": "110113"
+    "id": "110113",
+    "text": "Sr Roubado (Teatro)"
   },
   {
     "type": "line",
-    "id": "4600"
+    "id": "4600",
+    "text": "Alcochete (Freeport) - Barreiro (Terminal) via Samouco",
+    "color": "rgb(198, 29, 35)"
   },
   {
     "type": "line",
-    "id": "4701"
+    "id": "4701",
+    "text": "Lisboa (Oriente) - Vale da Amoreira",
+    "color": "rgb(253, 183, 26)"
   },
   {
     "type": "stop",
-    "id": "100418"
+    "id": "100418",
+    "text": "LANÇADA (EN 11 72)"
   }
 ]

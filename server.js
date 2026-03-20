@@ -231,6 +231,14 @@ app.post('/settings', (req, res) => {
   }
 })
 
+// MongoDB
+// const { MongoClient } = require('mongodb')
+// const client = new MongoClient(process.env.MONGO_URI)
+
+// app.post('/db/favorites', async (req, res) => {
+  
+// })
+
 // Server static files
 app.use(express.static(path.join(__dirname, 'public')));
 
