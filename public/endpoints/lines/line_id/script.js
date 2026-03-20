@@ -933,7 +933,8 @@ async function loadVehicles() {
     const vehicle_data = await getAPI_v2("vehicles")
     let pointFeatures = []
     vehicle_data.forEach(vehicle => {
-      if (vehicle.pattern_id === patternId) {
+      const currentUNIX = Math.floor(Date.now() / 1000)
+      if (vehicle.pattern_id === patternId && (currentUNIX - vehicle.timestamp) < 600) {
         let coords = [vehicle.lon, vehicle.lat]
         pointFeatures.push({
           type: "Feature",
@@ -1064,7 +1065,10 @@ async function updateTimes_vehicles() {
         vehicle_data.some(vehicle => vehicle.id === f.properties.name)
       );
 
-      vehicle_data.forEach(vehicle => {
+      const currentUNIX = Math.floor(Date.now() / 1000)
+      const recentVehicles = vehicle_data.filter(vehicle => (currentUNIX - vehicle.timestamp) < 600)
+
+      recentVehicles.forEach(vehicle => {
         if (vehicle.pattern_id === patternId) {
           const coords = [vehicle.lon, vehicle.lat];
 
