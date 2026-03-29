@@ -215,6 +215,7 @@ async function loadRoutes() {
       newRoute.innerText = `${String.fromCharCode(routeLetter)} - ${route_data.long_name}`
       patternsDiv.appendChild(newRoute)
       routeLetter++
+      console.log(route_data, route)
 
       // Fetch and add patterns for the route
       let patterns = route_data.pattern_ids
@@ -224,7 +225,9 @@ async function loadRoutes() {
         let changedDate = dateSelected.replace(/-/g, '')
         
         // TODO - Patterns estao a ser validados pelo dia selecionado. O que nao deve acontecer pois este foreach é para os mostrar no selet dos percursos/sentidos. Fazer apenas a verificação se o pattern ja foi colocado no select
-        const pattern_data = all_patterns_data.filter(pattern_result => pattern_result.valid_on.includes(changedDate))[0]
+        const pattern_data = (all_patterns_data.filter(pattern_result => pattern_result.valid_on.includes(changedDate))[0]) || all_patterns_data[0]
+        console.log(pattern)
+        console.log(patterns, all_patterns_data, pattern_data)
         let newPattern = document.createElement('div')
         newPattern.setAttribute('class', 'newPattern')
         newPattern.setAttribute('id', 'newPattern_' + pattern_data.id)
@@ -276,7 +279,7 @@ async function selectPattern(pattern_id) {
     const dateSelected = document.getElementById('date_input').value
     let changedDate = dateSelected.replace(/-/g, '')
     const all_patterns_data = await getAPI_v2("patterns/" + pattern_id)
-    const data = all_patterns_data.filter(pattern_result => pattern_result.valid_on.includes(changedDate))[0]
+    const data = all_patterns_data.filter(pattern_result => pattern_result.valid_on.includes(changedDate))[0] || all_patterns_data[0]
     activePatternDisplay.innerText = data.headsign
   } catch (error) {
     console.error(error.stack)
@@ -339,7 +342,7 @@ async function loadStops() {
     const dateSelected = document.getElementById('date_input').value
     let changedDate = dateSelected.replace(/-/g, '')
     const all_patterns_data = await getAPI_v2("patterns/" + patternId)
-    const data = all_patterns_data.filter(pattern_result => pattern_result.valid_on.includes(changedDate))[0]
+    const data = all_patterns_data.filter(pattern_result => pattern_result.valid_on.includes(changedDate))[0] || all_patterns_data[0]
     patternColor = data.color
     document.getElementById('stopsBorder').style.backgroundColor = data.color
     // Set and clear the stops container
@@ -537,6 +540,7 @@ async function selectStop(stop_id, stop_sequence, force = false) {
     newSkeleton_schedule.style.borderRadius = "15px"
     stopDiv.appendChild(newSkeleton_schedule)
 
+    // Redirect button to the stop page
     let stopDetails = document.createElement('a')
     stopDetails.setAttribute('class', 'stopDetails')
     stopDetails.setAttribute('href', '/stops/' + stop_id)
@@ -564,12 +568,24 @@ async function selectStop(stop_id, stop_sequence, force = false) {
     // return
 
     let schedules = [], trips = []
+    let availablePattern // In a day the pattern is not ACTIVE, schedules or arrival times will not be displayed
 
     const dateSelected = document.getElementById('date_input').value
     let changedDate = dateSelected.replace(/-/g, '')
     const all_patterns_data = await getAPI_v2("patterns/" + patternId)
-    const data = all_patterns_data.filter(pattern_result => pattern_result.valid_on.includes(changedDate))[0]
-    data.trips.forEach(trip => {
+    // If the pattern is available for the selected date, use it to show schedules and arriving times. If not, dont show schedules or tiems, but still be able to use pattern info (Color, id, etc)
+    if (all_patterns_data.filter(pattern_result => pattern_result.valid_on.includes(changedDate)).length > 0) {
+      data = all_patterns_data.filter(pattern_result => pattern_result.valid_on.includes(changedDate))[0]
+      availablePattern = true
+    } else {
+      data = all_patterns_data[0]
+      availablePattern = false
+    }
+    console.log(data)
+    if (!availablePattern) {
+
+    } else {
+      data.trips.forEach(trip => {
       if (trip.valid_on.includes(changedDate)) {
         trip.schedule.forEach(scheduleItem => {
           if (scheduleItem.stop_id == stop_id && scheduleItem.stop_sequence == stop_sequence) {
@@ -584,6 +600,7 @@ async function selectStop(stop_id, stop_sequence, force = false) {
         })
       }
     })
+    }
 
         const clickedFeature = pointFeatures.find(feature => feature.properties.id === stop_id);
     if (clickedFeature) {
@@ -622,101 +639,113 @@ async function selectStop(stop_id, stop_sequence, force = false) {
     stopSequence = stop_sequence
 
     // Create timetable
-    let verifiedHours = []
-    for (let i = 0; i < schedules.length; i++) {
-      let currentTime = schedules[i].substring(0, 2)
+    if (availablePattern) {
+      let verifiedHours = []
+      for (let i = 0; i < schedules.length; i++) {
+        let currentTime = schedules[i].substring(0, 2)
 
-      if (!verifiedHours.includes(currentTime)) {
-        verifiedHours.push(currentTime)
+        if (!verifiedHours.includes(currentTime)) {
+          verifiedHours.push(currentTime)
 
-        let ul = document.createElement("ul")
-        ul.setAttribute("class", "timeTable_times")
+          let ul = document.createElement("ul")
+          ul.setAttribute("class", "timeTable_times")
 
-        let hour = document.createElement("li")
-        hour.innerText = currentTime
+          let hour = document.createElement("li")
+          hour.innerText = currentTime
 
-        ul.appendChild(hour)
-        for (let j = 0; j < schedules.length; j++) {
-          if (schedules[j].substring(0, 2) === currentTime) {
-            let minute = document.createElement("li")
-            minute.innerText = schedules[j].substring(3, 5)
-            minute.setAttribute('onclick', `markTime("${trips[j]}")`)
-            if (trips[j] === tripId) {
-              minute.classList.add('marked')
+          ul.appendChild(hour)
+          for (let j = 0; j < schedules.length; j++) {
+            if (schedules[j].substring(0, 2) === currentTime) {
+              let minute = document.createElement("li")
+              minute.innerText = schedules[j].substring(3, 5)
+              minute.setAttribute('onclick', `markTime("${trips[j]}")`)
+              if (trips[j] === tripId) {
+                minute.classList.add('marked')
+              }
+
+              ul.appendChild(minute)
             }
-
-            ul.appendChild(minute)
           }
+          scheduleContainer.appendChild(ul)
         }
-        scheduleContainer.appendChild(ul)
       }
-    }
-    // Just show next arrivals if the selected date is for the current day
-    let hasArrivals = false
-    let arrivalTimes_temp = document.createElement('div')
-    if (changedDate === currentDate) {
-      let scheduledTimesCounter = 0
-      try {
-        const realTime_data = await getAPI_v2(`arrivals/by_pattern/${patternId}`)
-        const currentUNIX = Math.floor(Date.now() / 1000)
-        
-        realTime_data.forEach(realTime => {
-          let stopMatch = realTime.stop_id == stop_id && realTime.stop_sequence == stop_sequence
+      // Just show next arrivals if the selected date is for the current day
+      let hasArrivals = false
+      let arrivalTimes_temp = document.createElement('div')
+      if (changedDate === currentDate) {
+        let scheduledTimesCounter = 0
+        try {
+          const realTime_data = await getAPI_v2(`arrivals/by_pattern/${patternId}`)
+          const currentUNIX = Math.floor(Date.now() / 1000)
 
-          if (stopMatch && realTime.observed_arrival === null && realTime.estimated_arrival !== null && realTime.estimated_arrival_unix > currentUNIX) {
-            let newRealTime = document.createElement('p')
-            newRealTime.setAttribute('class', 'realTime')
-            newRealTime.setAttribute('id', realTime.stop_sequence + "_arrivalTime_" + realTime.trip_id)
-            let arrivalTime = Math.floor((realTime.estimated_arrival_unix - currentUNIX) / 60)
-            if (arrivalTime < 1) {
-              newRealTime.innerText = "A chegar"
-            } else {
-              newRealTime.innerText = arrivalTime + " min"
+          realTime_data.forEach(realTime => {
+            let stopMatch = realTime.stop_id == stop_id && realTime.stop_sequence == stop_sequence
+
+            if (stopMatch && realTime.observed_arrival === null && realTime.estimated_arrival !== null && realTime.estimated_arrival_unix > currentUNIX) {
+              let newRealTime = document.createElement('p')
+              newRealTime.setAttribute('class', 'realTime')
+              newRealTime.setAttribute('id', realTime.stop_sequence + "_arrivalTime_" + realTime.trip_id)
+              let arrivalTime = Math.floor((realTime.estimated_arrival_unix - currentUNIX) / 60)
+              if (arrivalTime < 1) {
+                newRealTime.innerText = "A chegar"
+              } else {
+                newRealTime.innerText = arrivalTime + " min"
+              }
+              arrivalTimes_temp.appendChild(newRealTime)
+              hasArrivals = true
+            } else if (stopMatch && realTime.observed_arrival === null && realTime.estimated_arrival === null && realTime.scheduled_arrival_unix > currentUNIX && scheduledTimesCounter < 3) {
+              let newScheduleTime = document.createElement('p')
+              newScheduleTime.setAttribute('class', 'scheduleTime')
+              newScheduleTime.setAttribute('id', realTime.stop_sequence + "_arrivalTime_" + realTime.trip_id)
+              // Handle hours after 24h
+              let rawTime = realTime.scheduled_arrival
+              let hours = parseInt(rawTime.substring(0, 2)) % 24
+              let minutes = rawTime.substring(3, 5)
+              let normalizedTime = `${hours.toString().padStart(2, '0')}:${minutes}`
+              scheduledTimesCounter++
+              newScheduleTime.innerText = normalizedTime
+              arrivalTimes_temp.appendChild(newScheduleTime)
+              hasArrivals = true
             }
-            arrivalTimes_temp.appendChild(newRealTime)
-            hasArrivals = true
-          } else if (stopMatch && realTime.observed_arrival === null && realTime.estimated_arrival === null && realTime.scheduled_arrival_unix > currentUNIX && scheduledTimesCounter < 3) {
-            let newScheduleTime = document.createElement('p')
-            newScheduleTime.setAttribute('class', 'scheduleTime')
-            newScheduleTime.setAttribute('id', realTime.stop_sequence + "_arrivalTime_" + realTime.trip_id)
-            // Handle hours after 24h
-            let rawTime = realTime.scheduled_arrival
-            let hours = parseInt(rawTime.substring(0, 2)) % 24
-            let minutes = rawTime.substring(3, 5)
-            let normalizedTime = `${hours.toString().padStart(2, '0')}:${minutes}`
-            scheduledTimesCounter++
-            newScheduleTime.innerText = normalizedTime
-            arrivalTimes_temp.appendChild(newScheduleTime)
-            hasArrivals = true
-          }
-        })
-      } catch (error) {
-        console.error(error.message)
-        snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as próximas passagens nesta paragem")
+          })
+        } catch (error) {
+          console.error(error.message)
+          snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as próximas passagens nesta paragem")
+        }
       }
-    }
-
-    if (updateInterval_stop) clearInterval(updateInterval_stop);
+          if (updateInterval_stop) clearInterval(updateInterval_stop);
         updateInterval_stop = setInterval(() => updateStopArrivals(stop_id), 10000);
-    // Add next arrival times
-    if (hasArrivals) {
-      arrivalTimes.querySelectorAll('.loadingItem').forEach(el => el.remove())
+      // Add next arrival times
+      if (hasArrivals) {
+        arrivalTimes.querySelectorAll('.loadingItem').forEach(el => el.remove())
 
-      Array.from(arrivalTimes_temp.childNodes).forEach(el => arrivalTimes.appendChild(el))
+        Array.from(arrivalTimes_temp.childNodes).forEach(el => arrivalTimes.appendChild(el))
+      } else {
+        arrivalTimes.querySelectorAll('.loadingItem').forEach(el => el.remove())
+        let noArrivalsMessage = document.createElement('p')
+        noArrivalsMessage.innerText = "Sem próximas passagens neste dia"
+        arrivalTimes.appendChild(noArrivalsMessage)
+      }
+
+      // Add the new schedule
+      let scheduleSkeleton = stopDiv.querySelector('.schedule.loadingItem')
+      scheduleSkeleton.replaceWith(scheduleContainer)
+      let stopRedirectButton = document.getElementsByClassName('stopDetails')[0]
+      stopRedirectButton.style.display = "inline"
+      // stopDiv.appendChild(scheduleTitle)
+      // stopDiv.appendChild(scheduleContainer)
+
+      updatePipArrivals()
     } else {
-      arrivalTimes.querySelectorAll('.loadingItem').forEach(el => el.remove())
-      let noArrivalsMessage = document.createElement('p')
-      noArrivalsMessage.innerText = "Sem próximas passagens neste dia"
-      arrivalTimes.appendChild(noArrivalsMessage)
+      let scheduleSkeleton = stopDiv.querySelector('.schedule.loadingItem')
+      scheduleSkeleton.remove()
+      stopDiv.querySelector('.scheduleTitle').remove()
+      stopDiv.querySelector('.arrivalTimes').remove()
+      stopDiv.querySelector('.arrivalTimesTitle').remove()
+      let stopRedirectButton = document.getElementsByClassName('stopDetails')[0]
+      stopRedirectButton.style.marginTop = "15px"
+      stopRedirectButton.style.display = "inline-block"
     }
-
-    // Add the new schedule
-    let scheduleSkeleton = stopDiv.querySelector('.schedule.loadingItem')
-    scheduleSkeleton.replaceWith(scheduleContainer)
-    // stopDiv.appendChild(scheduleTitle)
-    // stopDiv.appendChild(scheduleContainer)
-
-    updatePipArrivals()
   } catch (error) {
     console.error(error.stack)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar o horário para esta paragem")

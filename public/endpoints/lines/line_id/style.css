@@ -234,10 +234,6 @@ body {
     font-weight: 500;
     margin-left: 15px;
 }
-#lineStops #stopsContainer .newStop .stopDetails i {
-    vertical-align: middle;
-    margin-left: 3px;
-}
 #lineStops #stopsContainer .newStop .timeTable {
     color: whitesmoke;
     display: flex;
