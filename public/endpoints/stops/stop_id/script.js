@@ -30,6 +30,7 @@ function updateNotificationIcon() {
     iconElement.className = "fa-regular fa-bell"
   }
 }
+currentTimeMarker()
 
 // Check if stop is valid
 async function checkStop() {

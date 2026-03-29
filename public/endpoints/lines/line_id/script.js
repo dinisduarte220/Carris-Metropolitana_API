@@ -424,13 +424,19 @@ async function loadStops() {
       });
     }
     map.addSource("points", { type: "geojson", data: geoJsonPoints })
-
     map.addLayer({
       id: "points",
       type: "circle",
       source: "points",
       paint: {
-        "circle-radius": 3,
+        'circle-radius': [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          10, 2,     // zoom level 10 → radius 2
+          14, 6,     // zoom level 14 → radius 6
+          18, 12     // zoom level 18 → radius 12
+        ],
         "circle-color": data.color,
         "circle-stroke-width": 2,
         "circle-stroke-color": "#FFFFFF",
@@ -629,10 +635,24 @@ async function selectStop(stop_id, stop_sequence, force = false) {
           1
       ])
       map.setPaintProperty('points', 'circle-radius', [
-          'case',
-          ['==', ['get', 'id'], stop_id],
-          6,
-          3
+        'case',
+        ['==', ['get', 'id'], stop_id],
+        [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          10, 4,
+          14, 10,
+          18, 18
+        ],
+        [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          10, 2,
+          14, 6,
+          18, 12
+        ]
       ])
     }
     stopId = stop_id
