@@ -465,9 +465,10 @@ body {
 /* Credits */
 #credits {
   position: absolute;
-  bottom: 10px;
+  bottom: 5px;
   left: 50%;
   transform: translate(-50%, 0);
+  width: max-content;
   font-size: 12px;
   color: gray;
   font-weight: 600;
