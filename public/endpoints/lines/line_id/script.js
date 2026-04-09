@@ -78,7 +78,10 @@ async function checkLine() {
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as informações da linha: " + lineId)
   }
 }
-map.once("style.load", checkLine)
+map.once("style.load", async () => {
+  await checkLine()
+  await loadRoutes()
+})
 
 // Deactivate / Reactivate notifications
 function toggleNotifications() {
@@ -253,7 +256,6 @@ async function loadRoutes() {
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as rotas / sentidos para esta linha")
   }
 }
-loadRoutes()
 
 async function selectPattern(pattern_id) {
   params.pattern = pattern_id
@@ -983,7 +985,7 @@ async function loadVehicles() {
     let pointFeatures = []
     vehicle_data.forEach(vehicle => {
       const currentUNIX = Math.floor(Date.now() / 1000)
-      if (vehicle.pattern_id === patternId && (currentUNIX - vehicle.timestamp) < 600) {
+      if (vehicle.pattern_id === patternId && (currentUNIX - vehicle.timestamp) < 300) {
         let coords = [vehicle.lon, vehicle.lat]
         pointFeatures.push({
           type: "Feature",
@@ -997,13 +999,15 @@ async function loadVehicles() {
             Pattern: <b>${vehicle.pattern_id}</b><br>
             State: <b>${vehicle.current_status}</b><br>
             Stop: <b>${vehicle.stop_id}</b><br>
-            Vehicle ID: <b>${vehicle.id}</b>`
+            Vehicle ID: <b>${vehicle.id}</b><br>
+            Last Update: <b>${Math.floor(currentUNIX - vehicle.timestamp)} seconds ago</b>`
           },
           geometry: {
             type: "Point",
             coordinates: coords
           }
         });
+        console.log(currentUNIX)
 
         // Get previous stop ID
         let currentStopID = allStops.findIndex(stop => stop.id === vehicle.stop_id)
@@ -1115,7 +1119,7 @@ async function updateTimes_vehicles() {
       );
 
       const currentUNIX = Math.floor(Date.now() / 1000)
-      const recentVehicles = vehicle_data.filter(vehicle => (currentUNIX - vehicle.timestamp) < 600)
+      const recentVehicles = vehicle_data.filter(vehicle => (currentUNIX - vehicle.timestamp) < 300)
 
       recentVehicles.forEach(vehicle => {
         if (vehicle.pattern_id === patternId) {
@@ -1147,7 +1151,8 @@ async function updateTimes_vehicles() {
                   Pattern: <b>${vehicle.pattern_id}</b><br>
                   State: <b>${vehicle.current_status}</b><br>
                   Stop: <b>${vehicle.stop_id}</b><br>
-                  Vehicle ID: <b>${vehicle.id}</b>`
+                  Vehicle ID: <b>${vehicle.id}</b><br>
+                  Last Update: <b>${Math.floor(currentUNIX - vehicle.timestamp)} seconds ago</b>`
               }
             });
           }

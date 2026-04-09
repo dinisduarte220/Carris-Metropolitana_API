@@ -974,6 +974,8 @@ async function selectTrip(stop_sequence, trip_id, pattern_id, color, vehicle_id)
         const busCoords = [vehicle_data.lon, vehicle_data.lat]
         const stop_data = await getAPI("stops/" + stopId)
         const stopCoords = [stop_data.lon, stop_data.lat]
+        
+        const currentUNIX = Math.floor(Date.now() / 1000)
 
         const geoJsonPoints = {
           type: "FeatureCollection",
@@ -989,7 +991,8 @@ async function selectTrip(stop_sequence, trip_id, pattern_id, color, vehicle_id)
               Pattern: <b>${vehicle_data.pattern_id}</b><br>
               State: <b>${vehicle_data.current_status}</b><br>
               Stop: <b>${vehicle_data.stop_id}</b><br>
-              Vehicle ID: <b>${vehicle_data.id}</b>`
+              Vehicle ID: <b>${vehicle_data.id}</b><br>
+              Last Update: <b>${Math.floor((currentUNIX - vehicle_data.timestamp))} seconds ago</b>`
             },
             geometry: { type: "Point", coordinates: busCoords }
           }]
@@ -1186,6 +1189,7 @@ async function updateVehicle(vehicle_id) {
 
     const source = map.getSource("pointsbus");
     if (source) {
+      const currentUNIX = Math.floor(Date.now() / 1000)
       const raw = source._data;
       const data = raw.geojson;
       const coords = [vehicle_data.lon, vehicle_data.lat];
@@ -1200,7 +1204,8 @@ async function updateVehicle(vehicle_id) {
           Pattern: <b>${vehicle_data.pattern_id}</b><br>
           State: <b>${vehicle_data.current_status}</b><br>
           Stop: <b>${vehicle_data.stop_id}</b><br>
-          Vehicle ID: <b>${vehicle_data.id}</b>`;
+          Vehicle ID: <b>${vehicle_data.id}</b><br>
+          Last Update: <b>${Math.floor((currentUNIX - vehicle_data.timestamp))} seconds ago</b>`
       } else {
         // If the vehicle is not on the map, add it
         data.features.push({
@@ -1215,7 +1220,8 @@ async function updateVehicle(vehicle_id) {
               Pattern: <b>${vehicle_data.pattern_id}</b><br>
               State: <b>${vehicle_data.current_status}</b><br>
               Stop: <b>${vehicle_data.stop_id}</b><br>
-              Vehicle ID: <b>${vehicle_data.id}</b>`
+              Vehicle ID: <b>${vehicle_data.id}</b><br>
+              Last Update: <b>${Math.floor((currentUNIX - vehicle_data.timestamp))} seconds ago</b>`
           }
         });
       }
