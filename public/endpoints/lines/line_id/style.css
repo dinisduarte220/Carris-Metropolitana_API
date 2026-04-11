@@ -226,11 +226,15 @@ body {
     font-weight: 600;
     color: white;
     display: flex;
+    flex-direction: column;
     gap: 10px;
     align-items: center;
     margin: 0 0 5px 5px;
     max-width: 90vw;
     flex-wrap: wrap;
+}
+#lineStops #stopsContainer .newStop .arrivalTimesMetro .metroTime {
+    font-size: 12px;
 }
 
 /* Time Table */
