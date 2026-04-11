@@ -236,7 +236,7 @@ body {
     margin-right: 10px;
 }
 #lineStops #stopsContainer .newStop .arrivalTimesMetro .metroTime {
-    font-size: 12px;
+    font-size: 14px;
 }
 #lineStops #stopsContainer .newStop .arrivalTimesMetro .metroTimeLine {
     display: flex;
