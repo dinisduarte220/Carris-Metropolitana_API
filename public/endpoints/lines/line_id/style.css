@@ -241,8 +241,8 @@ body {
 }
 #lineStops #stopsContainer .newStop .arrivalTimesMetro .metroTimeLine {
     display: flex;
-    justify-content: left;
-    align-items: center;
+    justify-content: center;
+    align-items: left;
     text-align: left;
 }
 
