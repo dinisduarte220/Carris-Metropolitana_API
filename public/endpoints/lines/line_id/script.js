@@ -1,3 +1,5 @@
+// TODO: When clicking on the bus icon on the stopsBorder, zoom into that bus
+
 // Extract the current line_id from URL
 const pathParts = window.location.pathname.split('/')
 const lineId = pathParts[2]
@@ -218,7 +220,6 @@ async function loadRoutes() {
       newRoute.innerText = `${String.fromCharCode(routeLetter)} - ${route_data.long_name}`
       patternsDiv.appendChild(newRoute)
       routeLetter++
-      console.log(route_data, route)
 
       // Fetch and add patterns for the route
       let patterns = route_data.pattern_ids
@@ -229,8 +230,6 @@ async function loadRoutes() {
         
         // TODO - Patterns estao a ser validados pelo dia selecionado. O que nao deve acontecer pois este foreach é para os mostrar no selet dos percursos/sentidos. Fazer apenas a verificação se o pattern ja foi colocado no select
         const pattern_data = (all_patterns_data.filter(pattern_result => pattern_result.valid_on.includes(changedDate))[0]) || all_patterns_data[0]
-        console.log(pattern)
-        console.log(patterns, all_patterns_data, pattern_data)
         let newPattern = document.createElement('div')
         newPattern.setAttribute('class', 'newPattern')
         newPattern.setAttribute('id', 'newPattern_' + pattern_data.id)
@@ -355,6 +354,7 @@ async function loadStops() {
     // }
 
     let stops = data.path
+    const metro_stations = await getAPI_metro('infoEstacao/todos')
     const stops_data = await getAPI_v2("stops")
     stops.forEach( async stop_data => {
       const stop = stops_data.filter(stop_result => stop_result.id == stop_data.stop_id)[0]
@@ -387,6 +387,21 @@ async function loadStops() {
         } else {
           selectStop(stop.id, stop_data.stop_sequence)
         }
+      }
+      let hasmetro = false
+      let stationID
+      for (const station of metro_stations.resposta) {
+        // console.log(station.stop_id)
+        if (haversineDistance(stop.lat, stop.lon, station.stop_lat, station.stop_lon) < 0.3) {
+          stopName.setAttribute('data-metroid', station.stop_id)
+          hasmetro = true
+          break
+        }
+      }
+      if (hasmetro) {
+        let metro_interface = document.createElement('i')
+        metro_interface.setAttribute('class', 'fa-solid fa-train-subway metroInterface')
+        stopName.appendChild(metro_interface)
       }
 
       newStop.appendChild(stopName)
@@ -502,6 +517,7 @@ async function selectStop(stop_id, stop_sequence, force = false) {
     const previousArrivalTimes = stopsContainer.querySelectorAll('.newStop .arrivalTimes')
     const previousArrivalTimesTitle = stopsContainer.querySelectorAll('.newStop .arrivalTimesTitle')
     const previousSkeletons = stopsContainer.querySelectorAll('.newStop .loadingItem')
+    const previousSkeletonsMetro = stopsContainer.querySelectorAll('.newStop .arrivalTimesMetro')
     previousArrivalTimes.forEach(schedule => schedule.remove())
     previousArrivalTimesTitle.forEach(schedule => schedule.remove())
     previousSchedules.forEach(schedule => schedule.remove())
@@ -509,6 +525,7 @@ async function selectStop(stop_id, stop_sequence, force = false) {
     previousStopDetails.forEach(schedule => schedule.remove())
     previousSkeletons.forEach(schedule => schedule.remove())
     previousTimeTable.forEach(schedule => schedule.remove())
+    previousSkeletonsMetro.forEach(schedule => schedule.remove())
 
     // Arrival times title
     let arrivalTimesTitle = document.createElement('p')
@@ -547,6 +564,92 @@ async function selectStop(stop_id, stop_sequence, force = false) {
     newSkeleton_schedule.style.height = "125px"
     newSkeleton_schedule.style.borderRadius = "15px"
     stopDiv.appendChild(newSkeleton_schedule)
+
+    
+    // Metro Times
+    let stopNameDiv = stopDiv.querySelector('.stopName')
+    if (stopNameDiv.dataset.metroid) {
+      let metroTimes = document.createElement('p')
+      metroTimes.setAttribute('class', 'scheduleTitle')
+      metroTimes.innerHTML = "Próximos metros:"
+      stopDiv.appendChild(metroTimes)
+      // Skeleton Loader for arrival time
+      let arrivalTimesMetro = document.createElement('div')
+      arrivalTimesMetro.setAttribute('class', 'arrivalTimesMetro')
+      stopDiv.appendChild(arrivalTimesMetro)
+      // Skeleton Loader for metro times
+      let newSkeleton_metrotime = document.createElement('div')
+      newSkeleton_metrotime.setAttribute('class', 'schedule')
+      newSkeleton_metrotime.className = "metrotime loadingItem"
+      newSkeleton_metrotime.style.width = "100px"
+      newSkeleton_metrotime.style.height = "25px"
+      arrivalTimesMetro.appendChild(newSkeleton_metrotime)
+      for (let i = 0; i < 3; i++) {
+        let newSkeleton_metrotime_secondary = document.createElement('div')
+        newSkeleton_metrotime_secondary.setAttribute('class', 'schedule')
+        newSkeleton_metrotime_secondary.className = "metrotime loadingItem"
+        newSkeleton_metrotime_secondary.style.width = "60px"
+        newSkeleton_metrotime_secondary.style.height = "20px"
+        arrivalTimesMetro.appendChild(newSkeleton_metrotime_secondary)
+      }
+      // Load and display metro times
+      const metroTempos_data = await getAPI_metro(`tempoEspera/Estacao/${stopNameDiv.dataset.metroid}`)
+      const metroDestinos_data = await getAPI_metro(`infoDestinos/todos`)
+      if (metroTempos_data.codigo === "200" && metroDestinos_data.codigo === "200" && metroTempos_data.resposta.length > 0) {
+        metroTempos_data.resposta.forEach(metro_time => {
+          const direction = metroDestinos_data.resposta.filter(response => response.id_destino == metro_time.destino)[0]
+          console.log(direction.nome_destino)
+          let timesMetro = []
+          for ( let i = 1; i <= 3; i++) {
+            timesMetro.push(metro_time[`tempoChegada${i}`])
+          }
+          console.log(timesMetro)
+          // Create a Metro Title Element
+          let newMetroTitle = document.createElement('p')
+          newMetroTitle.setAttribute('class', 'metroDirection')
+          newMetroTitle.innerText = direction.nome_destino
+          let newMetroTimeLine = document.createElement('div')
+          newMetroTimeLine.setAttribute('class', 'metroTimeLine')
+          newMetroTimeLine.appendChild(newMetroTitle)
+          // Create Metro Times Element
+          for (time of timesMetro) {
+            // Turn the second in minutes
+            let minutes = Math.floor(time / 60)
+            let seconds = time % 60
+            let parsedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+            let newMetroTime = document.createElement('p')
+            newMetroTime.setAttribute('class', 'metroTime')
+            newMetroTime.innerText = parsedTime
+            newMetroTimeLine.appendChild(newMetroTime)
+          }
+          const previousSkeletons = stopDiv.querySelectorAll('.metrotime.loadingItem')
+          previousSkeletons.forEach(el => el.remove())
+          arrivalTimesMetro.appendChild(newMetroTimeLine)
+        })
+      } else if (metroTempos_data.resposta.length == 0) {
+        const previousSkeletons = stopDiv.querySelectorAll('.metrotime.loadingItem')
+        previousSkeletons.forEach(el => el.remove())
+        let newMetroTitle = document.createElement('p')
+        newMetroTitle.setAttribute('class', 'metroDirection')
+        newMetroTitle.innerText = "Sem próximas passagens de Metro"
+        arrivalTimesMetro.appendChild(newMetroTitle)
+      } else if (metroTempos_data.resposta == "Circulação encerrada") {
+        const previousSkeletons = stopDiv.querySelectorAll('.metrotime.loadingItem')
+        previousSkeletons.forEach(el => el.remove())
+        let newMetroTitle = document.createElement('p')
+        newMetroTitle.setAttribute('class', 'metroDirection')
+        newMetroTitle.innerHTML = `<i class="fa-solid fa-house-lock"></i> Estação Encerrada`
+        arrivalTimesMetro.appendChild(newMetroTitle)
+      } else {
+        const previousSkeletons = stopDiv.querySelectorAll('.metrotime.loadingItem')
+        previousSkeletons.forEach(el => el.remove())
+        let newMetroTitle = document.createElement('p')
+        newMetroTitle.setAttribute('class', 'metroDirection')
+        newMetroTitle.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Não foi possivel recolher informações do Metro`
+        arrivalTimesMetro.appendChild(newMetroTitle)
+      }
+      console.log(metroTempos_data.resposta)
+    }
 
     // Redirect button to the stop page
     let stopDetails = document.createElement('a')
@@ -589,7 +692,6 @@ async function selectStop(stop_id, stop_sequence, force = false) {
       data = all_patterns_data[0]
       availablePattern = false
     }
-    console.log(data)
     if (!availablePattern) {
 
     } else {
@@ -637,23 +739,29 @@ async function selectStop(stop_id, stop_sequence, force = false) {
           1
       ])
       map.setPaintProperty('points', 'circle-radius', [
-        'case',
-        ['==', ['get', 'id'], stop_id],
-        [
-          'interpolate',
-          ['linear'],
-          ['zoom'],
-          10, 4,
-          14, 10,
-          18, 18
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+      
+        10,
+        ['case',
+          ['==', ['get', 'id'], stop_id],
+          4,
+          2
         ],
-        [
-          'interpolate',
-          ['linear'],
-          ['zoom'],
-          10, 2,
-          14, 6,
-          18, 12
+      
+        14,
+        ['case',
+          ['==', ['get', 'id'], stop_id],
+          10,
+          6
+        ],
+      
+        18,
+        ['case',
+          ['==', ['get', 'id'], stop_id],
+          18,
+          12
         ]
       ])
     }
@@ -779,7 +887,7 @@ function deselectStop(stop_id) {
   const stopDiv = document.getElementById(params.stop_sequence + '_newStop_' + stop_id)
 
   // Clear stop-specific UI elements
-  const previousSchedules = stopDiv.querySelectorAll('.loadingItem, .timeTable, .schedule, .scheduleTitle, .stopDetails, .arrivalTimes, .arrivalTimesTitle')
+  const previousSchedules = stopDiv.querySelectorAll('.loadingItem, .timeTable, .schedule, .scheduleTitle, .stopDetails, .arrivalTimes, .arrivalTimesTitle, .arrivalTimesMetro')
   previousSchedules.forEach(el => el.remove())
 
   // Reset map styling

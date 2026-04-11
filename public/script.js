@@ -606,20 +606,6 @@ async function nearStops() {
   }
 }
 
-// Haversine formula to calculate distance between two coordinates
-function haversineDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371 // Earth radius (Km)
-  const toRad = angle => (angle * Math.PI) / 180
-
-  const dLat = toRad(lat2 - lat1)
-  const dLon = toRad(lon2 - lon1)
-  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2)
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-  return R * c // Distance (Km)
-}
-
 async function nearLines() {
   let linesContainer = document.getElementById('recentLines_container')
   if (navigator.geolocation) {

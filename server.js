@@ -5,6 +5,9 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000
 
+require('dotenv').config()
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+
 app.use(bodyParser.json());
 
 // Logging System
@@ -228,6 +231,27 @@ app.post('/settings', (req, res) => {
           icon: 'fa-solid fa-triangle-exclamation',
           message: '[ERRO] Ocorreu um erro ao processar as configurações!'
       })
+  }
+})
+
+app.get('/api/metro/*', async (req, res) => {
+  const endpoint = req.params[0]
+
+  const url = `https://api.metrolisboa.pt:8243/estadoServicoML/1.0.1/${endpoint}`
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${process.env.METRO_BEARER}`,
+      Accept: 'application/json'
+    }
+  })
+
+  const text = await response.text()
+
+  try {
+    res.json(JSON.parse(text))
+  } catch {
+    res.status(response.status).send(text)
   }
 })
 

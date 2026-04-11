@@ -196,6 +196,10 @@ body {
     cursor: pointer;
     transition: .3s;
 }
+#lineStops #stopsContainer .newStop .stopName i {
+    padding: 0 0 0 10px;
+    color: rgb(200, 200, 200);
+}
 
 .popupStop {
     font-size: 11px;
@@ -203,7 +207,6 @@ body {
 
 /* Next arrivals */
 #lineStops #stopsContainer .newStop .arrivalTimes {
-    /* margin-left: 1rem; */
     font-weight: 600;
     color: white;
     display: flex;
@@ -218,6 +221,16 @@ body {
 }
 #lineStops #stopsContainer .newStop .arrivalTimes p {
     font-weight: 600;
+}
+#lineStops #stopsContainer .newStop .arrivalTimesMetro {
+    font-weight: 600;
+    color: white;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin: 0 0 5px 5px;
+    max-width: 90vw;
+    flex-wrap: wrap;
 }
 
 /* Time Table */
@@ -244,6 +257,8 @@ body {
     border-radius: 15px;
     width: fit-content;
     margin-bottom: 5px;
+    flex-wrap: wrap;
+    max-width: calc(60vw - 75px - 13rem); /* Max Width to limit the schedule to go over the map */
 }
 #lineStops #stopsContainer .newStop .timeTable ul {
   display: flex;
@@ -316,7 +331,7 @@ body {
 }
 
 /* Responsive */
-@media only screen and (max-width: 750px) {
+@media only screen and (max-width: 800px) {
     /* Top Information */
     #topInformation {
         font-size: 14px;
@@ -372,7 +387,7 @@ body {
 
     /* Stops List */
     #lineStops {
-        margin: 2rem 0 2rem 3rem;
+        margin: 2rem 0 2rem 1.5rem;
     }
     #lineStops #stopsContainer .newStop .busIcon {
         top: -5px;
