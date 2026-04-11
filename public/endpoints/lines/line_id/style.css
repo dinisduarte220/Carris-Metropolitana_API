@@ -233,11 +233,17 @@ body {
     max-width: 90vw;
     flex-wrap: wrap;
 }
+#lineStops #stopsContainer .newStop .arrivalTimesMetro .metroDirection {
+    margin-right: 10px;
+}
 #lineStops #stopsContainer .newStop .arrivalTimesMetro .metroTime {
     font-size: 12px;
 }
 #lineStops #stopsContainer .newStop .arrivalTimesMetro .metroTimeLine {
     display: flex;
+    justify-content: left;
+    align-items: center;
+    text-align: left;
 }
 
 /* Time Table */
