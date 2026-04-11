@@ -595,7 +595,7 @@ async function selectStop(stop_id, stop_sequence, force = false) {
       // Load and display metro times
       const metroTempos_data = await getAPI_metro(`tempoEspera/Estacao/${stopNameDiv.dataset.metroid}`)
       const metroDestinos_data = await getAPI_metro(`infoDestinos/todos`)
-      if (metroTempos_data.codigo === "200" && metroDestinos_data.codigo === "200" && metroTempos_data.resposta.length > 0) {
+      if (metroTempos_data.codigo === "200" && metroDestinos_data.codigo === "200" && metroTempos_data.resposta !== []) {
         metroTempos_data.resposta.forEach(metro_time => {
           const direction = metroDestinos_data.resposta.filter(response => response.id_destino == metro_time.destino)[0]
           console.log(direction.nome_destino)
@@ -626,7 +626,7 @@ async function selectStop(stop_id, stop_sequence, force = false) {
           previousSkeletons.forEach(el => el.remove())
           arrivalTimesMetro.appendChild(newMetroTimeLine)
         })
-      } else if (metroTempos_data.resposta.length == 0) {
+      } else if (metroTempos_data.resposta == []) {
         const previousSkeletons = stopDiv.querySelectorAll('.metrotime.loadingItem')
         previousSkeletons.forEach(el => el.remove())
         let newMetroTitle = document.createElement('p')
