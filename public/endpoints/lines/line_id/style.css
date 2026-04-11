@@ -241,9 +241,10 @@ body {
 }
 #lineStops #stopsContainer .newStop .arrivalTimesMetro .metroTimeLine {
     display: flex;
-    justify-content: center;
-    align-items: left;
+    justify-content: flex-start;
+    align-items: center;
     text-align: left;
+    gap: 5px;
 }
 
 /* Time Table */
