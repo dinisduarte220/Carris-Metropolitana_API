@@ -577,21 +577,26 @@ async function selectStop(stop_id, stop_sequence, force = false) {
       let arrivalTimesMetro = document.createElement('div')
       arrivalTimesMetro.setAttribute('class', 'arrivalTimesMetro')
       stopDiv.appendChild(arrivalTimesMetro)
+      
+      let newMetroTimeLine = document.createElement('div')
+      newMetroTimeLine.setAttribute('class', 'metroTimeLine')
+      newMetroTimeLine.appendChild(newMetroTitle)
       // Skeleton Loader for metro times
       let newSkeleton_metrotime = document.createElement('div')
       newSkeleton_metrotime.setAttribute('class', 'schedule')
       newSkeleton_metrotime.className = "metrotime loadingItem"
       newSkeleton_metrotime.style.width = "100px"
       newSkeleton_metrotime.style.height = "25px"
-      arrivalTimesMetro.appendChild(newSkeleton_metrotime)
+      newMetroTimeLine.appendChild(newSkeleton_metrotime)
       for (let i = 0; i < 3; i++) {
         let newSkeleton_metrotime_secondary = document.createElement('div')
         newSkeleton_metrotime_secondary.setAttribute('class', 'schedule')
         newSkeleton_metrotime_secondary.className = "metrotime loadingItem"
         newSkeleton_metrotime_secondary.style.width = "60px"
         newSkeleton_metrotime_secondary.style.height = "20px"
-        arrivalTimesMetro.appendChild(newSkeleton_metrotime_secondary)
+        newMetroTimeLine.appendChild(newSkeleton_metrotime_secondary)
       }
+      arrivalTimesMetro.appendChild(newMetroTimeLine)
       // Load and display metro times
       const metroTempos_data = await getAPI_metro(`tempoEspera/Estacao/${stopNameDiv.dataset.metroid}`)
       const metroDestinos_data = await getAPI_metro(`infoDestinos/todos`)
