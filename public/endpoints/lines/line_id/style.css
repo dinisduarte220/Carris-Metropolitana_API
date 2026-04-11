@@ -228,7 +228,6 @@ body {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    align-items: center;
     margin: 0 0 5px 5px;
     max-width: 90vw;
     flex-wrap: wrap;
