@@ -236,6 +236,9 @@ body {
 #lineStops #stopsContainer .newStop .arrivalTimesMetro .metroTime {
     font-size: 12px;
 }
+#lineStops #stopsContainer .newStop .arrivalTimesMetro .metroTimeLine {
+    display: flex;
+}
 
 /* Time Table */
 #lineStops #stopsContainer .newStop .scheduleTitle, #lineStops #stopsContainer .newStop .arrivalTimesTitle {
