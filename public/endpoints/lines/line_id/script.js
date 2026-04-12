@@ -626,7 +626,7 @@ async function selectStop(stop_id, stop_sequence, force = false) {
           let newMetroTime = document.createElement('p')
           newMetroTime.setAttribute('class', 'metroTime')
           newMetroTime.dataset.seconds = time
-          newMetroTime.innerText = parsedTime
+          newMetroTime.innerText = (time > 0) ? parsedTime : "A chegar"
 
           newMetroTimeLine.appendChild(newMetroTime)
           const previousSkeletons = stopDiv.querySelectorAll('.metrotime.loadingItem, .metroTimeLine.skeleton')
