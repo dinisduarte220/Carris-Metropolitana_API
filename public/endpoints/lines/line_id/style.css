@@ -237,11 +237,12 @@ body {
 }
 #lineStops #stopsContainer .newStop .arrivalTimesMetro .metroTime {
     font-size: 14px;
+    font-family: monospace;
 }
 #lineStops #stopsContainer .newStop .arrivalTimesMetro .metroTimeLine {
     display: flex;
     justify-content: flex-start;
-    align-items: center;
+    align-items: end;
     text-align: left;
     gap: 5px;
 }

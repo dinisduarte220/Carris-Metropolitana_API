@@ -487,6 +487,10 @@ async function loadStops() {
 }
 
 let updateInterval_stop
+let updateInterval_metro
+let updateInterval_metro_api
+let updateInterval_metro_tick
+let metroLiveState = {}
 async function selectStop(stop_id, stop_sequence, force = false) {
   if (!force && stopId === stop_id && params.stop_sequence === stop_sequence) {
     return
@@ -576,11 +580,12 @@ async function selectStop(stop_id, stop_sequence, force = false) {
       // Skeleton Loader for arrival time
       let arrivalTimesMetro = document.createElement('div')
       arrivalTimesMetro.setAttribute('class', 'arrivalTimesMetro')
+      arrivalTimesMetro.setAttribute('data-metroid', stopNameDiv.dataset.metroid)
       stopDiv.appendChild(arrivalTimesMetro)
       
       let newMetroTimeLine = document.createElement('div')
-      newMetroTimeLine.setAttribute('class', 'metroTimeLine')
-      newMetroTimeLine.appendChild(newMetroTitle)
+      newMetroTimeLine.setAttribute('class', 'metroTimeLine skeleton')
+      // newMetroTimeLine.appendChild(newMetroTitle)
       // Skeleton Loader for metro times
       let newSkeleton_metrotime = document.createElement('div')
       newSkeleton_metrotime.setAttribute('class', 'schedule')
@@ -600,7 +605,7 @@ async function selectStop(stop_id, stop_sequence, force = false) {
       // Load and display metro times
       const metroTempos_data = await getAPI_metro(`tempoEspera/Estacao/${stopNameDiv.dataset.metroid}`)
       const metroDestinos_data = await getAPI_metro(`infoDestinos/todos`)
-      if (metroTempos_data.codigo === "200" && metroDestinos_data.codigo === "200" && metroTempos_data.resposta !== []) {
+      if (metroTempos_data.codigo === "200" && metroDestinos_data.codigo === "200" && metroTempos_data.resposta != []) {
         metroTempos_data.resposta.forEach(metro_time => {
           const direction = metroDestinos_data.resposta.filter(response => response.id_destino == metro_time.destino)[0]
           console.log(direction.nome_destino)
@@ -615,6 +620,7 @@ async function selectStop(stop_id, stop_sequence, force = false) {
           newMetroTitle.innerText = direction.nome_destino
           let newMetroTimeLine = document.createElement('div')
           newMetroTimeLine.setAttribute('class', 'metroTimeLine')
+          newMetroTimeLine.dataset.destination = metro_time.destino
           newMetroTimeLine.appendChild(newMetroTitle)
           // Create Metro Times Element
           for (time of timesMetro) {
@@ -624,10 +630,11 @@ async function selectStop(stop_id, stop_sequence, force = false) {
             let parsedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
             let newMetroTime = document.createElement('p')
             newMetroTime.setAttribute('class', 'metroTime')
+            newMetroTime.dataset.seconds = time
             newMetroTime.innerText = parsedTime
             newMetroTimeLine.appendChild(newMetroTime)
           }
-          const previousSkeletons = stopDiv.querySelectorAll('.metrotime.loadingItem')
+          const previousSkeletons = stopDiv.querySelectorAll('.metrotime.loadingItem, .metroTimeLine.skeleton')
           previousSkeletons.forEach(el => el.remove())
           arrivalTimesMetro.appendChild(newMetroTimeLine)
         })
@@ -653,6 +660,14 @@ async function selectStop(stop_id, stop_sequence, force = false) {
         newMetroTitle.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Não foi possivel recolher informações do Metro`
         arrivalTimesMetro.appendChild(newMetroTitle)
       }
+      if (updateInterval_metro_api) clearInterval(updateInterval_metro_api)
+      if (updateInterval_metro_tick) clearInterval(updateInterval_metro_tick)
+      
+      updateInterval_metro_api = setInterval(() => {
+        updateMetroArrivals(stopNameDiv.dataset.metroid)
+      }, 10000)
+
+      updateInterval_metro_tick = setInterval(tickMetroCountdown, 1000)
       console.log(metroTempos_data.resposta)
     }
 
@@ -886,6 +901,27 @@ async function selectStop(stop_id, stop_sequence, force = false) {
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar o horário para esta paragem")
   }
 }
+function tickMetroCountdown() {
+  const metroTimes = document.querySelectorAll('.metroTime')
+
+  metroTimes.forEach(item => {
+    let seconds = parseInt(item.dataset.seconds || 0)
+
+    if (seconds <= 0) {
+      item.innerText = "A chegar"
+      return
+    }
+
+    seconds -= 1
+    item.dataset.seconds = seconds
+
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = seconds % 60
+
+    item.innerText =
+      `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`
+  })
+}
 
 function deselectStop(stop_id) {
   const stopsContainer = document.getElementById('stopsContainer')
@@ -914,6 +950,19 @@ function deselectStop(stop_id) {
     clearInterval(updateInterval_stop)
     updateInterval_stop = null
   }
+  if (updateInterval_metro) {
+  clearInterval(updateInterval_metro)
+  updateInterval_metro = null
+  }
+  if (updateInterval_metro_api) {
+    clearInterval(updateInterval_metro_api)
+    updateInterval_metro_api = null
+  }
+  
+  if (updateInterval_metro_tick) {
+    clearInterval(updateInterval_metro_tick)
+    updateInterval_metro_tick = null
+  }
 
   if (originalBounds) {
     map.fitBounds(originalBounds, { padding: 50, animate: true })
@@ -921,6 +970,55 @@ function deselectStop(stop_id) {
 }
 // Update Real Times
 let notifiedBuses = new Set(); // Set to track notified buses
+
+async function updateMetroArrivals(metroID) {
+  try {
+    const metroContainer = document.querySelector('.arrivalTimesMetro')
+    if (!metroContainer) return
+
+    const metroTempos_data = await getAPI_metro(`tempoEspera/Estacao/${metroID}`)
+
+    if (!metroTempos_data.resposta || metroTempos_data.resposta.length === 0) {
+      return
+    }
+
+    metroTempos_data.resposta.forEach(metro_time => {
+      const line = metroContainer.querySelector(
+        `.metroTimeLine[data-destination="${metro_time.destino}"]`
+      )
+
+      if (!line) return
+
+      const metroTimes = [
+        metro_time.tempoChegada1,
+        metro_time.tempoChegada2,
+        metro_time.tempoChegada3
+      ]
+
+      const timeElements = line.querySelectorAll('.metroTime')
+
+      metroTimes.forEach((time, index) => {
+        const el = timeElements[index]
+        if (!el) return
+
+        el.dataset.seconds = time
+
+        const minutes = Math.floor(time / 60)
+        const seconds = time % 60
+
+        el.innerText =
+          `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+      })
+    })
+
+    // Restart smooth countdown
+    if (updateInterval_metro_tick) clearInterval(updateInterval_metro_tick)
+    updateInterval_metro_tick = setInterval(tickMetroCountdown, 1000)
+
+  } catch (error) {
+    console.error(error)
+  }
+}
 
 async function updateStopArrivals(id) {
   const currentUNIX = Math.floor(Date.now() / 1000)
