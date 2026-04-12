@@ -593,14 +593,11 @@ async function selectStop(stop_id, stop_sequence, force = false) {
       newSkeleton_metrotime.style.width = "100px"
       newSkeleton_metrotime.style.height = "25px"
       newMetroTimeLine.appendChild(newSkeleton_metrotime)
-      for (let i = 0; i < 3; i++) {
-        let newSkeleton_metrotime_secondary = document.createElement('div')
-        newSkeleton_metrotime_secondary.setAttribute('class', 'schedule')
-        newSkeleton_metrotime_secondary.className = "metrotime loadingItem"
-        newSkeleton_metrotime_secondary.style.width = "60px"
-        newSkeleton_metrotime_secondary.style.height = "20px"
-        newMetroTimeLine.appendChild(newSkeleton_metrotime_secondary)
-      }
+      let newSkeleton_metrotime_secondary = document.createElement('div')
+      newSkeleton_metrotime_secondary.className = "metrotime loadingItem"
+      newSkeleton_metrotime_secondary.style.width = "60px"
+      newSkeleton_metrotime_secondary.style.height = "20px"
+      newMetroTimeLine.appendChild(newSkeleton_metrotime_secondary)
       arrivalTimesMetro.appendChild(newMetroTimeLine)
       // Load and display metro times
       const metroTempos_data = await getAPI_metro(`tempoEspera/Estacao/${stopNameDiv.dataset.metroid}`)
@@ -609,31 +606,28 @@ async function selectStop(stop_id, stop_sequence, force = false) {
         metroTempos_data.resposta.forEach(metro_time => {
           const direction = metroDestinos_data.resposta.filter(response => response.id_destino == metro_time.destino)[0]
           console.log(direction.nome_destino)
-          let timesMetro = []
-          for ( let i = 1; i <= 3; i++) {
-            timesMetro.push(metro_time[`tempoChegada${i}`])
-          }
-          console.log(timesMetro)
+          let nextMetroTime = metro_time.tempoChegada1
           // Create a Metro Title Element
           let newMetroTitle = document.createElement('p')
           newMetroTitle.setAttribute('class', 'metroDirection')
-          newMetroTitle.innerText = direction.nome_destino
+          newMetroTitle.innerText = direction.nome_destino + ":"
           let newMetroTimeLine = document.createElement('div')
           newMetroTimeLine.setAttribute('class', 'metroTimeLine')
           newMetroTimeLine.dataset.destination = metro_time.destino
           newMetroTimeLine.appendChild(newMetroTitle)
           // Create Metro Times Element
-          for (time of timesMetro) {
-            // Turn the second in minutes
-            let minutes = Math.floor(time / 60)
-            let seconds = time % 60
-            let parsedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-            let newMetroTime = document.createElement('p')
-            newMetroTime.setAttribute('class', 'metroTime')
-            newMetroTime.dataset.seconds = time
-            newMetroTime.innerText = parsedTime
-            newMetroTimeLine.appendChild(newMetroTime)
-          }
+          let time = nextMetroTime
+
+          let minutes = Math.floor(time / 60)
+          let seconds = time % 60
+          let parsedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+
+          let newMetroTime = document.createElement('p')
+          newMetroTime.setAttribute('class', 'metroTime')
+          newMetroTime.dataset.seconds = time
+          newMetroTime.innerText = parsedTime
+
+          newMetroTimeLine.appendChild(newMetroTime)
           const previousSkeletons = stopDiv.querySelectorAll('.metrotime.loadingItem, .metroTimeLine.skeleton')
           previousSkeletons.forEach(el => el.remove())
           arrivalTimesMetro.appendChild(newMetroTimeLine)
