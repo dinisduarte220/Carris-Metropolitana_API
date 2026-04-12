@@ -231,12 +231,14 @@ body {
     margin: 0 0 5px 5px;
     max-width: 90vw;
     flex-wrap: wrap;
+    font-size: 14px;
 }
 #lineStops #stopsContainer .newStop .arrivalTimesMetro .metroDirection {
     margin-right: 10px;
 }
 #lineStops #stopsContainer .newStop .arrivalTimesMetro .metroTime {
     font-size: 14px;
+    font-weight: 600;
     font-family: monospace;
 }
 #lineStops #stopsContainer .newStop .arrivalTimesMetro .metroTimeLine {
