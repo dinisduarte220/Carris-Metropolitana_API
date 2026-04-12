@@ -597,6 +597,7 @@ async function selectStop(stop_id, stop_sequence, force = false) {
       newSkeleton_metrotime_secondary.className = "metrotime loadingItem"
       newSkeleton_metrotime_secondary.style.width = "60px"
       newSkeleton_metrotime_secondary.style.height = "20px"
+      newSkeleton_metrotime_secondary.style.marginLeft = "5px"
       newMetroTimeLine.appendChild(newSkeleton_metrotime_secondary)
       arrivalTimesMetro.appendChild(newMetroTimeLine)
       // Load and display metro times
