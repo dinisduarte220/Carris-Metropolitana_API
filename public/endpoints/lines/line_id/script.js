@@ -308,7 +308,7 @@ async function selectPattern(pattern_id) {
 }
 
 // Change URL date
-function changeDate(date) {
+async function changeDate(date) {
   let formattedDate = date.replace(/-/g, '')
   params.date = formattedDate
 
@@ -316,7 +316,17 @@ function changeDate(date) {
   newUrl.searchParams.set('date', formattedDate)
   window.history.replaceState(null, '', newUrl)
 
-  loadStops()
+  await loadStops()
+
+  if (params.active_stop && params.stop_sequence) {
+    const stopDiv = document.getElementById(
+      `${params.stop_sequence}_newStop_${params.active_stop}`
+    )
+
+    if (stopDiv) {
+      selectStop(params.active_stop, params.stop_sequence, true)
+    }
+  }
 }
 
 // Load stops for the active pattern
@@ -496,6 +506,11 @@ async function selectStop(stop_id, stop_sequence, force = false) {
     return
   }
   try {
+    // Get and define current date, as a YYYYMMDD format
+    const dateSelected = document.getElementById('date_input').value
+    let changedDate = dateSelected.replace(/-/g, '')
+
+    // Update URL params for stop selected and stop sequence
     params.active_stop = stop_id
     params.stop_sequence = stop_sequence
 
@@ -513,46 +528,48 @@ async function selectStop(stop_id, stop_sequence, force = false) {
       behavior: 'smooth',
       block: 'center',
     })
+    
+    // Remove all elements from the previous selected stop
+    const allPreviousElements = stopsContainer.querySelectorAll(
+      '.newStop .schedule,\
+      .newStop .timeTable,\
+      .newStop .scheduleTitle,\
+      .newStop .stopDetails,\
+      .newStop .arrivalTimes,\
+      .newStop .arrivalTimesTitle,\
+      .newStop .loadingItem,\
+      .newStop .arrivalTimesMetro'
+    )
+    allPreviousElements.forEach(element => element.remove())
 
-    const previousSchedules = stopsContainer.querySelectorAll('.newStop .schedule')
-    const previousTimeTable = stopsContainer.querySelectorAll('.newStop .timeTable')
-    const previousScheduleTitles = stopsContainer.querySelectorAll('.newStop .scheduleTitle')
-    const previousStopDetails = stopsContainer.querySelectorAll('.newStop .stopDetails')
-    const previousArrivalTimes = stopsContainer.querySelectorAll('.newStop .arrivalTimes')
-    const previousArrivalTimesTitle = stopsContainer.querySelectorAll('.newStop .arrivalTimesTitle')
-    const previousSkeletons = stopsContainer.querySelectorAll('.newStop .loadingItem')
-    const previousSkeletonsMetro = stopsContainer.querySelectorAll('.newStop .arrivalTimesMetro')
-    previousArrivalTimes.forEach(schedule => schedule.remove())
-    previousArrivalTimesTitle.forEach(schedule => schedule.remove())
-    previousSchedules.forEach(schedule => schedule.remove())
-    previousScheduleTitles.forEach(schedule => schedule.remove())
-    previousStopDetails.forEach(schedule => schedule.remove())
-    previousSkeletons.forEach(schedule => schedule.remove())
-    previousTimeTable.forEach(schedule => schedule.remove())
-    previousSkeletonsMetro.forEach(schedule => schedule.remove())
+    let arrivalTimes
+    // If the date selected is the same as the current date, create next arrivals skeletons
+    if (changedDate === currentDate) {
+      // Arrival times title
+      let arrivalTimesTitle = document.createElement('p')
+      arrivalTimesTitle.setAttribute('class', 'arrivalTimesTitle')
+      arrivalTimesTitle.innerHTML = 'Próximas passagens:'
+      stopDiv.appendChild(arrivalTimesTitle)
 
-    // Arrival times title
-    let arrivalTimesTitle = document.createElement('p')
-    arrivalTimesTitle.setAttribute('class', 'arrivalTimesTitle')
-    arrivalTimesTitle.innerHTML = 'Próximas passagens:'
-    stopDiv.appendChild(arrivalTimesTitle)
+      // Skeleton loader for arrival time
+      arrivalTimes = document.createElement('div')
+      arrivalTimes.setAttribute('class', 'arrivalTimes')
 
-    // Skeleton Loader for arrival time
-    let arrivalTimes = document.createElement('div')
-    arrivalTimes.setAttribute('class', 'arrivalTimes')
+      // Arrival times clock icon
+      let arrivalTimes_icon = document.createElement('i')
+      arrivalTimes_icon.setAttribute('class', 'fa-regular fa-clock')
+      arrivalTimes.appendChild(arrivalTimes_icon)
 
-    let arrivalTimes_icon = document.createElement('i')
-    arrivalTimes_icon.setAttribute('class', 'fa-regular fa-clock')
-    arrivalTimes.appendChild(arrivalTimes_icon)
-
-    for (let i = 0; i < 3; i++) {
-      let newSkeleton_arrivalTime = document.createElement('div')
-      newSkeleton_arrivalTime.classList.add('loadingItem')
-      newSkeleton_arrivalTime.style.width = "50px"
-      newSkeleton_arrivalTime.style.height = "20px"
-      arrivalTimes.appendChild(newSkeleton_arrivalTime)
+      // Create a skeleton for each of the 3 next scheduled arrivals
+      for (let i = 0; i < 3; i++) {
+        let newSkeleton_arrivalTime = document.createElement('div')
+        newSkeleton_arrivalTime.classList.add('loadingItem')
+        newSkeleton_arrivalTime.style.width = "50px"
+        newSkeleton_arrivalTime.style.height = "20px"
+        arrivalTimes.appendChild(newSkeleton_arrivalTime)
+      }
+      stopDiv.appendChild(arrivalTimes)
     }
-    stopDiv.appendChild(arrivalTimes)
 
     // Schedule Title
     let scheduleTitle = document.createElement('p')
@@ -568,11 +585,10 @@ async function selectStop(stop_id, stop_sequence, force = false) {
     newSkeleton_schedule.style.height = "125px"
     newSkeleton_schedule.style.borderRadius = "15px"
     stopDiv.appendChild(newSkeleton_schedule)
-
     
-    // Metro Times
+    // Create metro times using the metro api
     let stopNameDiv = stopDiv.querySelector('.stopName')
-    if (stopNameDiv.dataset.metroid) {
+    if (stopNameDiv.dataset.metroid && changedDate === currentDate) {
       let metroTimes = document.createElement('p')
       metroTimes.setAttribute('class', 'scheduleTitle')
       metroTimes.innerHTML = "Próximos metros:"
@@ -585,7 +601,7 @@ async function selectStop(stop_id, stop_sequence, force = false) {
       
       let newMetroTimeLine = document.createElement('div')
       newMetroTimeLine.setAttribute('class', 'metroTimeLine skeleton')
-      // newMetroTimeLine.appendChild(newMetroTitle)
+      
       // Skeleton Loader for metro times
       let newSkeleton_metrotime = document.createElement('div')
       newSkeleton_metrotime.setAttribute('class', 'schedule')
@@ -606,7 +622,6 @@ async function selectStop(stop_id, stop_sequence, force = false) {
       if (metroTempos_data.codigo === "200" && metroDestinos_data.codigo === "200" && metroTempos_data.resposta != []) {
         metroTempos_data.resposta.forEach(metro_time => {
           const direction = metroDestinos_data.resposta.filter(response => response.id_destino == metro_time.destino)[0]
-          console.log(direction.nome_destino)
           let nextMetroTime = metro_time.tempoChegada1
           // Create a Metro Title Element
           let newMetroTitle = document.createElement('p')
@@ -663,9 +678,7 @@ async function selectStop(stop_id, stop_sequence, force = false) {
       }, 10000)
 
       updateInterval_metro_tick = setInterval(tickMetroCountdown, 1000)
-      console.log(metroTempos_data.resposta)
     }
-
     // Redirect button to the stop page
     let stopDetails = document.createElement('a')
     stopDetails.setAttribute('class', 'stopDetails')
@@ -696,8 +709,6 @@ async function selectStop(stop_id, stop_sequence, force = false) {
     let schedules = [], trips = []
     let availablePattern // In a day the pattern is not ACTIVE, schedules or arrival times will not be displayed
 
-    const dateSelected = document.getElementById('date_input').value
-    let changedDate = dateSelected.replace(/-/g, '')
     const all_patterns_data = await getAPI_v2("patterns/" + patternId)
     // If the pattern is available for the selected date, use it to show schedules and arriving times. If not, dont show schedules or tiems, but still be able to use pattern info (Color, id, etc)
     if (all_patterns_data.filter(pattern_result => pattern_result.valid_on.includes(changedDate)).length > 0) {
@@ -707,27 +718,25 @@ async function selectStop(stop_id, stop_sequence, force = false) {
       data = all_patterns_data[0]
       availablePattern = false
     }
-    if (!availablePattern) {
-
-    } else {
+    if (availablePattern) {
       data.trips.forEach(trip => {
-      if (trip.valid_on.includes(changedDate)) {
-        trip.schedule.forEach(scheduleItem => {
-          if (scheduleItem.stop_id == stop_id && scheduleItem.stop_sequence == stop_sequence) {
-            schedules.push(scheduleItem.arrival_time.substring(0, 5))
-            schedules.sort((a, b) => {
-              const timeA = parseArrivalTime(a)
-              const timeB = parseArrivalTime(b)
-              return timeA - timeB
-            })
-            trips.push(trip.trip_ids[0])
-          }
-        })
-      }
-    })
+        if (trip.valid_on.includes(changedDate)) {
+          trip.schedule.forEach(scheduleItem => {
+            if (scheduleItem.stop_id == stop_id && scheduleItem.stop_sequence == stop_sequence) {
+              schedules.push(scheduleItem.arrival_time.substring(0, 5))
+              schedules.sort((a, b) => {
+                const timeA = parseArrivalTime(a)
+                const timeB = parseArrivalTime(b)
+                return timeA - timeB
+              })
+              trips.push(trip.trip_ids[0])
+            }
+          })
+        }
+      })
     }
 
-        const clickedFeature = pointFeatures.find(feature => feature.properties.id === stop_id);
+    const clickedFeature = pointFeatures.find(feature => feature.properties.id === stop_id);
     if (clickedFeature) {
       // Zoom and center to the select stop
       map.flyTo({
@@ -858,14 +867,14 @@ async function selectStop(stop_id, stop_sequence, force = false) {
           snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as próximas passagens nesta paragem")
         }
       }
-          if (updateInterval_stop) clearInterval(updateInterval_stop);
-        updateInterval_stop = setInterval(() => updateStopArrivals(stop_id), 10000);
+      if (updateInterval_stop) clearInterval(updateInterval_stop);
+      updateInterval_stop = setInterval(() => updateStopArrivals(stop_id), 10000);
       // Add next arrival times
       if (hasArrivals) {
         arrivalTimes.querySelectorAll('.loadingItem').forEach(el => el.remove())
 
         Array.from(arrivalTimes_temp.childNodes).forEach(el => arrivalTimes.appendChild(el))
-      } else {
+      } else if (changedDate === currentDate){
         arrivalTimes.querySelectorAll('.loadingItem').forEach(el => el.remove())
         let noArrivalsMessage = document.createElement('p')
         noArrivalsMessage.innerText = "Sem próximas passagens neste dia"
@@ -1213,7 +1222,6 @@ async function loadVehicles() {
             coordinates: coords
           }
         });
-        console.log(currentUNIX)
 
         // Get previous stop ID
         let currentStopID = allStops.findIndex(stop => stop.id === vehicle.stop_id)
