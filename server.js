@@ -1,11 +1,19 @@
+require('dns').setDefaultResultOrder('ipv4first')
+require('dotenv').config()
+
 const express = require('express');
+
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000
 
-require('dotenv').config()
+// Session and OAuth
+const session = require('express-session')
+const authRoutes = require('./routes/auth')
+const { google } = require('googleapis')
+
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
 app.use(bodyParser.json());
@@ -60,126 +68,6 @@ app.use('/settings', express.static(path.join(__dirname, 'public', 'endpoints', 
 app.use('/lines/:line_id', express.static(path.join(__dirname, 'public', 'endpoints', 'lines', 'line_id')))
 // Stops Endpoint - Details for a specific Stop
 app.use('/stops/:stop_id', express.static(path.join(__dirname, 'public', 'endpoints', 'stops', 'stop_id')))
-
-// Storage Endpoints - Get & Store
-app.get('/storage', (req, res) => {
-  try {
-    const data = fs.readFileSync(storageFilePath, 'utf8')
-    const storage = JSON.parse(data)
-
-    if (!Array.isArray(storage)) {
-      return res.status(500).json({
-        icon: "fa-solid fa-triangle-exclamation",
-        message: "[ERRO] O formato dos dados guardados é inválido!"
-      })
-    }
-
-    const queryId = req.query.id
-
-    if (queryId) {
-      const item = storage.find(entry => entry.id === queryId)
-      if (item) {
-        return res.json(item)
-      } else {
-        return res.status(404).json({
-          error: `[ERROR] Item with ID "${queryId}" not found`
-        })
-      }
-    }
-
-    // No ID: return all stored items
-    return res.json(storage)
-
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({
-      icon: "fa-solid fa-triangle-exclamation",
-      message: "[ERRO] Ocorreu um erro ao carregar os dados guardados!"
-    })
-  }
-})
-
-app.post('/storage', (req, res) => {
-  try {
-    const { value } = req.body
-
-    if (!value) {
-      return res.status(400).json({
-        error: '[ERROR] Missing required field: value'
-      })
-    }
-
-    // Read and parse the file; fallback to an empty array if invalid
-    let storage = []
-    try {
-      const data = fs.readFileSync(storageFilePath, 'utf8')
-      storage = JSON.parse(data)
-      if (!Array.isArray(storage)) storage = []
-    } catch {
-      storage = []
-    }
-
-    // Optional: prevent duplicate IDs
-    const exists = storage.find(item => item.id === value.id)
-    if (exists) {
-      return res.status(409).json({
-        message: '[INFO] Item with this ID already exists.',
-        id: value.id
-      })
-    }
-
-    // Add new item
-    storage.push(value)
-
-    // Save to file
-    try {
-      fs.writeFileSync(storageFilePath, JSON.stringify(storage, null, 2))
-      res.json({
-        message: '[SUCCESS] Dados adicionados com sucesso!',
-        value: value
-      })
-    } catch (writeError) {
-      console.error(writeError)
-      res.status(500).json({
-        icon: 'fa-solid fa-triangle-exclamation',
-        message: '[ERRO] Ocorreu um erro ao guardar os dados!'
-      })
-    }
-  } catch (readError) {
-    console.error(readError)
-    res.status(500).json({
-      icon: 'fa-solid fa-triangle-exclamation',
-      message: '[ERRO] Ocorreu um erro ao processar os dados!'
-    })
-  }
-})
-
-app.put('/storage', (req, res) => {
-  try {
-    const { value } = req.body
-
-    if (!Array.isArray(value)) {
-      return res.status(400).json({
-        error: '[ERROR] Expected an array of items in "value"'
-      })
-    }
-
-    // Save the new array to the file
-    fs.writeFileSync(storageFilePath, JSON.stringify(value, null, 2))
-
-    res.json({
-      message: '[SUCCESS] Ordem dos favoritos atualizada com sucesso!',
-      value: value
-    })
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({
-      icon: 'fa-solid fa-triangle-exclamation',
-      message: '[ERRO] Ocorreu um erro ao atualizar os dados!'
-    })
-  }
-})
-
 
 // Settings Endpoints - Get & Update
 app.get('/settings', (req, res) => {
@@ -255,16 +143,159 @@ app.get('/api/metro/*', async (req, res) => {
   }
 })
 
-// MongoDB
-// const { MongoClient } = require('mongodb')
-// const client = new MongoClient(process.env.MONGO_URI)
-
-// app.post('/db/favorites', async (req, res) => {
-  
-// })
+// DataBase endpoints
+const pool = require("./db")
 
 // Server static files
 app.use(express.static(path.join(__dirname, 'public')));
+
+// User session
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    sameSite: 'lax'
+  }
+}))
+app.use(authRoutes)
+
+app.get('/me' , (req , res)=>{
+  if (!req.session.user) {
+    return res.status(401).json({ loggedIn: false })
+  }
+
+  res.json({
+    loggedIn: true,
+    user: req.session.user
+  })
+})
+
+// Login
+app.get('/login' , async (req , res)=>{
+  if (!req.session.user) {
+    res.redirect('auth/google')
+  }
+})
+
+// Store a new favorite
+app.post('/storage', async (req, res) => {
+  try {
+    const { newFavorite } = req.body
+    
+    if (!newFavorite) {
+      return res.status(400).json({
+        error: '[ERROR] Missing required field: value'
+      })
+    }
+
+    // Check if there is a previous favorite for that user
+    const isFavorite = await pool.query(`SELECT * FROM favorites WHERE user_id = $1 AND favorite_id = $2`, [req.session.user.id, newFavorite.id])
+    if (isFavorite.rows.length > 0) {
+      return res.status(409).json({ message: '[INFO] That user already has that line/stop favorited', id: newFavorite.id })
+    }
+    
+    const lastPosition = await pool.query(
+      `
+      SELECT COALESCE(MAX(position), 0) as max
+      FROM favorites
+      WHERE user_id = $1
+      `,
+      [req.session.user.id]
+    )
+
+    const nextPosition = Number(lastPosition.rows[0].max) + 1
+
+    await pool.query(
+      `
+      INSERT INTO favorites (user_id, type, favorite_id, position)
+      VALUES ($1, $2, $3, $4)
+      `,
+      [
+        req.session.user.id,
+        newFavorite.type,
+        newFavorite.id,
+        nextPosition
+      ]
+    )
+
+    res.status(200).json({ message: 'New favorite stored' })
+  } catch (error) {
+    console.error(error.stack)
+    res.status(500).json({ message: '[SERVER] An error occured when storing the favorite' })
+  }
+})
+
+// Storage Endpoints - Get & Store
+app.get('/storage', async (req, res) => {
+  try {
+    const userFavorites = await pool.query('SELECT * FROM favorites WHERE user_id = $1 ORDER BY position ASC', [req.session.user.id])
+    const data = userFavorites.rows
+
+    // No ID: return all stored items
+    return res.json(data)
+
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({
+      icon: "fa-solid fa-triangle-exclamation",
+      message: "[ERRO] Ocorreu um erro ao carregar os dados guardados!"
+    })
+  }
+})
+
+app.delete('/storage', async (req, res) => {
+  try {
+    const { favoriteToDelete } = req.body
+    if (!favoriteToDelete) {
+      return res.status(400).json({ message: '[ERROR] Missing required value: favorite_id' })
+    }
+    const deleteFavorite = await pool.query('DELETE FROM favorites WHERE user_id = $1 AND favorite_id = $2', [req.session.user.id, favoriteToDelete])
+
+    return res.status(200).json({ message: '[SUCCESS] Favorite removed' })
+  } catch (error) {
+    return res.status(500).json({ message: '[ERRO] Ocorreu um erro ao eliminar um favorito' })
+  }
+})
+
+app.put('/storage/order', async (req, res) => {
+  try {
+    const { updatedOrder } = req.body
+
+    if (!updatedOrder || !Array.isArray(updatedOrder)) {
+      return res.status(400).json({
+        message: '[ERROR] Invalid updated order'
+      })
+    }
+
+    for (const item of updatedOrder) {
+      await pool.query(
+        `
+        UPDATE favorites
+        SET position = $1
+        WHERE user_id = $2
+        AND favorite_id = $3
+        `,
+        [
+          item.position,
+          req.session.user.id,
+          item.favorite_id
+        ]
+      )
+    }
+
+    res.status(200).json({
+      message: '[SUCCESS] Favorites order updated'
+    })
+
+  } catch (error) {
+    console.error(error.stack)
+    res.status(500).json({
+      message: '[SERVER] Failed to update favorites order'
+    })
+  }
+})
 
 // Start Server
 app.listen(PORT, () => {

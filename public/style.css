@@ -121,7 +121,7 @@ body {
   right: 10px;
   gap: 10px;
 }
-#homeGrid .gridItem button {
+#homeGrid .gridItem button:not(.logInButton) {
   padding: 5px 10px;
   border-radius: 5px;
   background-color: rgb(75, 75, 75);
@@ -212,20 +212,20 @@ body {
   margin-bottom: 10px;
 }
 /* Lines Style */
-#homeGrid .gridItem .itemsContainer .item.line .lineID, #modalFavorites #favoritesLinesContainer .item.line .lineID {
+#homeGrid .gridItem .itemsContainer .item.line .id, #modalFavorites #favoritesLinesContainer .item.line .id, .lineID {
   padding: 5px 15px;
   border-radius: 50px;
 }
-#homeGrid .gridItem .itemsContainer .item.line .lineName, #modalFavorites #favoritesLinesContainer .item.line .lineName {
+#homeGrid .gridItem .itemsContainer .item.line .name, #modalFavorites #favoritesLinesContainer .item.line .name, .lineName {
   text-align: left;
 }
 /* Stops Style */
-#homeGrid .gridItem .itemsContainer .item.stop .stopID, #modalFavorites #favoritesStopsContainer .item.stop .stopID {
+#homeGrid .gridItem .itemsContainer .item.stop .id, #modalFavorites #favoritesStopsContainer .item.stop .id, .stopID {
   padding: 5px 15px;
   border-radius: 50px;
   background-color: rgb(75, 75, 75);
 }
-#homeGrid .gridItem .itemsContainer .item.stop .stopName, #modalFavorites #favoritesStopsContainer .item.stop .stopName {
+#homeGrid .gridItem .itemsContainer .item.stop .name, #modalFavorites #favoritesStopsContainer .item.stop .name, .stopName {
   text-align: left;
 }
 
@@ -289,6 +289,31 @@ body {
   font-weight: 800;
   font-size: 18px;
   width: max-content;
+}
+.noSessionMessage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: gray;
+  font-weight: 600;
+  font-size: 20px;
+  width: max-content;
+  line-height: 3rem;
+}
+.noSessionMessage .logInButton {
+  text-decoration: none;
+  padding: 5px 10px;
+  border-radius: 10px;
+  background-color: rgb(75, 75, 75);
+  border: 2px solid rgb(125, 125, 125);
+  color: whitesmoke;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.noSessionMessage .logInButton i {
+  margin-right: 5px;
 }
 
 #modalFavorites #favoritesLinesContainer, #modalFavorites #favoritesStopsContainer {

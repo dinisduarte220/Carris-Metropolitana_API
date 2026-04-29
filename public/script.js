@@ -121,11 +121,19 @@ function enableDragAndDrop() {
     deleteButton.classList.remove('highlight-delete')
   })
 
-  deleteButton.addEventListener('drop', e => {
+  deleteButton.addEventListener('drop', async e => {
     e.preventDefault()
     if (draggedItem) {
+      const favorite_id = draggedItem.querySelector('p.id')
+      const favoriteToDelete = favorite_id.innerText.trim()
       draggedItem.remove()
-      saveFavoritesOrder()
+      await fetch('/storage', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ favoriteToDelete })
+      })
       endDrag()
     }
   })
@@ -159,9 +167,35 @@ function enableDragAndDrop() {
 
 // Get favorites and display them on main page
 async function getFavorites() {
+  const container = document.getElementById('favoriteRoutes_container')
   try {
+    // Check if user has a session
+    const res = await fetch('/me', {
+      credentials: 'include'
+    })
+    const userLogged = await res.json()
+
+    if (!userLogged.loggedIn) {
+      let newMessage = document.createElement('div')
+      newMessage.setAttribute('class', 'noSessionMessage')
+
+      let messageText = document.createElement('p')
+      messageText.setAttribute('class', 'userNotLogged_text')
+      messageText.innerText = "Inicia sessão para aceder aos favoritos"
+
+      let messageActionButton = document.createElement('a')
+      messageActionButton.setAttribute('class', 'logInButton')
+      messageActionButton.setAttribute('href', '/login')
+      messageActionButton.innerHTML = `<i class="fa-brands fa-google"></i> Iniciar sessão`
+
+      newMessage.appendChild(messageText)
+      newMessage.appendChild(messageActionButton)
+
+      container.appendChild(newMessage)
+      return
+    }
+
     const response = await fetch('/storage')
-    const container = document.getElementById('favoriteRoutes_container')
 
     let tempFavoritesContainer = document.createElement('div')
 
@@ -181,22 +215,22 @@ async function getFavorites() {
       container.appendChild(newFavorite_skeleton)
     }
     try {
-      const lines_data = await getAPI("lines")
-      const stops_data = await getAPI("stops")
+      const lines_data = await getAPI_v2("lines")
+      const stops_data = await getAPI_v2("stops")
 
       favorites.forEach(item => {
         if (item.type === "line") {
-          const line_data = lines_data.filter(line => line.id.toLowerCase().includes(item.id))
+          const line_data = lines_data.filter(line => line.id.toLowerCase().includes(item.favorite_id))
           let newLine = document.createElement('a')
           newLine.classList.add('item')
           newLine.classList.add('line')
-          newLine.setAttribute('href', `/lines/${item.id}`)
+          newLine.setAttribute('href', `/lines/${item.favorite_id}`)
           let lineNumber = document.createElement('p')
-          lineNumber.setAttribute('class', 'lineID')
+          lineNumber.setAttribute('class', 'id')
           lineNumber.style.backgroundColor = line_data[0].color
-          lineNumber.innerText = item.id
+          lineNumber.innerText = item.favorite_id
           let lineName = document.createElement('p')
-          lineName.setAttribute('class', 'lineName')
+          lineName.setAttribute('class', 'name')
           lineName.innerText = line_data[0].long_name
           // Append number and name to the line DIV
           newLine.appendChild(lineNumber)
@@ -204,17 +238,17 @@ async function getFavorites() {
           // Append the new line to the main container
           tempFavoritesContainer.appendChild(newLine)
         } else {
-          const stop_data = stops_data.filter(stop => stop.id.toLowerCase().includes(item.id))
+          const stop_data = stops_data.filter(stop => stop.id.toLowerCase().includes(item.favorite_id))
           let newStop = document.createElement('a')
           newStop.classList.add('item')
           newStop.classList.add('stop')
-          newStop.setAttribute('href', `stops/${item.id}`)
+          newStop.setAttribute('href', `stops/${item.favorite_id}`)
           let stopID = document.createElement('p')
-          stopID.setAttribute('class', 'stopID')
-          stopID.innerText = "#" + item.id
+          stopID.setAttribute('class', 'id')
+          stopID.innerText = "#" + item.favorite_id
           let stopName = document.createElement('p')
-          stopName.setAttribute('class', 'stopName')
-          stopName.innerText = stop_data[0].name
+          stopName.setAttribute('class', 'name')
+          stopName.innerText = stop_data[0].long_name
           // Append ID and name to the stop DIV
           newStop.appendChild(stopID)
           newStop.appendChild(stopName)
@@ -230,7 +264,7 @@ async function getFavorites() {
     Array.from(tempFavoritesContainer.childNodes).forEach(el => container.appendChild(el))
     enableDragAndDrop()
   } catch (error) {
-    console.error(error.message)
+    console.error(error.stack)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar os percursos favoritos")
   }
 }
@@ -238,43 +272,43 @@ async function getFavorites() {
 async function saveFavoritesOrder() {
   const container = document.getElementById('favoriteRoutes_container')
   const items = container.querySelectorAll('.item')
-  const updatedFavorites = []
 
-  items.forEach(item => {
-    if (item.classList.contains('line')) {
-      updatedFavorites.push({
-        type: 'line',
-        id: item.querySelector('.lineID').innerText.trim(),
-        text: item.querySelector('.lineName').innerText.trim(),
-        color: item.querySelector('.lineID').style.backgroundColor
-      })
-    } else if (item.classList.contains('stop')) {
-      updatedFavorites.push({
-        type: 'stop',
-        id: item.querySelector('.stopID').innerText.trim().replace('#', ''),
-        text: item.querySelector('.stopName').innerText.trim()
-      })
+  const updatedOrder = []
+
+  items.forEach((item, index) => {
+    let favorite_id
+
+    if (item.classList.contains('stop')) {
+      favorite_id = item.querySelector('.id').innerText.trim().replace('#', '')
+    } else {
+      favorite_id = item.querySelector('.id').innerText.trim()
     }
+
+    updatedOrder.push({
+      favorite_id,
+      position: index + 1
+    })
   })
 
   try {
-    const response = await fetch('/storage', {
+    const response = await fetch('/storage/order', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ value: updatedFavorites })
+      body: JSON.stringify({ updatedOrder })
     })
 
     const result = await response.json()
+
     if (!response.ok) {
-      console.error('[ERROR]', result)
+      console.error(result)
     } else {
-      console.log('[SUCCESS] Favorites updated:', result)
+      console.log('Favorites order updated')
     }
 
-  } catch (err) {
-    console.error('[ERROR] Failed to update favorites:', err)
+  } catch (error) {
+    console.error(error)
   }
 }
 
@@ -361,11 +395,11 @@ async function searchLine(searchText) {
       newLine.setAttribute('id', `item_${line.id}`)
       newLine.setAttribute('onclick', `selectLine("item_${line.id}")`)
       let lineNumber = document.createElement('p')
-      lineNumber.setAttribute('class', 'lineID')
+      lineNumber.setAttribute('class', 'id')
       lineNumber.style.backgroundColor = line.color
       lineNumber.innerText = line.id
       let lineName = document.createElement('p')
-      lineName.setAttribute('class', 'lineName')
+      lineName.setAttribute('class', 'name')
       lineName.innerText = line.long_name
       // Append number and name to the line DIV
       newLine.appendChild(lineNumber)
@@ -386,13 +420,13 @@ async function searchStop(searchText) {
     container.removeChild(container.firstChild)
   }
   try {
-    const stops_data = await getAPI("stops")
+    const stops_data = await getAPI_v2("stops")
     let stopsToDisplay
 
     if (searchText.length > 3) {
       stopsToDisplay = stops_data.filter(stop => 
         stop.id?.toLowerCase().includes(searchText) || 
-        stop.name?.toLowerCase().includes(searchText) || 
+        stop.long_name?.toLowerCase().includes(searchText) || 
         stop.locality?.toLowerCase().includes(searchText)
       )
       while (container.firstChild) {
@@ -423,11 +457,11 @@ async function searchStop(searchText) {
       newStop.setAttribute('id', `item_${stop.id}`)
       newStop.setAttribute('onclick', `selectStop("item_${stop.id}")`)
       let stopID = document.createElement('p')
-      stopID.setAttribute('class', 'stopID')
+      stopID.setAttribute('class', 'id')
       stopID.innerText = "#" + stop.id
       let stopName = document.createElement('p')
-      stopName.setAttribute('class', 'stopName')
-      stopName.innerText = stop.name
+      stopName.setAttribute('class', 'name')
+      stopName.innerText = stop.long_name
       // Append ID and name to the stop DIV
       newStop.appendChild(stopID)
       newStop.appendChild(stopName)
@@ -513,35 +547,18 @@ function clearFavoritesSections() {
 
 // Add the item to favorites
 async function addFavorite(type) {
-  let value
+  let newFavorite
 
-  if (type === "line") {
-    let container = document.getElementById('favoritesLinesContainer')
-    let activeLine = container.querySelector('.item.selected')
-    let lineID = activeLine.querySelector('.lineID').innerText.trim()
-    let lineColor = activeLine.querySelector('.lineID').style.backgroundColor
-    let lineName = activeLine.querySelector('.lineName').innerText.trim()
+  const container = type === "line" ? document.getElementById('favoritesLinesContainer') : document.getElementById('favoritesStopsContainer')
+  let activeLine = container.querySelector('.item.selected')
+  let favoriteID = type === "stop" ? activeLine.querySelector('.id').innerText.trim().replace('#', '') : activeLine.querySelector('.id').innerText.trim()
+  let favoriteName = activeLine.querySelector('.name').innerText.trim()
 
-    value = {
-      type: "line",
-      id: lineID,
-      text: lineName,
-      color: lineColor
-    }
-
-  } else {
-    let container = document.getElementById('favoritesStopsContainer')
-    let activeStop = container.querySelector('.item.selected')
-    let stopID = activeStop.querySelector('.stopID').innerText.trim()
-    let stopName = activeStop.querySelector('.stopName').innerText.trim()
-    let stopID_split = stopID.split('#')
-
-    value = {
-      type: "stop",
-      id: stopID_split[1],
-      text: stopName
-    }
+  newFavorite = {
+    type: type,
+    id: favoriteID
   }
+  console.log(newFavorite)
 
   try {
     const response = await fetch('/storage', {
@@ -549,7 +566,7 @@ async function addFavorite(type) {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ value })
+      body: JSON.stringify({ newFavorite })
     })
 
     const result = await response.json()

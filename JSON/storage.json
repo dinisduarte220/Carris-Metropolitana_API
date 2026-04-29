@@ -24,6 +24,18 @@
     "color": "rgb(198, 29, 35)"
   },
   {
+    "type": "line",
+    "id": "1709",
+    "text": "Caneças (Largo Jardim) - Colégio Militar (Metro)",
+    "color": "rgb(198, 29, 35)"
+  },
+  {
+    "type": "line",
+    "id": "1710",
+    "text": "Caneças (Qtª São Carlos) - Pontinha (Metro)",
+    "color": "rgb(198, 29, 35)"
+  },
+  {
     "type": "stop",
     "id": "110113",
     "text": "Sr Roubado (Teatro)"
