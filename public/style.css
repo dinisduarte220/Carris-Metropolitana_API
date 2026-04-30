@@ -298,8 +298,7 @@ body {
   color: gray;
   font-weight: 600;
   font-size: 20px;
-  width: max-content;
-  line-height: 3rem;
+  width: 90%;
 }
 .noSessionMessage .logInButton {
   text-decoration: none;
@@ -311,6 +310,7 @@ body {
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
+  vertical-align: -1rem;
 }
 .noSessionMessage .logInButton i {
   margin-right: 5px;

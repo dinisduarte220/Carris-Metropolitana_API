@@ -558,7 +558,6 @@ async function addFavorite(type) {
     type: type,
     id: favoriteID
   }
-  console.log(newFavorite)
 
   try {
     const response = await fetch('/storage', {
@@ -572,8 +571,6 @@ async function addFavorite(type) {
     const result = await response.json()
     if (!response.ok) {
       console.error('[ERROR]', result)
-    } else {
-      console.log('[SUCCESS]', result)
     }
 
   } catch (err) {
@@ -583,6 +580,12 @@ async function addFavorite(type) {
   toggleFavoritesModal()
   getFavorites()
 }
+
+// TODO:
+// When adding a new line, it waits for the db post before it shows the line and continues.
+// Instead: When clicking the add button, append the favorite to the home page favoirtes container, and do the rest in the background to provide a "instant" effect
+
+// Add sessions to db to stop users from getting their session destroyed when the render instance restarts or goes down due to inactivity
 
 // Near Stops
 async function nearStops() {

@@ -7,7 +7,7 @@ require('dotenv').config()
 const oauth2Client = new google.auth.OAuth2(
   process.env.OAUTH_CLIENTID,
   process.env.OAUTH_SECRET,
-  'https://carris-metropolitana-api-1.onrender.com/auth/google/callback'
+  process.env.OAUTH_REDIRECT_URI
 )
 
 router.get('/auth/google', (req, res) => {
