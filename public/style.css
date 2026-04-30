@@ -141,6 +141,8 @@ body {
   font-size: 20px;
   font-weight: 700;
   color: rgba(128, 128, 128, 0.5);
+  /* Limit error message width for the grid item width*/
+  max-width: calc(100vw - 6rem - 4rem);
 }
 #homeGrid .gridItem .itemsContainer {
   margin-top: 15px;
