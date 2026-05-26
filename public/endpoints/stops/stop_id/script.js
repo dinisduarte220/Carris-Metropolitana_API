@@ -195,15 +195,15 @@ async function stopInformationDisplay() {
     document.title = `${stop_data.name}`
 
     // If line is stored on favorites, change the icon to solid
-    const response = await fetch('/storage?storage_id=favorite_stops')
-    if (!response.ok) {
-      throw new Error(`[ERROR] Failed to fetch favorite lines: ${response.statusText}`)
-    }
-    let data_favorites = await response.json()
-    if (data_favorites.includes(stopId)) {
-      document.getElementById('favoritesIcon').classList.remove('fa-regular')
-      document.getElementById('favoritesIcon').classList.add('fa-solid')
-    }
+    // const response = await fetch('/storage?storage_id=favorite_stops')
+    // if (!response.ok) {
+    //   throw new Error(`[ERROR] Failed to fetch favorite lines: ${response.statusText}`)
+    // }
+    // let data_favorites = await response.json()
+    // if (data_favorites.includes(stopId)) {
+    //   document.getElementById('favoritesIcon').classList.remove('fa-regular')
+    //   document.getElementById('favoritesIcon').classList.add('fa-solid')
+    // }
 
     stopLinesContainer.innerHTML = ""
     linesData = []
@@ -229,7 +229,7 @@ async function stopInformationDisplay() {
     setSelectedStop(stop_data.lon, stop_data.lat, stopId)
     loadArrivals()
   } catch (error) {
-    console.error(error.message)
+    console.error(error.stack)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as informações desta paragem")
   }
 }

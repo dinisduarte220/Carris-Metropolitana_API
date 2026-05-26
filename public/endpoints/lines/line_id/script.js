@@ -119,15 +119,15 @@ async function lineInformationDisplay() {
     document.title = `${lineId} - ${data.long_name}`
 
     // If line is stored on favorites, change the icon to solid
-    const response = await fetch('/storage?storage_id=favorite_lines')
-    if (!response.ok) {
-      throw new Error(`[ERROR] Failed to fetch favorite lines: ${response.statusText}`)
-    }
-    let data_favorites = await response.json()
-    if (data_favorites.includes(lineId)) {
-      document.getElementById('favoritesIcon').classList.remove('fa-regular')
-      document.getElementById('favoritesIcon').classList.add('fa-solid')
-    }
+    // const response = await fetch('/storage?storage_id=favorite_lines')
+    // if (!response.ok) {
+    //   throw new Error(`[ERROR] Failed to fetch favorite lines: ${response.statusText}`)
+    // }
+    // let data_favorites = await response.json()
+    // if (data_favorites.includes(lineId)) {
+    //   document.getElementById('favoritesIcon').classList.remove('fa-regular')
+    //   document.getElementById('favoritesIcon').classList.add('fa-solid')
+    // }
   } catch (error) {
     console.error(error.message)
     snackbar("fa-solid fa-triangle-exclamation", "Ocorreu um erro ao carregar as informações da linha: " + lineId)
