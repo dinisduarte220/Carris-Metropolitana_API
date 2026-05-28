@@ -63,6 +63,8 @@ app.use('/lines', express.static(path.join(__dirname, 'public', 'endpoints', 'li
 app.use('/stops', express.static(path.join(__dirname, 'public', 'endpoints', 'stops')))
 // Settings Endpoint
 app.use('/settings', express.static(path.join(__dirname, 'public', 'endpoints', 'settings')))
+// 404 Endpoint
+app.use('/404', express.static(path.join(__dirname, 'public', 'endpoints', '404')))
 
 // Lines Endpoint - Details for a specific Line
 app.use('/lines/:line_id', express.static(path.join(__dirname, 'public', 'endpoints', 'lines', 'line_id')))
@@ -295,6 +297,11 @@ app.put('/storage/order', async (req, res) => {
       message: '[SERVER] Failed to update favorites order'
     })
   }
+})
+
+// 404 handler
+app.use((req, res) => {
+  res.redirect('/404')
 })
 
 // Start Server

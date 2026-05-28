@@ -64,7 +64,7 @@ router.get('/auth/google/callback', async (req, res) => {
     res.redirect('/')
   } catch (err) {
     console.error(err)
-    res.redirect(process.env.CLIENT_URL + '/login-error')
+    res.redirect(process.env.CLIENT_URL + '/404')
   }
 })
 
