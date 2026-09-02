@@ -1,5 +1,3 @@
-// TODO: When clicking on the bus icon on the stopsBorder, zoom into that bus
-
 // Extract the current line_id from URL
 const pathParts = window.location.pathname.split('/')
 const lineId = pathParts[2]
